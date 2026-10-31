@@ -8,6 +8,7 @@ A prototype artificial marine ecosystem with one authoritative Python simulation
 - Configurable Koyeb `PORT` and bind address.
 - CORS restricted to `NEXUS_ALLOWED_ORIGIN` (defaults to the GitHub Pages origin).
 - Atomic JSON checkpoints, restored on startup.
+- Coral reef condition model: bleaching stress, recovery, calcification and live dashboard telemetry (simplified educational proxy, not a calibrated forecast).
 - Bearer token compared in constant time; request body size limited.
 
 This is an early extensible model, not a complete scientific ecosystem. Species-specific reproductive biology, broad species coverage, complete nutrient cycling, full SPH fluid simulation, advanced social cognition and production-grade observability remain future work.
