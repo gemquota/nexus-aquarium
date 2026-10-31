@@ -59,7 +59,7 @@ class Engine:
         self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config); self.water_fraction=float(self.config["initial_water_fraction"]); self.rainfall=0.0; self.weather="clear"; self.precipitation=0.0
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False; self.habitat=self.config["habitat"]
         self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem(); self.environment=EnvironmentalResponse(); self.habitat_map=HabitatMap(self.config["world_width"],self.config["world_height"],seed,base_habitat=self.habitat); self.nutrients=NutrientCycle(); self.disease=DiseaseSystem(); self.social=SocialSystem(); self.migration=MigrationSystem()
-        self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
+        self.performance={"step_ms":0.0,"step_ema_ms":0.0,"stages_ms":{},"slowest_stage":"none","samples":0}; self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",(i*43+35)%(self.config["world_width"]-20)+10,self.config["world_height"]*(.90+self.rng.random()*.08),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.08,.08))
         self.add("shark",self.config["world_width"]*.42,self.config["world_height"]*.94,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,self.config["world_height"]*.93,vy=.12)
@@ -88,6 +88,7 @@ class Engine:
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
+        step_started=time.perf_counter(); stages={}; stage_started=step_started
         self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
         self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
         if self.config["weather_enabled"]:
@@ -103,6 +104,7 @@ class Engine:
             if o.energy<=.02 or o.health<=.01:
                 o.alive=False; self.deaths+=1
         alive=[o for o in self.organisms if o.alive]
+        stages["life_support_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
         breeding_grid=SpatialGrid(10.0); breeding_grid.rebuild(alive)
         for parent in alive:
             if len(self.organisms)>=self.config["max_organisms"]: break
@@ -117,9 +119,11 @@ class Engine:
                 parent.energy*=.82
                 if mate: mate.energy*=.9; mate.cooldown=30
                 parent.cooldown=30; self.births+=1
+        stages["reproduction_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
         self.behaviour.step(self.organisms,dt,self.rng)
         for o in alive:
             self.physics.move(o,dt,self.sim_time)
+        stages["behaviour_physics_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
         self.social.step(self.organisms,dt,self.tick)
         self.migration.step(self.organisms,self.habitat_map,dt)
         self.physics.step_particles(dt,self.sim_time)
@@ -129,6 +133,14 @@ class Engine:
         self.events.step(self,dt)
         self.disease.step(self.organisms,self.disturbances,dt,self.rng)
         self.environment.step(self.organisms,self.water,dt,self.habitat_map)
+        stages["ecosystem_ms"]=(time.perf_counter()-stage_started)*1000
+        elapsed=(time.perf_counter()-step_started)*1000
+        previous=float(self.performance.get("step_ema_ms",0.0))
+        self.performance={"step_ms":elapsed,"step_ema_ms":elapsed if not previous else previous*.85+elapsed*.15,
+            "stages_ms":stages,"slowest_stage":max(stages,key=stages.get) if stages else "none",
+            "samples":int(self.performance.get("samples",0))+1,"organisms":len(self.organisms),
+            "alive":sum(1 for item in self.organisms if item.alive),"fluid_particles":len(self.physics.particles),
+            "budget_ms":1000.0/30.0,"budget_utilization":elapsed/(1000.0/30.0)}
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
@@ -176,7 +188,7 @@ class Engine:
         species_counts={}
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"]},"config":self.config,
+          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"]},"config":self.config,"performance":dict(self.performance),
           "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":self.environment.snapshot(),
           "water":asdict(self.water),
           "genetics":population_diversity(living),"nutrients":self.nutrients.snapshot(),"disease":self.disease.snapshot(),"social":self.social.snapshot(),"migration":self.migration.snapshot(),
