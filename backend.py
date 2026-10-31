@@ -12,6 +12,7 @@ from behaviour import BehaviourSystem
 from events import EventSystem
 from environment import EnvironmentalResponse
 from genetics import recombine, population_diversity
+from habitats import HabitatMap
 
 ENGINE_VERSION = 3
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
@@ -52,7 +53,7 @@ class Engine:
     def __init__(self,seed=2026,config=None):
         self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config)
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False
-        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem(); self.environment=EnvironmentalResponse()
+        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem(); self.environment=EnvironmentalResponse(); self.habitat_map=HabitatMap(self.config["world_width"],self.config["world_height"],seed)
         self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
@@ -107,7 +108,7 @@ class Engine:
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
         self.events.step(self,dt)
-        self.environment.step(self.organisms,self.water,dt,self.habitat)
+        self.environment.step(self.organisms,self.water,dt,self.habitat_map)
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
@@ -158,7 +159,7 @@ class Engine:
           "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem"},
           "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":self.environment.snapshot(),
           "water":asdict(self.water),
-          "genetics":population_diversity(living),
+          "genetics":population_diversity(living),\n          "habitat_map":self.habitat_map.snapshot(),
           "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
             "species_count":len(species_counts),"species":species_counts,
             "mean_energy":sum(o.energy for o in living)/len(living) if living else 0,
@@ -243,7 +244,7 @@ class Handler(BaseHTTPRequestHandler):
                 try: Engine.validate_config(candidate)
                 except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
                 e.config=candidate
-                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]
+                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed)
                 for organism in e.organisms:
                     organism.x=max(0,min(e.physics.width-1,organism.x)); organism.y=max(0,min(e.physics.height-1,organism.y))
                 if candidate["habitat"]!=e.habitat:
