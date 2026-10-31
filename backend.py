@@ -69,8 +69,16 @@ class Engine:
         self.seabird_catches=0
         for i in range(18): self.add("reef_fish",(i*43+35)%(self.config["world_width"]-20)+10,self.config["world_height"]*(.90+self.rng.random()*.08),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.08,.08))
         self.add("shark",self.config["world_width"]*.42,self.config["world_height"]*.94,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,self.config["world_height"]*.93,vy=.12)
-        extras=("ray","dolphin","whale","crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","phytoplankton","zooplankton","bacteria")
-        for i,name in enumerate(extras): self.add(name,30+(i*131)%(self.config["world_width"]-60),self.config["world_height"]*(.90+self.rng.random()*.08),vx=species_profile(name)["speed"]*.4,vy=self.rng.uniform(-.06,.06))
+        h=self.config["world_height"]; surface=h*(1-self.water_fraction)
+        for i in range(10): self.add(("surface_fish","sardine")[i%2],(i*71+45)%self.config["world_width"],surface+12+(i%3)*5,vx=.45 if i%2 else -.45)
+        for i in range(8): self.add(("pelagic_fish","mackerel")[i%2],(i*113+90)%self.config["world_width"],surface+self.water_fraction*h*.42+(i%3)*7,vx=.35 if i%2 else -.35)
+        for i in range(6): self.add(("deepwater_fish","lanternfish","anglerfish")[i%3],(i*149+110)%self.config["world_width"],h*.88+(i%2)*5,vx=.12)
+        self.add("shark",self.config["world_width"]*.42,h*.62,vx=.35)
+        extras=("ray","dolphin","whale","orca","humpback_whale","sea_lion","manatee","crab","lobster","crayfish","hermit_crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","sargassum","sea_lettuce","mangrove","phytoplankton","zooplankton","bacteria")
+        for i,name in enumerate(extras):
+            zone=species_profile(name).get("zone","benthic")
+            y=surface+8 if zone=="surface" else (surface+self.water_fraction*h*.48 if zone=="open_water" else (h*.88 if zone=="deep" else (h*.94 if zone=="benthic" else surface-1)))
+            self.add(name,30+(i*131)%(self.config["world_width"]-60),y,vx=species_profile(name)["speed"]*.4,vy=self.rng.uniform(-.04,.04))
     @staticmethod
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
