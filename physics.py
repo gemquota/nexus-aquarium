@@ -58,8 +58,9 @@ class MarinePhysics:
         organism.vy=(organism.vy+(cy+buoyancy)*dt+math.sin(heading)*thrust)*drag
         organism.vx*=.985+.014*turn_rate
         organism.vy*=.985+.014*turn_rate
-        organism.x+=organism.vx*dt/mass
-        organism.y+=organism.vy*dt/mass
+        motion_scale=float(getattr(self,"movement_scale",40.0))
+        organism.x+=organism.vx*dt*motion_scale/mass
+        organism.y+=organism.vy*dt*motion_scale/mass
         # The dynamic waterline is a hard upper boundary: marine life stays submerged.
         lower=max(0.0,min(self.height-1.0,float(self.waterline)))
         if organism.y<lower:
