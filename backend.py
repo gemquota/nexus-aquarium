@@ -17,6 +17,7 @@ from nutrients import NutrientCycle
 from disease import DiseaseSystem
 from social import SocialSystem
 from migration import MigrationSystem
+from physics import SpatialGrid
 
 ENGINE_VERSION = 4
 DEFAULT_CONFIG = {"world_width":800,"world_height":240,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":240,"initial_water_fraction":0.10,"rain_rate":0.0008,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.0,"predation_intensity":1.0}
@@ -102,11 +103,12 @@ class Engine:
             if o.energy<=.02 or o.health<=.01:
                 o.alive=False; self.deaths+=1
         alive=[o for o in self.organisms if o.alive]
+        breeding_grid=SpatialGrid(10.0); breeding_grid.rebuild(alive)
         for parent in alive:
             if len(self.organisms)>=self.config["max_organisms"]: break
             if not parent.alive or life_stage(parent.species,parent.age)!="adult" or parent.energy<.72 or parent.cooldown>0: continue
             mode=reproductive_mode(parent.species)
-            mates=[m for m in alive if compatible(parent,m) and m.energy>.65 and life_stage(m.species,m.age)=="adult" and (m.x-parent.x)**2+(m.y-parent.y)**2<100] if mode=="sexual" else []
+            mates=[m for m in breeding_grid.nearby(parent.x,parent.y,10.0) if compatible(parent,m) and m.energy>.65 and life_stage(m.species,m.age)=="adult" and (m.x-parent.x)**2+(m.y-parent.y)**2<100] if mode=="sexual" else []
             mate=min(mates,key=lambda m:(m.x-parent.x)**2+(m.y-parent.y)**2) if mates else None
             if (mate is not None or mode!="sexual") and self.rng.random()<reproduction_probability(parent,dt):
                 x,y=offspring_position(parent,mate)
