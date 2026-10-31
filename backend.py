@@ -135,7 +135,7 @@ class Handler(BaseHTTPRequestHandler):
     service=None
     def log_message(self,*args):pass
     def send_json(self,code,data):
-        raw=json.dumps(data).encode(); self.send_response(code); self.send_header("Content-Type","application/json")
+        raw=json.dumps(data).encode() if code!=204 else b""; self.send_response(code); self.send_header("Content-Type","application/json")
         origin=self.headers.get("Origin","")
         allowed=os.getenv("NEXUS_ALLOWED_ORIGIN","https://gemquota.github.io")
         if origin==allowed: self.send_header("Access-Control-Allow-Origin",allowed); self.send_header("Vary","Origin")
