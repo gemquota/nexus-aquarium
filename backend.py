@@ -9,6 +9,7 @@ from biodiversity import species_profile
 from ecology import Ecology
 from life_cycles import life_stage, compatible, reproduction_probability
 from behaviour import BehaviourSystem
+from events import EventSystem
 
 ENGINE_VERSION = 2
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000}
@@ -53,7 +54,7 @@ class Engine:
     def __init__(self,seed=2026,config=None):
         self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config)
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False
-        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem()
+        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem()
         self.organisms=[]; self.next_id=1; self.water=Water(); self.births=0; self.deaths=0; self.food_web={"reef_fish":["kelp","plankton"],"shark":["reef_fish","eel"],"jellyfish":["plankton"],"turtle":["seagrass","jellyfish"]}
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
@@ -101,12 +102,7 @@ class Engine:
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
-        for d in self.disturbances:
-            d["remaining"]-=dt
-            if d["kind"] in ("oxygen_depletion","disease_outbreak","algal_bloom"):
-                for o in alive:
-                    if o.alive:o.health=max(0,o.health-d["intensity"]*.0005*dt)
-        self.disturbances=[d for d in self.disturbances if d["remaining"]>0]
+        self.events.step(self,dt)
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
@@ -152,7 +148,7 @@ class Engine:
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
           "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":"coral_reef","engine":"NEXUS Python ecosystem"},
-          "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),
+          "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),
           "water":asdict(self.water),
           "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
             "species_count":len(species_counts),"species":species_counts,
