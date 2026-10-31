@@ -310,7 +310,7 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path=="/control/reset":
                 try: seed=int(body.get("seed",e.seed))
                 except (TypeError,ValueError): return self.send_json(400,{"error":"seed must be an integer"})
-                self.service.engine=Engine(seed,config=e.config); result={"reset":True,"seed":seed}
+                self.service.engine=Engine(seed); result={"reset":True,"seed":seed,"defaults":True}
             else:return self.send_json(404,{"error":"unknown control"})
         self.send_json(200,result)
 
