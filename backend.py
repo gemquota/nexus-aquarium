@@ -106,7 +106,8 @@ class Engine:
                 parent.cooldown=30; self.births+=1
         self.behaviour.step(self.organisms,dt,self.rng)
         self.physics.step_particles(dt,self.sim_time)
-        self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)\n        self.nutrients.step(self.organisms,self.water,dt)
+        self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
+        self.nutrients.step(self.organisms,self.water,dt)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
         self.events.step(self,dt)
         self.environment.step(self.organisms,self.water,dt,self.habitat_map)
