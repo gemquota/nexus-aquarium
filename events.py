@@ -1,10 +1,13 @@
 EVENTS={"storm","algal_bloom","oxygen_depletion","coral_bleaching","disease_outbreak","habitat_damage","invasive_species","food_shortage","heatwave","volcanic_activity"}
 class EventSystem:
- def __init__(self): self.total_events=0
+ def __init__(self): self.total_events=0; self.history=[]
  def add(self,engine,kind,intensity=.4,duration=20):
   if kind not in EVENTS: raise ValueError("unsupported event")
   item={"kind":kind,"intensity":max(0,min(1,float(intensity))),"remaining":max(.1,min(3600,float(duration)))}
-  engine.disturbances.append(item); self.total_events+=1; return item
+  engine.disturbances.append(item); self.total_events+=1
+  self.history.append({"tick":engine.tick,"time":engine.sim_time,"kind":kind,"intensity":item["intensity"],"duration":item["remaining"]})
+  self.history=self.history[-500:]
+  return item
  def step(self,engine,dt):
   for e in engine.disturbances:
    e["remaining"]-=dt; k=e["kind"]; p=e["intensity"]; w=engine.water
@@ -23,6 +26,6 @@ class EventSystem:
     for o in engine.organisms:
      if o.alive: o.energy=max(0,o.energy-p*.0001*dt)
   engine.disturbances=[e for e in engine.disturbances if e["remaining"]>0]
- def state(self): return {"total_events":self.total_events}
- def restore(self,d): self.total_events=max(0,int(d.get("total_events",0)))
- def snapshot(self,engine): return {"active":len(engine.disturbances),"events_started":self.total_events,"event_types":sorted(EVENTS)}
+ def state(self): return {"total_events":self.total_events,"history":self.history}
+ def restore(self,d): self.total_events=max(0,int(d.get("total_events",0))); self.history=list(d.get("history",[]))[-500:]
+ def snapshot(self,engine): return {"active":len(engine.disturbances),"events_started":self.total_events,"event_types":sorted(EVENTS),"recent_history":self.history[-20:]}
