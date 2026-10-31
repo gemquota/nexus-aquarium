@@ -372,3 +372,28 @@ class CoralReefHealthTests(unittest.TestCase):
             restored=Engine.load_state(path)
             self.assertAlmostEqual(restored.coral.bleaching,0.37)
             self.assertAlmostEqual(restored.coral.cumulative_calcification,1.25)
+
+
+class MarineDiversityTests(unittest.TestCase):
+    def test_surface_pelagic_and_deep_communities_are_seeded(self):
+        engine=Engine(seed=902)
+        names={o.species for o in engine.organisms if o.alive}
+        self.assertTrue({"surface_fish","sardine","pelagic_fish","mackerel","deepwater_fish","lanternfish","anglerfish"}<=names)
+        surface=engine.config["world_height"]*(1-engine.water_fraction)
+        fish=[o for o in engine.organisms if o.species in {"surface_fish","sardine","pelagic_fish","mackerel","deepwater_fish","lanternfish","anglerfish"}]
+        self.assertTrue(any(o.y<surface+30 for o in fish))
+        self.assertTrue(any(o.y>engine.config["world_height"]*.8 for o in fish))
+
+    def test_marine_mammals_crustaceans_and_plants_are_catalogued(self):
+        from biodiversity import SPECIES
+        expected={"orca","humpback_whale","sea_lion","manatee","lobster","crayfish","hermit_crab","sargassum","sea_lettuce","mangrove"}
+        self.assertTrue(expected<=set(SPECIES))
+        self.assertEqual(SPECIES["lobster"]["zone"],"benthic")
+        self.assertEqual(SPECIES["sargassum"]["zone"],"surface")
+
+    def test_seabird_variety_and_islets_are_exposed(self):
+        engine=Engine(seed=903)
+        snap=engine.snapshot()
+        self.assertGreaterEqual(len(snap["seabirds"]),8)
+        self.assertGreaterEqual(len({b["species"] for b in snap["seabirds"]}),6)
+        self.assertGreaterEqual(len(snap["floating_islets"]),2)
