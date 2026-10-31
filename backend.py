@@ -21,7 +21,7 @@ from coral import CoralReefSystem
 from physics import SpatialGrid
 
 ENGINE_VERSION = 4
-DEFAULT_CONFIG = {"world_width":1200,"world_height":360,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":30.0,"max_organisms":1500,"habitat":"coral_reef","initial_fluid_particles":180,"initial_water_fraction":0.22,"rain_rate":0.00035,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.4,"movement_scale":68.0,"predation_intensity":0.8}
+DEFAULT_CONFIG = {"world_width":2400,"world_height":720,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":30.0,"max_organisms":1500,"habitat":"coral_reef","initial_fluid_particles":180,"initial_water_fraction":0.22,"rain_rate":0.00035,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.4,"movement_scale":68.0,"predation_intensity":0.8}
 
 @dataclass
 class Genome:
