@@ -55,6 +55,8 @@ class Engine:
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
         self.add("shark",40,10,vx=.08); self.add("jellyfish",25,18,vy=.04)
+        extras=("ray","dolphin","whale","crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","phytoplankton","zooplankton","bacteria")
+        for i,name in enumerate(extras): self.add(name,5+(i*13)%70,2+(i*7)%20,vx=species_profile(name)["speed"]*.02)
     @staticmethod
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms"):
