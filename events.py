@@ -23,4 +23,6 @@ class EventSystem:
     for o in engine.organisms:
      if o.alive: o.energy=max(0,o.energy-p*.0001*dt)
   engine.disturbances=[e for e in engine.disturbances if e["remaining"]>0]
+ def state(self): return {"total_events":self.total_events}
+ def restore(self,d): self.total_events=max(0,int(d.get("total_events",0)))
  def snapshot(self,engine): return {"active":len(engine.disturbances),"events_started":self.total_events,"event_types":sorted(EVENTS)}
