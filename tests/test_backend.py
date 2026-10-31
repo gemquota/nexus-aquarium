@@ -63,5 +63,18 @@ class PhysicsTests(unittest.TestCase):
         grid.rebuild([a,b,c])
         self.assertEqual(len(grid.nearby(1,1,2)),2)
 
+
+class EcologyTests(unittest.TestCase):
+    def test_food_web_feeding_and_nutrients(self):
+        from ecology import Ecology
+        from backend import Water
+        engine=Engine(seed=4); ecology=Ecology(); predator=engine.add("shark",10,10); prey=engine.add("reef_fish",10.2,10)
+        predator.energy=.2; prey.energy=.5
+        water=Water(); before=predator.energy
+        for _ in range(100): ecology.step(engine.organisms,{"shark":["reef_fish"]},water,.1,engine.rng)
+        self.assertGreaterEqual(predator.energy,before)
+        self.assertGreater(ecology.feedings,0)
+        self.assertGreaterEqual(water.nitrate,0)
+
 if __name__=="__main__":
     unittest.main()
