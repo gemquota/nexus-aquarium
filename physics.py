@@ -44,11 +44,20 @@ class MarinePhysics:
         self.grid=SpatialGrid(4); self.smoothing_radius=3.0; self.rest_density=1.0
     def move(self,organism,dt,t):
         cx,cy=self.currents.sample(organism.x,organism.y,t)
-        mass=max(.2,float(organism.genome.traits.get("size",.5))+0.5)
-        drag=max(.02,1-float(organism.genome.traits.get("size",.5))*.08)
+        traits=organism.genome.traits
+        mass=max(.2,float(traits.get("size",.5))+0.5)
+        agility=max(0.0,min(1.0,float(traits.get("agility",.5))))
+        speed=max(.05,min(2.0,float(traits.get("speed",.5))*1.5))
+        turn_rate=max(.05,min(1.0,float(traits.get("turn_rate",.5))))
+        drag=max(.02,1-float(traits.get("size",.5))*.08)
         buoyancy=(.0005 if organism.species in ("jellyfish","turtle") else 0.0)
-        organism.vx=(organism.vx+cx*dt)*drag
-        organism.vy=(organism.vy+(cy+buoyancy)*dt)*drag
+        # Individual swim thrust, responsiveness and turning authority.
+        heading=math.atan2(organism.vy,organism.vx) if abs(organism.vx)+abs(organism.vy)>1e-8 else self.currents.phase
+        thrust=speed*(.0015+.0025*agility)*dt
+        organism.vx=(organism.vx+cx*dt+math.cos(heading)*thrust)*drag
+        organism.vy=(organism.vy+(cy+buoyancy)*dt+math.sin(heading)*thrust)*drag
+        organism.vx*=.985+.014*turn_rate
+        organism.vy*=.985+.014*turn_rate
         organism.x+=organism.vx*dt/mass
         organism.y+=organism.vy*dt/mass
         if organism.x<0 or organism.x>self.width-1:
