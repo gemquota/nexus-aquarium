@@ -11,7 +11,7 @@ from life_cycles import life_stage, compatible, reproduction_probability
 from behaviour import BehaviourSystem
 from events import EventSystem
 
-ENGINE_VERSION = 2
+ENGINE_VERSION = 3
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
 
 @dataclass
@@ -108,12 +108,12 @@ class Engine:
         if not path: return
         data={"engine_version":ENGINE_VERSION,"config":self.config,"habitat":self.habitat,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
-              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
+              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,\n              "physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),
               "rng_state":self.rng.getstate(),
               "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
                 "age":o.age,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,
                 "cooldown":o.cooldown,"genome":asdict(o.genome),"brain":{"senses":list(o.brain.senses),
-                "memory":o.brain.memory,"learning":o.brain.learning}} for o in self.organisms]}
+                "memory":o.brain.memory,"learning":o.brain.learning},"decomposed":getattr(o,"_decomposed",False)} for o in self.organisms]}
         target=os.path.abspath(path); os.makedirs(os.path.dirname(target),exist_ok=True)
         tmp=target+".tmp"
         with open(tmp,"w",encoding="utf-8") as handle:
@@ -131,7 +131,7 @@ class Engine:
         engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1)
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
         engine.water=Water(**data.get("water",{})); engine.habitat=data.get("habitat",engine.config.get("habitat","coral_reef")); engine.food_web=data.get("food_web",engine.food_web)
-        engine.disturbances=data.get("disturbances",[])
+        engine.disturbances=data.get("disturbances",[])\n        engine.physics.restore(data.get("physics_state",{})); engine.ecology.restore(data.get("ecology_state",{})); engine.behaviour.restore(data.get("behaviour_state",{})); engine.events.restore(data.get("events_state",{}))
         def tuples(value): return tuple(tuples(v) for v in value) if isinstance(value,list) else value
         if data.get("rng_state"): engine.rng.setstate(tuples(data["rng_state"]))
         engine.organisms=[]
@@ -139,7 +139,7 @@ class Engine:
             genome=Genome(**item.get("genome",{})); brain_data=item.get("brain",{})
             brain=Brain(tuple(brain_data.get("senses",Brain.senses)),brain_data.get("memory",[]),brain_data.get("learning",{}))
             fields={k:item[k] for k in ("id","species","x","y","vx","vy","age","energy","health","alive","state","cooldown") if k in item}
-            fields["genome"]=genome; fields["brain"]=brain; engine.organisms.append(Organism(**fields))
+            fields["genome"]=genome; fields["brain"]=brain; organism=Organism(**fields); organism._decomposed=bool(item.get("decomposed",False)); engine.organisms.append(organism)
         return engine
 
     def snapshot(self):
