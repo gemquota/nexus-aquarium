@@ -22,4 +22,6 @@ class BehaviourSystem:
    speed=math.hypot(o.vx,o.vy); cap=max(.01,profile["speed"]*.25)
    if speed>cap: o.vx*=cap/speed; o.vy*=cap/speed
    self.decisions+=1
+ def state(self): return {"decisions":self.decisions,"school_links":self.school_links,"flee_responses":self.flee_responses}
+ def restore(self,d): self.decisions=max(0,int(d.get("decisions",0))); self.school_links=max(0,int(d.get("school_links",0))); self.flee_responses=max(0,int(d.get("flee_responses",0)))
  def snapshot(self): return {"decisions":self.decisions,"school_links":self.school_links,"flee_responses":self.flee_responses}
