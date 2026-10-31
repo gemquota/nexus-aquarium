@@ -24,5 +24,28 @@ class PersistenceTests(unittest.TestCase):
         self.assertEqual(engine.tick,0)
         self.assertGreater(len(engine.organisms),0)
 
+
+class EngineFoundationTests(unittest.TestCase):
+    def test_config_is_persisted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"state.json")
+            engine=Engine(seed=44,config={"max_organisms":100})
+            engine.save_state(path)
+            restored=Engine.load_state(path)
+            self.assertEqual(restored.config["max_organisms"],100)
+
+    def test_invalid_config_rejected(self):
+        with self.assertRaises(ValueError): Engine(config={"max_organisms":0})
+
+    def test_organism_capacity_enforced(self):
+        engine=Engine(config={"max_organisms":20})
+        with self.assertRaises(RuntimeError): engine.add("reef_fish",1,1)
+
+    def test_future_checkpoint_version_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"state.json")
+            with open(path,"w") as f: json.dump({"engine_version":999},f)
+            with self.assertRaises(ValueError): Engine.load_state(path)
+
 if __name__=="__main__":
     unittest.main()
