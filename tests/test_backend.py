@@ -182,3 +182,27 @@ class TiltAndPhenotypeTests(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main()
+
+
+class DynamicOceanTests(unittest.TestCase):
+    def test_rain_gradually_raises_waterline(self):
+        engine=Engine(seed=81,config={"rain_rate":0.01})
+        start=engine.water_fraction
+        for _ in range(30): engine.step(0.2)
+        self.assertGreater(engine.water_fraction,start)
+        self.assertLessEqual(engine.water_fraction,1.0)
+
+    def test_organisms_are_kept_below_dynamic_surface(self):
+        engine=Engine(seed=82,config={"initial_water_fraction":0.2})
+        engine.physics.waterline=engine.config["world_height"]*(1-engine.water_fraction)
+        organism=engine.add("reef_fish",20,0,vx=0,vy=-1)
+        engine.physics.move(organism,0.1,0.0)
+        self.assertGreaterEqual(organism.y,engine.physics.waterline)
+
+    def test_species_behaviour_produces_multiple_states(self):
+        engine=Engine(seed=83)
+        for _ in range(60): engine.step(0.1)
+        states={o.state for o in engine.organisms if o.alive}
+        self.assertGreaterEqual(len(states),2)
+        metrics=engine.behaviour.snapshot()
+        self.assertGreater(metrics["decisions"],0)
