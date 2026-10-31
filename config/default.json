@@ -1,0 +1,8 @@
+{
+  "world_width": 80,
+  "world_height": 24,
+  "fixed_dt": 0.0333333333,
+  "max_frame_dt": 0.2,
+  "checkpoint_interval": 15,
+  "max_organisms": 5000
+}
