@@ -13,7 +13,8 @@ class EnvironmentalResponse:
             lo,hi=p["temperature"]
             temp=max(0.0,lo-water.temperature,water.temperature-hi)/max(1.0,hi-lo)
             oxygen=max(0.0,p["oxygen_min"]-water.oxygen)/max(.5,p["oxygen_min"])
-            local_habitat=habitat.at(organism.x,organism.y) if hasattr(habitat,"at") else habitat\n            habitat_penalty=0.12 if local_habitat not in p["habitats"] and "all" not in p["habitats"] else 0.0
+            local_habitat=habitat.at(organism.x,organism.y) if hasattr(habitat,"at") else habitat
+            habitat_penalty=0.12 if local_habitat not in p["habitats"] and "all" not in p["habitats"] else 0.0
             stress=min(1.0,temp+oxygen+habitat_penalty)
             resistance=organism.genome.traits.get("resistance",.5)
             effective=stress*(1.0-.65*resistance)
