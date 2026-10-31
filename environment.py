@@ -25,5 +25,9 @@ class EnvironmentalResponse:
             else:
                 organism.health=min(1.0,organism.health+dt*.000015)
         self.mean_stress=total/max(1,count); self.stressed_organisms=stressed
+    def state(self): return self.snapshot()
+    def restore(self,data):
+        self.mean_stress=max(0.0,min(1.0,float(data.get("mean_stress",0))))
+        self.stressed_organisms=max(0,int(data.get("stressed_organisms",0)))
     def snapshot(self):
         return {"mean_stress":self.mean_stress,"stressed_organisms":self.stressed_organisms}
