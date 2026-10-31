@@ -110,5 +110,43 @@ class ReleaseARegressionTests(unittest.TestCase):
         self.assertGreaterEqual(response.mean_stress,0)
         self.assertLessEqual(response.mean_stress,1)
 
+
+class ReleaseBSubsystemTests(unittest.TestCase):
+    def test_life_history_profile_contains_stage_and_strategy(self):
+        from life_cycles import life_history_profile
+        profile=life_history_profile("whale")
+        self.assertEqual(profile["strategy"],"live_birth_and_care")
+        self.assertGreater(profile["maximum_age"],profile["maturity"])
+    def test_genetic_diversity_metrics(self):
+        from genetics import population_diversity
+        engine=Engine(seed=10)
+        metrics=population_diversity(engine.organisms)
+        self.assertIn("speed",metrics["trait_means"])
+        self.assertGreaterEqual(metrics["trait_ranges"]["speed"],0)
+    def test_spatial_habitat_map_is_deterministic(self):
+        from habitats import HabitatMap
+        a=HabitatMap(80,24,seed=55); b=HabitatMap(80,24,seed=55)
+        self.assertEqual(a.snapshot(),b.snapshot())
+        self.assertIn(a.at(5,5),("coral_reef","open_ocean","deep_sea","seagrass","kelp_forest","rocky_seabed","sandy_seabed","hydrothermal_vent"))
+    def test_nutrient_cycle_bounds_water(self):
+        from nutrients import NutrientCycle
+        engine=Engine(seed=7); cycle=NutrientCycle()
+        for _ in range(100): cycle.step(engine.organisms,engine.water,.1)
+        self.assertGreaterEqual(engine.water.oxygen,0)
+        self.assertLessEqual(engine.water.oxygen,14)
+    def test_event_history_is_bounded_and_persisted(self):
+        engine=Engine(seed=8)
+        engine.events.add(engine,"storm",.4,5)
+        self.assertEqual(engine.events.history[-1]["kind"],"storm")
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"events.json"); engine.save_state(path)
+            restored=Engine.load_state(path)
+            self.assertEqual(restored.events.history[-1]["kind"],"storm")
+    def test_spatial_disease_system_reports_zero_without_outbreak(self):
+        from disease import DiseaseSystem
+        engine=Engine(seed=9); disease=DiseaseSystem()
+        disease.step(engine.organisms,[],.1,engine.rng)
+        self.assertEqual(disease.infected,0)
+
 if __name__=="__main__":
     unittest.main()
