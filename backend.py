@@ -128,7 +128,7 @@ class Engine:
         self.social.step(self.organisms,dt,self.tick)
         self.migration.step(self.organisms,self.habitat_map,dt)
         self.physics.step_particles(dt,self.sim_time)
-        self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
+        self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng,self.config['predation_intensity'])
         self.nutrients.step(self.organisms,self.water,dt)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
         self.events.step(self,dt)
@@ -281,7 +281,13 @@ class Handler(BaseHTTPRequestHandler):
                 candidate={**e.config,**{k:v for k,v in body.items() if k in e.config}}
                 try: Engine.validate_config(candidate)
                 except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
-                old_initial=e.config.get("initial_water_fraction"); e.config=candidate
+                old_initial=e.config.get("initial_water_fraction"); old_particles=e.config.get("initial_fluid_particles",len(e.physics.particles)); e.config=candidate
+                target_particles=int(candidate["initial_fluid_particles"])
+                if target_particles<len(e.physics.particles): e.physics.particles=e.physics.particles[:target_particles]
+                elif target_particles>len(e.physics.particles):
+                    from physics import FluidParticle
+                    for _ in range(target_particles-len(e.physics.particles)):
+                        e.physics.particles.append(FluidParticle(e.rng.random()*e.physics.width,e.rng.random()*e.physics.height,e.rng.uniform(-.1,.1),e.rng.uniform(-.1,.1)))
                 e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.physics.waterline=e.physics.height*(1-e.water_fraction); e.physics.currents.base_x=.035*float(candidate["current_strength"]); e.physics.currents.base_y=.008*float(candidate["current_strength"]); e.physics.movement_scale=float(candidate["movement_scale"]);
                 if candidate["initial_water_fraction"]!=old_initial: e.water_fraction=float(candidate["initial_water_fraction"])
                 e.physics.waterline=e.physics.height*(1-e.water_fraction); e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed,base_habitat=candidate["habitat"])
