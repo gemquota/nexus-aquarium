@@ -110,7 +110,8 @@ class Engine:
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         self.nutrients.step(self.organisms,self.water,dt)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
-        self.events.step(self,dt)\n        self.disease.step(self.organisms,self.disturbances,dt,self.rng)
+        self.events.step(self,dt)
+        self.disease.step(self.organisms,self.disturbances,dt,self.rng)
         self.environment.step(self.organisms,self.water,dt,self.habitat_map)
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
