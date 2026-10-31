@@ -19,7 +19,7 @@ from social import SocialSystem
 from migration import MigrationSystem
 
 ENGINE_VERSION = 4
-DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
+DEFAULT_CONFIG = {"world_width":800,"world_height":240,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":240,"initial_water_fraction":0.10,"rain_rate":0.0008,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.0,"predation_intensity":1.0}
 
 @dataclass
 class Genome:
@@ -55,7 +55,7 @@ class Water:
 
 class Engine:
     def __init__(self,seed=2026,config=None):
-        self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config)
+        self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config); self.water_fraction=float(self.config["initial_water_fraction"]); self.rainfall=0.0; self.weather="clear"; self.precipitation=0.0
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False; self.habitat=self.config["habitat"]
         self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem(); self.environment=EnvironmentalResponse(); self.habitat_map=HabitatMap(self.config["world_width"],self.config["world_height"],seed,base_habitat=self.habitat); self.nutrients=NutrientCycle(); self.disease=DiseaseSystem(); self.social=SocialSystem(); self.migration=MigrationSystem()
         self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
@@ -63,12 +63,12 @@ class Engine:
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
         self.add("shark",40,10,vx=.08); self.add("jellyfish",25,18,vy=.04)
         extras=("ray","dolphin","whale","crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","phytoplankton","zooplankton","bacteria")
-        for i,name in enumerate(extras): self.add(name,5+(i*13)%70,2+(i*7)%20,vx=species_profile(name)["speed"]*.02)
+        for i,name in enumerate(extras): self.add(name,50+(i*131)%700,self.config["world_height"]*(.90+self.rng.random()*.08),vx=species_profile(name)["speed"]*.25)
     @staticmethod
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
             if int(config[key])<1: raise ValueError(f"{key} must be positive")
-        if config["habitat"] not in HABITATS: raise ValueError("unknown habitat profile")
+        if config["habitat"] not in HABITATS: raise ValueError("unknown habitat profile")\n        if not 0.01<=float(config["initial_water_fraction"])<=1: raise ValueError("initial_water_fraction must be between 0.01 and 1")\n        if not 0<=float(config["rain_rate"])<=0.1: raise ValueError("rain_rate must be between 0 and 0.1")\n        if float(config["simulation_speed"])<0.1 or float(config["simulation_speed"])>10: raise ValueError("simulation_speed must be between 0.1 and 10")\n        if float(config["current_strength"])<0 or float(config["current_strength"])>5: raise ValueError("current_strength must be between 0 and 5")
         if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
         if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
         if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
@@ -83,7 +83,7 @@ class Engine:
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
-        self.tick+=1; self.sim_time+=dt
+        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt\n        if self.config["weather_enabled"]:\n            self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))\n            self.weather="rain" if self.precipitation>.00001 else "clear"\n            self.rainfall+=self.precipitation*dt\n            self.water_fraction=min(1.0,self.water_fraction+self.precipitation*dt*.02)\n        else:self.precipitation=0.0; self.weather="clear"
         alive=[o for o in self.organisms if o.alive]
         for o in alive:
             o.age+=dt; o.cooldown=max(0,o.cooldown-dt); o.energy=max(0,o.energy-dt*(.0008+o.genome.traits["metabolism"]*.0007))
@@ -93,7 +93,7 @@ class Engine:
                 p=threats[0]; o.vx+=(o.x-p.x)*.015*dt; o.vy+=(o.y-p.y)*.015*dt
             elif o.species=="reef_fish": o.state="schooling"
             else:o.state="foraging" if o.energy<.5 else "cruising"
-            self.physics.move(o,dt,self.sim_time)
+            self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)\n            self.physics.move(o,dt,self.sim_time)
             if o.energy<=.02 or o.health<=.01:o.alive=False; self.deaths+=1
         for parent in alive:
             if len(self.organisms)>=self.config["max_organisms"]: break
@@ -144,7 +144,7 @@ class Engine:
         if version>ENGINE_VERSION: raise ValueError(f"checkpoint version {version} is newer than engine version {ENGINE_VERSION}")
         engine=cls(data.get("seed",2026),data.get("config"))
         engine.tick=max(0,int(data.get("tick",0))); engine.sim_time=max(0.0,float(data.get("sim_time",0.0)))
-        engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1)
+        engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1); ws=data.get("weather_state",{}); engine.water_fraction=max(.01,min(1,float(ws.get("water_fraction",engine.config["initial_water_fraction"])))); engine.rainfall=float(ws.get("rainfall",0)); engine.weather=ws.get("weather","clear"); engine.precipitation=float(ws.get("precipitation",0))
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
         engine.water=Water(**data.get("water",{})); engine.habitat=data.get("habitat",engine.config.get("habitat","coral_reef")); engine.food_web=data.get("food_web",engine.food_web)
         engine.disturbances=data.get("disturbances",[])
@@ -165,7 +165,7 @@ class Engine:
         species_counts={}
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem"},
+          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"]},"config":self.config,
           "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":self.environment.snapshot(),
           "water":asdict(self.water),
           "genetics":population_diversity(living),"nutrients":self.nutrients.snapshot(),"disease":self.disease.snapshot(),"social":self.social.snapshot(),"migration":self.migration.snapshot(),
