@@ -109,13 +109,15 @@ class Engine:
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
-        self.events.step(self,dt)\n        self.environment.step(self.organisms,self.water,dt,self.habitat)
+        self.events.step(self,dt)
+        self.environment.step(self.organisms,self.water,dt,self.habitat)
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
         data={"engine_version":ENGINE_VERSION,"config":self.config,"habitat":self.habitat,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
-              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,\n              "physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),
+              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
+              "physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),
               "rng_state":self.rng.getstate(),
               "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
                 "age":o.age,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,
@@ -138,7 +140,8 @@ class Engine:
         engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1)
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
         engine.water=Water(**data.get("water",{})); engine.habitat=data.get("habitat",engine.config.get("habitat","coral_reef")); engine.food_web=data.get("food_web",engine.food_web)
-        engine.disturbances=data.get("disturbances",[])\n        engine.physics.restore(data.get("physics_state",{})); engine.ecology.restore(data.get("ecology_state",{})); engine.behaviour.restore(data.get("behaviour_state",{})); engine.events.restore(data.get("events_state",{})); engine.environment.restore(data.get("environment_state",{}))
+        engine.disturbances=data.get("disturbances",[])
+        engine.physics.restore(data.get("physics_state",{})); engine.ecology.restore(data.get("ecology_state",{})); engine.behaviour.restore(data.get("behaviour_state",{})); engine.events.restore(data.get("events_state",{})); engine.environment.restore(data.get("environment_state",{}))
         def tuples(value): return tuple(tuples(v) for v in value) if isinstance(value,list) else value
         if data.get("rng_state"): engine.rng.setstate(tuples(data["rng_state"]))
         engine.organisms=[]
