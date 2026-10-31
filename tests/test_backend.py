@@ -206,3 +206,37 @@ class DynamicOceanTests(unittest.TestCase):
         self.assertGreaterEqual(len(states),2)
         metrics=engine.behaviour.snapshot()
         self.assertGreater(metrics["decisions"],0)
+
+
+class IndividualBehaviourTests(unittest.TestCase):
+    def test_individual_patrol_goals_and_behaviour_metrics(self):
+        engine=Engine(seed=91)
+        for _ in range(12): engine.step(0.25)
+        mobile=[o for o in engine.organisms if o.alive and o.species=="reef_fish"]
+        self.assertTrue(any("goal_x" in o.brain.learning for o in mobile))
+        metrics=engine.behaviour.snapshot()
+        self.assertGreater(metrics["goal_changes"],0)
+        self.assertGreater(metrics["patrols"]+metrics["school_links"],0)
+
+    def test_predator_target_is_remembered(self):
+        engine=Engine(seed=92)
+        engine.organisms=[]
+        predator=engine.add("shark",100,100)
+        prey=engine.add("reef_fish",104,100)
+        predator.energy=.2
+        engine.behaviour.step(engine.organisms,0.2,engine.rng)
+        self.assertEqual(predator.state,"hunting")
+        self.assertEqual(predator.brain.learning.get("goal_id"),prey.id)
+        self.assertGreater(engine.behaviour.hunts,0)
+
+    def test_goal_memory_survives_checkpoint(self):
+        engine=Engine(seed=93)
+        for _ in range(8): engine.step(.2)
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"goals.json")
+            engine.save_state(path)
+            restored=Engine.load_state(path)
+            original=next(o for o in engine.organisms if o.brain.learning.get("goal_kind"))
+            clone=next(o for o in restored.organisms if o.id==original.id)
+            self.assertEqual(clone.brain.learning.get("goal_kind"),original.brain.learning.get("goal_kind"))
+            self.assertEqual(clone.brain.learning.get("goal_x"),original.brain.learning.get("goal_x"))
