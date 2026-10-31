@@ -5,6 +5,9 @@ import argparse, json, os, random, secrets, threading, time
 from dataclasses import dataclass, field, asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+ENGINE_VERSION = 2
+DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000}
+
 @dataclass
 class Genome:
     traits: dict = field(default_factory=lambda: {"speed":.5,"size":.5,"camouflage":.5,"metabolism":.5,"fecundity":.5,"sensory":.5,"resistance":.5})
@@ -42,13 +45,26 @@ class Water:
         self.turbidity=max(0,min(1,self.turbidity*.999+biomass*.000001))
 
 class Engine:
-    def __init__(self,seed=2026):
+    def __init__(self,seed=2026,config=None):
+        self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config)
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False
         self.organisms=[]; self.next_id=1; self.water=Water(); self.births=0; self.deaths=0; self.food_web={"reef_fish":["kelp","plankton"],"shark":["reef_fish","eel"],"jellyfish":["plankton"],"turtle":["seagrass","jellyfish"]}
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
         self.add("shark",40,10,vx=.08); self.add("jellyfish",25,18,vy=.04)
+    @staticmethod
+    def validate_config(config):
+        for key in ("world_width","world_height","max_organisms"):
+            if int(config[key])<1: raise ValueError(f"{key} must be positive")
+        if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
+        if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
+        if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
+
     def add(self,species,x,y,vx=0,vy=0,genome=None):
+        if len(self.organisms)>=self.config["max_organisms"]: raise RuntimeError("organism capacity reached")
+        if not species or not isinstance(species,str): raise ValueError("species must be a non-empty string")
+        x=float(x); y=float(y)
+        if not all(map(lambda v: v==v and abs(v)<1e9,(x,y))): raise ValueError("organism coordinates must be finite")
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome or Genome()); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
@@ -78,7 +94,7 @@ class Engine:
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
-        data={"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
+        data={"engine_version":ENGINE_VERSION,"config":self.config,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
               "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
               "rng_state":self.rng.getstate(),
@@ -88,15 +104,18 @@ class Engine:
                 "memory":o.brain.memory,"learning":o.brain.learning}} for o in self.organisms]}
         target=os.path.abspath(path); os.makedirs(os.path.dirname(target),exist_ok=True)
         tmp=target+".tmp"
-        with open(tmp,"w",encoding="utf-8") as handle: json.dump(data,handle,separators=(",",":"))
+        with open(tmp,"w",encoding="utf-8") as handle:
+            json.dump(data,handle,separators=(",",":"),allow_nan=False); handle.flush(); os.fsync(handle.fileno())
         os.replace(tmp,target)
 
     @classmethod
     def load_state(cls,path):
         if not path or not os.path.isfile(path): return cls()
         with open(path,encoding="utf-8") as handle: data=json.load(handle)
-        engine=cls(data.get("seed",2026))
-        engine.tick=data.get("tick",0); engine.sim_time=data.get("sim_time",0.0)
+        version=int(data.get("engine_version",1))
+        if version>ENGINE_VERSION: raise ValueError(f"checkpoint version {version} is newer than engine version {ENGINE_VERSION}")
+        engine=cls(data.get("seed",2026),data.get("config"))
+        engine.tick=max(0,int(data.get("tick",0))); engine.sim_time=max(0.0,float(data.get("sim_time",0.0)))
         engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1)
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
         engine.water=Water(**data.get("water",{})); engine.food_web=data.get("food_web",engine.food_web)
@@ -141,7 +160,7 @@ class Service:
             now=time.monotonic(); dt=min(.2,now-last); last=now
             with self.lock:
                 self.engine.step(dt)
-                if self.state_path and now-self.last_save>=15:
+                if self.state_path and now-self.last_save>=self.engine.config["checkpoint_interval"]:
                     self.engine.save_state(self.state_path); self.last_save=now
             time.sleep(1/30)
 class Handler(BaseHTTPRequestHandler):
@@ -166,7 +185,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path=="/":
             return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health",
               "snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
-        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine"})
+        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION})
         if self.path!="/snapshot":return self.send_json(404,{"error":"not found"})
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
         with self.service.lock:data=self.service.engine.snapshot()
