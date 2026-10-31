@@ -10,8 +10,7 @@ class Ecology:
         self.detritus=0.0; self.feedings=0; self.predation_events=0; self.decomposed=0.0
     def step(self,organisms,food_web,water,dt,rng):
         living=[o for o in organisms if o.alive]
-        by_species={}
-        for o in living: by_species.setdefault(o.species,[]).append(o)
+        grid=SpatialGrid(3.0); grid.rebuild(living)
         for o in living:
             profile=species_profile(o.species)
             group=profile["group"]
@@ -20,7 +19,8 @@ class Ecology:
                 continue
             needs=food_web.get(o.species,[])
             if not needs or o.energy>.78: continue
-            candidates=[p for name in needs for p in by_species.get(name,[]) if p.alive and p.id!=o.id]
+            wanted=set(needs)
+            candidates=[p for p in grid.nearby(o.x,o.y,2.8) if p.id!=o.id and p.alive and p.species in wanted]
             if candidates:
                 prey=min(candidates,key=lambda p:(p.x-o.x)**2+(p.y-o.y)**2)
                 distance=math.hypot(prey.x-o.x,prey.y-o.y)
