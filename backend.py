@@ -217,7 +217,8 @@ class Handler(BaseHTTPRequestHandler):
                 result={"tick":e.tick}
             elif self.path=="/control/disturbance":
                 kind=str(body.get("kind","storm")); intensity=max(0,min(1,float(body.get("intensity",.5))))
-                e.disturbances.append({"kind":kind,"intensity":intensity,"remaining":max(.1,float(body.get("duration",10)))})
+                try: e.events.add(e,kind,intensity,float(body.get("duration",10)))
+                except ValueError as exc: return self.send_json(400,{"error":str(exc)})
                 result={"accepted":True,"kind":kind}
             else:return self.send_json(404,{"error":"unknown control"})
         self.send_json(200,result)
