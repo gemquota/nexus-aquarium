@@ -2,6 +2,7 @@
 from __future__ import annotations
 import math
 from biodiversity import species_profile
+from physics import SpatialGrid
 
 PRODUCER_GROUPS={"macroalgae","seagrass","microorganism"}
 class Ecology:
