@@ -109,7 +109,7 @@ class BehaviourSystem:
  def _goal_timer(self,o): return float(o.brain.learning.get("goal_timer",0))
  def _set_goal(self,o,target,kind,rng):
   l=o.brain.learning
-  if l.get("goal_id")!=target.id or l.get("goal_kind")!=kind:
+  if l.get("goal_id")!=target.id or l.get("goal_kind")!=kind or self._goal_timer(o)<=0:
    l.update({"goal_x":float(target.x),"goal_y":float(target.y),"goal_id":int(target.id),"goal_kind":kind,"goal_timer":2.0})
    self.goal_changes+=1
  def _set_waypoint(self,o,rng):
