@@ -61,6 +61,9 @@ class Engine:
         self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem(); self.environment=EnvironmentalResponse(); self.habitat_map=HabitatMap(self.config["world_width"],self.config["world_height"],seed,base_habitat=self.habitat); self.nutrients=NutrientCycle(); self.disease=DiseaseSystem(); self.social=SocialSystem(); self.migration=MigrationSystem()
         self.performance={"step_ms":0.0,"step_ema_ms":0.0,"stages_ms":{},"slowest_stage":"none","samples":0}; self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
         self.disturbances=[]
+        self.moon_phase=0.0; self.tide_height=0.0; self.plankton_bloom=0.0; self.bloom_phase=0.0
+        self.seabirds=[{"id":i+1,"x":(i*173+65)%self.config["world_width"],"y":-12.0-i*1.8,"vx":(0.8 if i%2==0 else -0.8),"vy":0.0,"state":"soaring","hunger":0.35+(i%3)*.1,"dive_cooldown":8.0+i*2,"catches":0} for i in range(7)]
+        self.seabird_catches=0
         for i in range(18): self.add("reef_fish",(i*43+35)%(self.config["world_width"]-20)+10,self.config["world_height"]*(.90+self.rng.random()*.08),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.08,.08))
         self.add("shark",self.config["world_width"]*.42,self.config["world_height"]*.94,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,self.config["world_height"]*.93,vy=.12)
         extras=("ray","dolphin","whale","crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","phytoplankton","zooplankton","bacteria")
@@ -96,8 +99,14 @@ class Engine:
             self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))
             cloud_signal=__import__("math").sin(self.sim_time*.0017+1.2); self.weather="storm" if self.precipitation>.00045 and cloud_signal>.25 else ("rain" if self.precipitation>.00001 else ("overcast" if cloud_signal>.55 else "clear"))
             self.rainfall+=self.precipitation*dt
-            self.water_fraction=min(1.0,self.water_fraction+self.precipitation*dt*.02)
         else:self.precipitation=0.0; self.weather="clear"
+        import math
+        self.moon_phase=(self.sim_time%24000.0)/24000.0
+        self.tide_height=math.sin(self.sim_time*2*math.pi/360.0)*.025
+        self.water_fraction=max(.08,min(.96,float(self.config["initial_water_fraction"])+self.rainfall*.02+self.tide_height))
+        wind=0.15+0.85*(.5+.5*math.sin(self.sim_time*.003))
+        self.physics.currents.base_x=.035*float(self.config["current_strength"])*(1+wind*.7)
+        self.physics.currents.base_y=.008*float(self.config["current_strength"])+self.tide_height*.08
         alive=[o for o in self.organisms if o.alive]
         for o in alive:
             o.age+=dt; o.cooldown=max(0,o.cooldown-dt)
@@ -130,6 +139,15 @@ class Engine:
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng,self.config['predation_intensity'])
         self.nutrients.step(self.organisms,self.water,dt)
+        light=max(0.0,math.sin((self.sim_time%1200.0)/1200.0*2*math.pi-math.pi/2))
+        nutrient_signal=min(1.0,(self.water.nitrate*.12+self.water.phosphate*.8))
+        bloom_target=max(0.0,min(1.0,nutrient_signal*(.25+light*.9)))
+        self.plankton_bloom=max(0.0,min(1.0,self.plankton_bloom+(bloom_target-self.plankton_bloom)*dt*.025))
+        self.bloom_phase=(self.bloom_phase+dt*(.15+self.plankton_bloom*.4))%(2*math.pi)
+        for plankton in self.organisms:
+            if plankton.alive and plankton.species in ("phytoplankton","zooplankton"):
+                plankton.energy=min(1.0,plankton.energy+dt*(.0005+self.plankton_bloom*.002))
+        self._step_seabirds(dt)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
         self.events.step(self,dt)
         self.disease.step(self.organisms,self.disturbances,dt,self.rng)
@@ -142,13 +160,38 @@ class Engine:
             "samples":int(self.performance.get("samples",0))+1,"organisms":len(self.organisms),
             "alive":sum(1 for item in self.organisms if item.alive),"fluid_particles":len(self.physics.particles),
             "budget_ms":1000.0/30.0,"budget_utilization":elapsed/(1000.0/30.0)}
+    def _step_seabirds(self,dt):
+        """Surface predator agents: soar, spot schools, dive and catch fish."""
+        import math
+        width=float(self.config["world_width"]); surface=self.config["world_height"]*(1-self.water_fraction)
+        fish=[o for o in self.organisms if o.alive and o.species in ("reef_fish","shrimp")]
+        for bird in self.seabirds:
+            bird["dive_cooldown"]=max(0.0,bird["dive_cooldown"]-dt)
+            bird["hunger"]=min(1.0,bird["hunger"]+dt*.0015)
+            if bird["state"]=="diving":
+                bird["y"]+=dt*5.5; bird["x"]+=bird["vx"]*dt*.35
+                if bird["y"]>=surface-2:
+                    targets=[f for f in fish if (f.x-bird["x"])**2+(f.y-surface)**2<180]
+                    if targets and bird["hunger"]>.18:
+                        prey=min(targets,key=lambda f:(f.x-bird["x"])**2+(f.y-surface)**2)
+                        prey.energy=max(0.0,prey.energy-.22); bird["hunger"]=max(0.0,bird["hunger"]-.45)
+                        bird["catches"]+=1; self.seabird_catches+=1
+                        if prey.energy<=.02: prey.alive=False; self.deaths+=1
+                    bird["state"]="soaring"; bird["dive_cooldown"]=12.0; bird["y"]=-8.0
+            else:
+                bird["x"]=(bird["x"]+bird["vx"]*dt*2.4)%width
+                bird["y"]=-12.0+math.sin(self.sim_time*.7+bird["id"])*3.0
+                if bird["dive_cooldown"]<=0 and bird["hunger"]>.5 and fish:
+                    school=max(fish,key=lambda f:sum(1 for other in fish if abs(other.x-f.x)<18 and abs(other.y-f.y)<12))
+                    if abs(school.x-bird["x"])<65:
+                        bird["state"]="diving"; bird["x"]=school.x; bird["y"]=-4.0
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
         data={"engine_version":ENGINE_VERSION,"config":self.config,"habitat":self.habitat,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
               "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
-              "weather_state":{"water_fraction":self.water_fraction,"rainfall":self.rainfall,"weather":self.weather,"precipitation":self.precipitation},"physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),"nutrient_state":self.nutrients.state(),"disease_state":self.disease.state(),"social_state":self.social.state(),"migration_state":self.migration.state(),
+              "weather_state":{"water_fraction":self.water_fraction,"rainfall":self.rainfall,"weather":self.weather,"precipitation":self.precipitation,"moon_phase":self.moon_phase,"tide_height":self.tide_height,"plankton_bloom":self.plankton_bloom,"bloom_phase":self.bloom_phase,"seabirds":self.seabirds,"seabird_catches":self.seabird_catches},"physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),"nutrient_state":self.nutrients.state(),"disease_state":self.disease.state(),"social_state":self.social.state(),"migration_state":self.migration.state(),
               "rng_state":self.rng.getstate(),
               "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
                 "age":o.age,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,
@@ -168,7 +211,7 @@ class Engine:
         if version>ENGINE_VERSION: raise ValueError(f"checkpoint version {version} is newer than engine version {ENGINE_VERSION}")
         engine=cls(data.get("seed",2026),data.get("config"))
         engine.tick=max(0,int(data.get("tick",0))); engine.sim_time=max(0.0,float(data.get("sim_time",0.0)))
-        engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1); ws=data.get("weather_state",{}); engine.water_fraction=max(.01,min(1,float(ws.get("water_fraction",engine.config["initial_water_fraction"])))); engine.rainfall=float(ws.get("rainfall",0)); engine.weather=ws.get("weather","clear"); engine.precipitation=float(ws.get("precipitation",0))
+        engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1); ws=data.get("weather_state",{}); engine.water_fraction=max(.01,min(1,float(ws.get("water_fraction",engine.config["initial_water_fraction"])))); engine.rainfall=float(ws.get("rainfall",0)); engine.weather=ws.get("weather","clear"); engine.precipitation=float(ws.get("precipitation",0)); engine.moon_phase=float(ws.get("moon_phase",0)); engine.tide_height=float(ws.get("tide_height",0)); engine.plankton_bloom=float(ws.get("plankton_bloom",0)); engine.bloom_phase=float(ws.get("bloom_phase",0)); engine.seabirds=ws.get("seabirds",engine.seabirds); engine.seabird_catches=int(ws.get("seabird_catches",0))
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
         engine.water=Water(**data.get("water",{})); engine.habitat=data.get("habitat",engine.config.get("habitat","coral_reef")); engine.food_web=data.get("food_web",engine.food_web)
         engine.disturbances=data.get("disturbances",[])
@@ -189,8 +232,8 @@ class Engine:
         species_counts={}
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"],"wind_speed":0.15+0.85*(.5+.5*__import__("math").sin(self.sim_time*.003)),"cloud_cover":max(0.0,min(1.0,.35+.3*__import__("math").sin(self.sim_time*.0017+1.2)+(.35 if self.weather=="rain" else 0.0))),"sunlight":max(0.0,__import__("math").sin((self.sim_time%1200)/1200*2*__import__("math").pi-__import__("math").pi/2))},"environment":{"day_phase":(self.sim_time%1200)/1200},"config":self.config,"performance":dict(self.performance),
-          "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":{**self.environment.snapshot(),"day_phase":(self.sim_time%1200)/1200},
+          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"],"tide_height":self.tide_height,"moon_phase":self.moon_phase,"swell":0.4+0.6*(.5+.5*math.sin(self.sim_time*.018)),"wind_speed":0.15+0.85*(.5+.5*__import__("math").sin(self.sim_time*.003)),"cloud_cover":max(0.0,min(1.0,.35+.3*__import__("math").sin(self.sim_time*.0017+1.2)+(.35 if self.weather=="rain" else 0.0))),"sunlight":max(0.0,__import__("math").sin((self.sim_time%1200)/1200*2*__import__("math").pi-__import__("math").pi/2))},"environment":{"day_phase":(self.sim_time%1200)/1200},"config":self.config,"performance":dict(self.performance),
+          "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":{**self.environment.snapshot(),"day_phase":(self.sim_time%1200)/1200,"season_phase":(self.sim_time%9600)/9600,"plankton_bloom":self.plankton_bloom,"bloom_phase":self.bloom_phase},"seabirds":self.seabirds,"seabird_metrics":{"total":len(self.seabirds),"dives":sum(1 for b in self.seabirds if b["state"]=="diving"),"catches":self.seabird_catches},
           "water":asdict(self.water),
           "genetics":population_diversity(living),"nutrients":self.nutrients.snapshot(),"disease":self.disease.snapshot(),"social":self.social.snapshot(),"migration":self.migration.snapshot(),
           "habitat_map":self.habitat_map.snapshot(),
