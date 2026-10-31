@@ -5,14 +5,14 @@ import argparse, json, os, random, secrets, threading, time
 from dataclasses import dataclass, field, asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from physics import MarinePhysics
-from biodiversity import species_profile
+from biodiversity import species_profile, HABITATS
 from ecology import Ecology
 from life_cycles import life_stage, compatible, reproduction_probability
 from behaviour import BehaviourSystem
 from events import EventSystem
 
 ENGINE_VERSION = 2
-DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000}
+DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
 
 @dataclass
 class Genome:
@@ -54,8 +54,8 @@ class Engine:
     def __init__(self,seed=2026,config=None):
         self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config)
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False
-        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem()
-        self.organisms=[]; self.next_id=1; self.water=Water(); self.births=0; self.deaths=0; self.food_web={"reef_fish":["kelp","plankton"],"shark":["reef_fish","eel"],"jellyfish":["plankton"],"turtle":["seagrass","jellyfish"]}
+        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem()
+        self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
         self.add("shark",40,10,vx=.08); self.add("jellyfish",25,18,vy=.04)
@@ -106,7 +106,7 @@ class Engine:
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
-        data={"engine_version":ENGINE_VERSION,"config":self.config,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
+        data={"engine_version":ENGINE_VERSION,"config":self.config,"habitat":self.habitat,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
               "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
               "rng_state":self.rng.getstate(),
@@ -130,7 +130,7 @@ class Engine:
         engine.tick=max(0,int(data.get("tick",0))); engine.sim_time=max(0.0,float(data.get("sim_time",0.0)))
         engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1)
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
-        engine.water=Water(**data.get("water",{})); engine.food_web=data.get("food_web",engine.food_web)
+        engine.water=Water(**data.get("water",{})); engine.habitat=data.get("habitat",engine.config.get("habitat","coral_reef")); engine.food_web=data.get("food_web",engine.food_web)
         engine.disturbances=data.get("disturbances",[])
         def tuples(value): return tuple(tuples(v) for v in value) if isinstance(value,list) else value
         if data.get("rng_state"): engine.rng.setstate(tuples(data["rng_state"]))
@@ -147,7 +147,7 @@ class Engine:
         species_counts={}
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":"coral_reef","engine":"NEXUS Python ecosystem"},
+          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem"},
           "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),
           "water":asdict(self.water),
           "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
@@ -159,7 +159,7 @@ class Engine:
           "food_web":self.food_web,"disturbances":self.disturbances,
           "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
             "energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,"age":o.age,
-            "generation":o.genome.generation,"genome":o.genome.traits,"senses":o.brain.senses,
+            "generation":o.genome.generation,"life_stage":life_stage(o.species,o.age),"trophic_role":species_profile(o.species)["trophic"],"genome":o.genome.traits,"senses":o.brain.senses,
             "memory":o.brain.memory[-8:]} for o in self.organisms]}
 
 class Service:
