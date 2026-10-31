@@ -60,10 +60,14 @@ class MarinePhysics:
         organism.vy*=.985+.014*turn_rate
         organism.x+=organism.vx*dt/mass
         organism.y+=organism.vy*dt/mass
+        # The dynamic waterline is a hard upper boundary: marine life stays submerged.
+        lower=max(0.0,min(self.height-1.0,float(self.waterline)))
+        if organism.y<lower:
+            organism.y=lower; organism.vy=abs(organism.vy)*.25
         if organism.x<0 or organism.x>self.width-1:
             organism.x=max(0,min(self.width-1,organism.x)); organism.vx*=-.55
-        if organism.y<0 or organism.y>self.height-1:
-            organism.y=max(0,min(self.height-1,organism.y)); organism.vy*=-.55
+        if organism.y>self.height-1:
+            organism.y=self.height-1; organism.vy*=-.35
     def step_particles(self,dt,t):
         for p in self.particles:
             cx,cy=self.currents.sample(p.x,p.y,t)
