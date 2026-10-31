@@ -196,30 +196,50 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(204,{})
     def do_GET(self):
         if self.path=="/":
-            return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health",
-              "snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
+            return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health","snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
         if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION})
-        if self.path!="/snapshot":return self.send_json(404,{"error":"not found"})
+        if self.path not in ("/snapshot","/metrics"):return self.send_json(404,{"error":"not found"})
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
-        with self.service.lock:data=self.service.engine.snapshot()
+        with self.service.lock:
+            data=self.service.engine.snapshot()
+            if self.path=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics")}
         self.send_json(200,data)
     def do_POST(self):
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
-        length=int(self.headers.get("Content-Length",0))
+        try: length=int(self.headers.get("Content-Length",0))
+        except ValueError: return self.send_json(400,{"error":"invalid content length"})
+        if length<0:return self.send_json(400,{"error":"invalid content length"})
         if length>8192:return self.send_json(413,{"error":"request too large"})
         try:body=json.loads(self.rfile.read(length) or b"{}")
         except Exception:return self.send_json(400,{"error":"invalid JSON"})
+        if not isinstance(body,dict):return self.send_json(400,{"error":"JSON object required"})
         with self.service.lock:
             e=self.service.engine
-            if self.path=="/control/pause":e.paused=bool(body.get("paused",True)); result={"paused":e.paused}
+            if self.path=="/control/pause":
+                e.paused=bool(body.get("paused",True)); result={"paused":e.paused}
             elif self.path=="/control/step":
-                for _ in range(max(0,min(10000,int(body.get("steps",1))))):e.step()
-                result={"tick":e.tick}
+                try: steps=max(0,min(10000,int(body.get("steps",1))))
+                except (TypeError,ValueError): return self.send_json(400,{"error":"steps must be an integer"})
+                for _ in range(steps):e.step()
+                result={"tick":e.tick,"steps":steps}
             elif self.path=="/control/disturbance":
-                kind=str(body.get("kind","storm")); intensity=max(0,min(1,float(body.get("intensity",.5))))
-                try: e.events.add(e,kind,intensity,float(body.get("duration",10)))
-                except ValueError as exc: return self.send_json(400,{"error":str(exc)})
+                try:
+                    kind=str(body.get("kind","storm")); intensity=max(0,min(1,float(body.get("intensity",.5))))
+                    e.events.add(e,kind,intensity,float(body.get("duration",10)))
+                except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
                 result={"accepted":True,"kind":kind}
+            elif self.path=="/control/config":
+                candidate={**e.config,**{k:v for k,v in body.items() if k in e.config}}
+                try: Engine.validate_config(candidate)
+                except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
+                e.config=candidate; result={"config":e.config}
+            elif self.path=="/control/save":
+                if not self.service.state_path:return self.send_json(503,{"error":"checkpoint storage is disabled"})
+                e.save_state(self.service.state_path); result={"saved":True,"tick":e.tick}
+            elif self.path=="/control/reset":
+                try: seed=int(body.get("seed",e.seed))
+                except (TypeError,ValueError): return self.send_json(400,{"error":"seed must be an integer"})
+                self.service.engine=Engine(seed); result={"reset":True,"seed":seed}
             else:return self.send_json(404,{"error":"unknown control"})
         self.send_json(200,result)
 
