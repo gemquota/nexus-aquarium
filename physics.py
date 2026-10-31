@@ -67,6 +67,25 @@ class MarinePhysics:
             p.density=sum(max(0,1-(math.hypot(q.x-p.x,q.y-p.y)/self.smoothing_radius)**2)**3 for q in neighbours)
             p.density=max(.05,p.density)
             p.pressure=max(-.2,min(2.0,.35*(p.density-self.rest_density)))
+        # Bounded pressure and viscosity forces; this advances the fluid field
+        # without claiming a calibrated full-scale SPH solver.
+        accelerations=[]
+        for p in self.particles:
+            ax=0.0; ay=0.0
+            for q in self.grid.nearby(p.x,p.y,self.smoothing_radius):
+                if q is p: continue
+                dx=q.x-p.x; dy=q.y-p.y; r=math.hypot(dx,dy)
+                if r<=1e-6 or r>=self.smoothing_radius: continue
+                kernel=(self.smoothing_radius-r)/self.smoothing_radius
+                pressure=(p.pressure+q.pressure)*.5
+                ax+=pressure*kernel*dx/r*.0008
+                ay+=pressure*kernel*dy/r*.0008
+                ax+=(q.vx-p.vx)*kernel*.00015
+                ay+=(q.vy-p.vy)*kernel*.00015
+            accelerations.append((ax,ay))
+        for p,(ax,ay) in zip(self.particles,accelerations):
+            p.vx=max(-.25,min(.25,p.vx+ax*dt))
+            p.vy=max(-.25,min(.25,p.vy+ay*dt))
     def state(self):
         return {"particles":[{"x":p.x,"y":p.y,"vx":p.vx,"vy":p.vy,"density":p.density,"pressure":p.pressure} for p in self.particles],
                 "phase":self.currents.phase,"base_x":self.currents.base_x,"base_y":self.currents.base_y}
