@@ -38,7 +38,7 @@ class CurrentField:
 class MarinePhysics:
     """Bounded, deterministic current/drag/buoyancy and SPH-inspired fluid particles."""
     def __init__(self,seed=0,width=80,height=24,particle_count=48):
-        self.width=width; self.height=height; self.currents=CurrentField(seed)
+        self.width=width; self.height=height; self.waterline=height*.9; self.currents=CurrentField(seed)
         rng=random.Random(seed ^ 0xA51); self.particles=[FluidParticle(rng.random()*width,rng.random()*height,
             rng.uniform(-.02,.02),rng.uniform(-.01,.01)) for _ in range(particle_count)]
         self.grid=SpatialGrid(4); self.smoothing_radius=3.0; self.rest_density=1.0
@@ -53,7 +53,7 @@ class MarinePhysics:
         buoyancy=(.0005 if organism.species in ("jellyfish","turtle") else 0.0)
         # Individual swim thrust, responsiveness and turning authority.
         heading=math.atan2(organism.vy,organism.vx) if abs(organism.vx)+abs(organism.vy)>1e-8 else self.currents.phase
-        thrust=speed*(.0015+.0025*agility)*dt
+        thrust=speed*(.012+.025*agility)*dt
         organism.vx=(organism.vx+cx*dt+math.cos(heading)*thrust)*drag
         organism.vy=(organism.vy+(cy+buoyancy)*dt+math.sin(heading)*thrust)*drag
         organism.vx*=.985+.014*turn_rate
