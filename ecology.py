@@ -41,6 +41,9 @@ class Ecology:
         water.nitrate=max(0,min(10,water.nitrate+decomposition*.4-dt*.0003))
         water.phosphate=max(0,min(5,water.phosphate+decomposition*.08-dt*.00005))
         water.oxygen=max(0,min(14,water.oxygen+dt*.0002*sum(1 for o in living if species_profile(o.species)["trophic"]=="producer")))
+    def state(self): return {"detritus":self.detritus,"feedings":self.feedings,"predation_events":self.predation_events,"decomposed":self.decomposed}
+    def restore(self,data):
+        self.detritus=max(0,float(data.get("detritus",0))); self.feedings=max(0,int(data.get("feedings",0))); self.predation_events=max(0,int(data.get("predation_events",0))); self.decomposed=max(0,int(data.get("decomposed",0)))
     def snapshot(self):
         return {"feedings":self.feedings,"predation_events":self.predation_events,
                 "decomposed_organisms":self.decomposed,"detritus":self.detritus}
