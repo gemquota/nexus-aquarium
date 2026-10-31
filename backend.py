@@ -68,7 +68,9 @@ class Engine:
         if not species or not isinstance(species,str): raise ValueError("species must be a non-empty string")
         x=float(x); y=float(y)
         if not all(map(lambda v: v==v and abs(v)<1e9,(x,y))): raise ValueError("organism coordinates must be finite")
-        o=Organism(self.next_id,species,x,y,vx,vy,genome=genome or Genome()); self.next_id+=1; self.organisms.append(o); return o
+        profile=species_profile(species)
+        if genome is None: genome=Genome({"speed":profile["speed"],"size":profile["size"],"camouflage":.5,"metabolism":.5,"fecundity":profile["fecundity"],"sensory":.5,"resistance":.5})
+        o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
         self.tick+=1; self.sim_time+=dt
