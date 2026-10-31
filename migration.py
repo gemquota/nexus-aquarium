@@ -6,6 +6,7 @@ class MigrationSystem:
     def __init__(self): self.migrating=0; self.completed=0
     def step(self,organisms,habitat_map,dt):
         active=0
+        preferred_targets={}
         for o in organisms:
             if not o.alive or o.species not in MIGRATORY: continue
             profile=species_profile(o.species)
@@ -14,14 +15,10 @@ class MigrationSystem:
             stress=float(o.brain.learning.get("acclimation",0))
             target=None
             if current not in preferred or stress>.6:
-                options=[]
-                for (cx,cy),name in habitat_map.tiles.items():
-                    if name in preferred:
-                        tx=min(habitat_map.width-1,cx*habitat_map.cell_size+habitat_map.cell_size/2)
-                        ty=min(habitat_map.height-1,cy*habitat_map.cell_size+habitat_map.cell_size/2)
-                        d=(tx-o.x)**2+(ty-o.y)**2
-                        options.append((d,tx,ty))
-                if options: _,tx,ty=min(options); target=(tx,ty)
+                if o.species not in preferred_targets:
+                    preferred_targets[o.species]=[(min(habitat_map.width-1,cx*habitat_map.cell_size+habitat_map.cell_size/2),min(habitat_map.height-1,cy*habitat_map.cell_size+habitat_map.cell_size/2)) for (cx,cy),name in habitat_map.tiles.items() if name in preferred]
+                options=preferred_targets[o.species]
+                if options: tx,ty=min(options,key=lambda point:(point[0]-o.x)**2+(point[1]-o.y)**2); target=(tx,ty)
             if target:
                 dx=target[0]-o.x; dy=target[1]-o.y; mag=max(.1,math.hypot(dx,dy))
                 o.vx+=dx/mag*.012*dt; o.vy+=dy/mag*.012*dt
