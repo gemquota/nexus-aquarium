@@ -332,3 +332,43 @@ class LivingOceanWorldTests(unittest.TestCase):
             self.assertAlmostEqual(restored.plankton_bloom,.61)
             self.assertEqual(restored.seabirds[0]["state"],"diving")
             self.assertEqual(restored.seabird_catches,9)
+
+
+class CoralReefHealthTests(unittest.TestCase):
+    def test_heat_and_acidification_drive_bleaching(self):
+        from coral import CoralReefSystem
+        engine=Engine(seed=410)
+        coral=next(o for o in engine.organisms if o.species=="coral_polyp")
+        system=CoralReefSystem()
+        engine.water.temperature=32.0
+        engine.water.ph=7.6
+        system.step(engine.organisms,engine.water,1000.0,light=0.8,plankton_bloom=0.2)
+        self.assertGreater(system.bleaching,0.5)
+        self.assertLess(coral.health,1.0)
+        self.assertEqual(system.snapshot()["condition"],"bleached")
+
+    def test_coral_can_recover_under_favourable_conditions(self):
+        from coral import CoralReefSystem
+        engine=Engine(seed=411)
+        coral=next(o for o in engine.organisms if o.species=="coral_polyp")
+        coral.health=0.6
+        system=CoralReefSystem()
+        system.bleaching=0.7
+        engine.water.temperature=26.0
+        engine.water.ph=8.1
+        engine.water.turbidity=0.05
+        system.step(engine.organisms,engine.water,100000.0,light=1.0,plankton_bloom=0.1)
+        self.assertLess(system.bleaching,0.1)
+        self.assertGreater(coral.health,0.6)
+        self.assertGreater(system.cumulative_calcification,0.0)
+
+    def test_coral_state_survives_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"coral.json")
+            engine=Engine(seed=412)
+            engine.coral.bleaching=0.37
+            engine.coral.cumulative_calcification=1.25
+            engine.save_state(path)
+            restored=Engine.load_state(path)
+            self.assertAlmostEqual(restored.coral.bleaching,0.37)
+            self.assertAlmostEqual(restored.coral.cumulative_calcification,1.25)
