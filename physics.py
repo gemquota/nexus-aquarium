@@ -30,7 +30,7 @@ class SpatialGrid:
 class CurrentField:
     def __init__(self,seed=0):
         self.phase=(seed%10000)/1000
-        self.base_x=.035; self.base_y=.008
+        self.base_x=.035; self.base_y=.008; self.tilt_x=0.0; self.tilt_y=0.0
     def sample(self,x,y,t):
         return (self.base_x+math.sin(y*.31+t*.17+self.phase)*.025,
                 self.base_y+math.cos(x*.19-t*.11+self.phase)*.012)
@@ -88,13 +88,13 @@ class MarinePhysics:
             p.vy=max(-.25,min(.25,p.vy+ay*dt))
     def state(self):
         return {"particles":[{"x":p.x,"y":p.y,"vx":p.vx,"vy":p.vy,"density":p.density,"pressure":p.pressure} for p in self.particles],
-                "phase":self.currents.phase,"base_x":self.currents.base_x,"base_y":self.currents.base_y}
+                "phase":self.currents.phase,"base_x":self.currents.base_x,"base_y":self.currents.base_y,"tilt_x":self.currents.tilt_x,"tilt_y":self.currents.tilt_y}
     def restore(self,data):
         self.particles=[FluidParticle(**p) for p in data.get("particles",[])][:20000]
         self.currents.phase=float(data.get("phase",self.currents.phase))
-        self.currents.base_x=float(data.get("base_x",self.currents.base_x)); self.currents.base_y=float(data.get("base_y",self.currents.base_y))
+        self.currents.base_x=float(data.get("base_x",self.currents.base_x)); self.currents.base_y=float(data.get("base_y",self.currents.base_y))\n        self.currents.tilt_x=max(-1.0,min(1.0,float(data.get("tilt_x",0.0)))); self.currents.tilt_y=max(-1.0,min(1.0,float(data.get("tilt_y",0.0))))
         self.grid.rebuild(self.particles)
     def snapshot(self):
         return {"particle_count":len(self.particles),"mean_density":sum(p.density for p in self.particles)/max(1,len(self.particles)),
                 "mean_pressure":sum(p.pressure for p in self.particles)/max(1,len(self.particles)),
-                "current_strength":math.hypot(*self.currents.sample(self.width/2,self.height/2,0))}
+                "current_strength":math.hypot(*self.currents.sample(self.width/2,self.height/2,0)),\n                "tilt":{"x":self.currents.tilt_x,"y":self.currents.tilt_y},\n                "particles":[{"x":p.x,"y":p.y,"vx":p.vx,"vy":p.vy,"density":p.density} for p in self.particles]}
