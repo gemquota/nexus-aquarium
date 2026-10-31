@@ -1,4 +1,7 @@
 (()=>{'use strict';
+window.addEventListener('error',event=>{const m=document.getElementById('message'),s=document.getElementById('status');if(m)m.textContent='Dashboard error: '+(event.message||'unknown JavaScript error');if(s)s.textContent='UI ERROR'});
+window.addEventListener('unhandledrejection',event=>{const m=document.getElementById('message'),s=document.getElementById('status');if(m)m.textContent='Dashboard request error: '+String(event.reason?.message||event.reason||'unknown error');if(s&&s.textContent!=='BACKEND CONNECTED')s.textContent='REQUEST ERROR'});
+
 const $=id=>document.getElementById(id),canvas=$('ocean'),ctx=canvas.getContext('2d'),mini=$('minimap'),mx=mini.getContext('2d'),tank=$('tank'),WORLD={w:80,h:24};
 let width=0,height=0,dpr=1,t=0,api='',token='',snapshot=null,refreshTimer=null,selected=null;
 let tiltEnabled=false,lastTiltSend=0,tiltX=0,tiltY=0;const history=[],speciesFilter=$('species-filter'),trend=$('trend-chart');
@@ -55,6 +58,6 @@ async function refresh(){const r=await fetch(api.replace(/\/$/,'')+'/snapshot',{
 $('pause').onclick=async()=>{if(!api)return $('message').textContent='Connect backend first';try{await request('/control/pause',{paused:!data().paused});await refresh()}catch(e){$('message').textContent=e.message}};
 $('step').onclick=async()=>{if(!api)return $('message').textContent='Connect backend first';try{await request('/control/step',{steps:30});await refresh()}catch(e){$('message').textContent=e.message}};
 document.querySelectorAll('[data-event]').forEach(btn=>btn.onclick=async()=>{if(!api)return $('message').textContent='Connect backend first';try{await request('/control/disturbance',{kind:btn.dataset.event,intensity:.35,duration:20});await refresh()}catch(e){$('message').textContent=e.message}});
-new ResizeObserver(resize).observe(canvas);resize();updateModules();if(loadConnection())connectBackend();
-function animate(){if(!snapshot){preview.forEach(o=>{o.x+=o.vx*.03;if(o.x>79)o.x=1;if(o.x<1)o.x=79;o.y+=Math.sin(t+o.id)*.001})}draw();requestAnimationFrame(animate)}animate();
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(canvas);else window.addEventListener('resize',resize);resize();updateModules();if(loadConnection())connectBackend();
+function animate(){try{if(!snapshot){preview.forEach(o=>{o.x+=o.vx*.03;if(o.x>79)o.x=1;if(o.x<1)o.x=79;o.y+=Math.sin(t+o.id)*.001})}draw()}catch(err){const m=$('message'),s=$('status');if(m)m.textContent='Renderer error: '+err.message;if(s)s.textContent='RENDER ERROR'}requestAnimationFrame(animate)}animate();
 })();
