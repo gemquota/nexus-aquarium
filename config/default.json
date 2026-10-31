@@ -1,10 +1,15 @@
 {
-  "world_width": 80,
-  "world_height": 24,
+  "world_width": 800,
+  "world_height": 240,
   "fixed_dt": 0.0333333333,
   "max_frame_dt": 0.2,
   "checkpoint_interval": 15,
   "max_organisms": 5000,
   "habitat": "coral_reef",
-  "initial_fluid_particles": 48
+  "initial_fluid_particles": 240,
+  "initial_water_fraction": 0.1,
+  "rain_rate": 0.0008,
+  "weather_enabled": true,
+  "simulation_speed": 1,
+  "current_strength": 1
 }
