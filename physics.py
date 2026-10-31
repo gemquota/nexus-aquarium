@@ -50,10 +50,10 @@ class MarinePhysics:
         speed=max(.05,min(2.0,float(traits.get("speed",.5))*1.5))
         turn_rate=max(.05,min(1.0,float(traits.get("turn_rate",.5))))
         drag=max(.02,1-float(traits.get("size",.5))*.08)
-        buoyancy=(.0005 if organism.species in ("jellyfish","turtle") else 0.0)
+        buoyancy=(.012 if organism.species in ("jellyfish","whale","dolphin","sea_turtle","seal") else (-.004 if organism.species in ("ray","crab","sea_star","sea_urchin","clam","octopus") else 0.0))
         # Individual swim thrust, responsiveness and turning authority.
         heading=math.atan2(organism.vy,organism.vx) if abs(organism.vx)+abs(organism.vy)>1e-8 else self.currents.phase
-        thrust=speed*(.012+.025*agility)*dt
+        thrust=speed*(.055+.11*agility)*dt
         organism.vx=(organism.vx+cx*dt+math.cos(heading)*thrust)*drag
         organism.vy=(organism.vy+(cy+buoyancy)*dt+math.sin(heading)*thrust)*drag
         organism.vx*=.985+.014*turn_rate
