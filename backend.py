@@ -244,7 +244,14 @@ class Handler(BaseHTTPRequestHandler):
                 candidate={**e.config,**{k:v for k,v in body.items() if k in e.config}}
                 try: Engine.validate_config(candidate)
                 except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
-                e.config=candidate; result={"config":e.config}
+                e.config=candidate
+                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]
+                for organism in e.organisms:
+                    organism.x=max(0,min(e.physics.width-1,organism.x)); organism.y=max(0,min(e.physics.height-1,organism.y))
+                if candidate["habitat"]!=e.habitat:
+                    hp=HABITATS[candidate["habitat"]]; e.habitat=candidate["habitat"]
+                    e.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"])
+                result={"config":e.config,"habitat":e.habitat}
             elif self.path=="/control/save":
                 if not self.service.state_path:return self.send_json(503,{"error":"checkpoint storage is disabled"})
                 e.save_state(self.service.state_path); result={"saved":True,"tick":e.tick}
