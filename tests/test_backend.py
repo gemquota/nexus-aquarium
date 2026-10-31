@@ -212,7 +212,7 @@ class IndividualBehaviourTests(unittest.TestCase):
     def test_individual_patrol_goals_and_behaviour_metrics(self):
         engine=Engine(seed=91)
         engine.organisms=[]
-        mobile=[engine.add("reef_fish",100,100)]
+        mobile=[engine.add("shark",100,100)]
         for _ in range(12): engine.behaviour.step(engine.organisms,0.25,engine.rng)
         self.assertTrue(any("goal_x" in o.brain.learning for o in mobile))
         metrics=engine.behaviour.snapshot()
