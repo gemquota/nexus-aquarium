@@ -76,5 +76,39 @@ class EcologyTests(unittest.TestCase):
         self.assertGreater(ecology.feedings,0)
         self.assertGreaterEqual(water.nitrate,0)
 
+
+class ReleaseARegressionTests(unittest.TestCase):
+    def test_habitat_profile_initializes_water_and_snapshot(self):
+        engine=Engine(seed=3,config={"habitat":"deep_sea"})
+        self.assertEqual(engine.habitat,"deep_sea")
+        self.assertEqual(engine.snapshot()["world"]["habitat"],"deep_sea")
+        self.assertAlmostEqual(engine.water.temperature,3.0)
+    def test_organisms_expose_life_stage_and_trophic_role(self):
+        organism=Engine(seed=3).snapshot()["organisms"][0]
+        self.assertIn(organism["life_stage"],("juvenile","subadult","adult"))
+        self.assertIn("trophic_role",organism)
+    def test_subsystem_state_survives_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"full.json")
+            engine=Engine(seed=9); engine.ecology.feedings=12; engine.behaviour.flee_responses=4
+            engine.events.total_events=2; engine.environment.mean_stress=.23
+            engine.physics.particles[0].vx=.123
+            engine.save_state(path); restored=Engine.load_state(path)
+            self.assertEqual(restored.ecology.feedings,12)
+            self.assertEqual(restored.behaviour.flee_responses,4)
+            self.assertEqual(restored.events.total_events,2)
+            self.assertAlmostEqual(restored.environment.mean_stress,.23)
+            self.assertAlmostEqual(restored.physics.particles[0].vx,.123)
+    def test_species_reproductive_modes(self):
+        from life_cycles import reproductive_mode
+        self.assertEqual(reproductive_mode("coral_polyp"),"asexual_or_fragmentation")
+        self.assertEqual(reproductive_mode("reef_fish"),"sexual")
+    def test_environmental_stress_is_bounded(self):
+        from environment import EnvironmentalResponse
+        engine=Engine(seed=2); response=EnvironmentalResponse()
+        response.step(engine.organisms,engine.water,1.0,"deep_sea")
+        self.assertGreaterEqual(response.mean_stress,0)
+        self.assertLessEqual(response.mean_stress,1)
+
 if __name__=="__main__":
     unittest.main()
