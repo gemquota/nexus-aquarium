@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from physics import MarinePhysics
 from biodiversity import species_profile
 from ecology import Ecology
+from life_cycles import life_stage, compatible, reproduction_probability
 
 ENGINE_VERSION = 2
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000}
@@ -89,9 +90,12 @@ class Engine:
             self.physics.move(o,dt,self.sim_time)
             if o.energy<=.02 or o.health<=.01:o.alive=False; self.deaths+=1
         for parent in alive:
-            if parent.alive and parent.age>30 and parent.energy>.72 and parent.cooldown<=0 and self.rng.random()<.0008*dt*30:
-                child=self.add(parent.species,parent.x,parent.y,genome=parent.genome.inherit(parent.genome,self.rng))
-                parent.energy*=.72; parent.cooldown=20; self.births+=1
+            if not parent.alive or life_stage(parent.species,parent.age)!="adult" or parent.energy<.72 or parent.cooldown>0: continue
+            mates=[m for m in alive if compatible(parent,m) and m.energy>.65 and life_stage(m.species,m.age)=="adult" and (m.x-parent.x)**2+(m.y-parent.y)**2<100]
+            if mates and self.rng.random()<reproduction_probability(parent,dt):
+                mate=min(mates,key=lambda m:(m.x-parent.x)**2+(m.y-parent.y)**2)
+                self.add(parent.species,(parent.x+mate.x)/2,(parent.y+mate.y)/2,genome=parent.genome.inherit(mate.genome,self.rng))
+                parent.energy*=.82; mate.energy*=.9; parent.cooldown=30; mate.cooldown=30; self.births+=1
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
