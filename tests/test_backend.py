@@ -284,3 +284,51 @@ class PerformanceTelemetryTests(unittest.TestCase):
         engine.paused=True
         engine.step(1/30)
         self.assertEqual(engine.snapshot()["performance"]["samples"],before)
+
+
+class LivingOceanWorldTests(unittest.TestCase):
+    def test_lunar_tide_and_moon_phase_are_exposed(self):
+        engine=Engine(seed=310)
+        for _ in range(30): engine.step(.5)
+        snap=engine.snapshot()
+        self.assertGreaterEqual(snap["weather"]["moon_phase"],0)
+        self.assertLess(snap["weather"]["moon_phase"],1)
+        self.assertTrue(-.026<=snap["weather"]["tide_height"]<=.026)
+        self.assertIn("swell",snap["weather"])
+
+    def test_seabirds_are_simulated_and_can_catch_fish(self):
+        engine=Engine(seed=311)
+        engine.organisms=[]
+        surface=engine.config["world_height"]*(1-engine.water_fraction)
+        prey=engine.add("reef_fish",100,surface)
+        bird=engine.seabirds[0]
+        bird.update({"x":100.0,"y":surface-1.0,"state":"diving","hunger":.8,"dive_cooldown":0.0})
+        before=prey.energy
+        engine._step_seabirds(.5)
+        self.assertLess(prey.energy,before)
+        self.assertGreater(engine.seabird_catches,0)
+        self.assertEqual(bird["state"],"soaring")
+
+    def test_plankton_bloom_is_reported_and_bounded(self):
+        engine=Engine(seed=312)
+        engine.water.nitrate=5.0
+        engine.water.phosphate=1.0
+        for _ in range(90): engine.step(.5)
+        bloom=engine.snapshot()["environment"]["plankton_bloom"]
+        self.assertGreaterEqual(bloom,0.0)
+        self.assertLessEqual(bloom,1.0)
+        self.assertIn("season_phase",engine.snapshot()["environment"])
+
+    def test_new_ocean_state_survives_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"ocean.json")
+            engine=Engine(seed=313)
+            engine.moon_phase=.42; engine.tide_height=.017; engine.plankton_bloom=.61
+            engine.seabirds[0]["state"]="diving"; engine.seabird_catches=9
+            engine.save_state(path)
+            restored=Engine.load_state(path)
+            self.assertAlmostEqual(restored.moon_phase,.42)
+            self.assertAlmostEqual(restored.tide_height,.017)
+            self.assertAlmostEqual(restored.plankton_bloom,.61)
+            self.assertEqual(restored.seabirds[0]["state"],"diving")
+            self.assertEqual(restored.seabird_catches,9)
