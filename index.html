@@ -27,6 +27,10 @@
 <label>ORGANISM CAPACITY <output id="val-capacity">5000</output><input id="cfg-capacity" type="range" min="100" max="20000" step="100" value="5000"></label>
 <label>STARTING WATER LEVEL <output id="val-water">10%</output><input id="cfg-water" type="range" min="1" max="100" step="1" value="10"></label>
 <label>CHECKPOINT INTERVAL <output id="val-checkpoint">15 s</output><input id="cfg-checkpoint" type="range" min="1" max="120" step="1" value="15"></label>
+<label>PHYSICS STEP <output id="val-fixed">0.033 s</output><input id="cfg-fixed" type="range" min="0.005" max="0.1" step="0.001" value="0.033"></label>
+<label>FRAME TIME LIMIT <output id="val-frame">0.20 s</output><input id="cfg-frame" type="range" min="0.1" max="1" step="0.05" value="0.2"></label>
+<label>FLUID PARTICLES <output id="val-fluid">240</output><input id="cfg-fluid" type="range" min="0" max="1200" step="20" value="240"></label>
+<label>PREDATOR PRESSURE <output id="val-predation">1.0×</output><input id="cfg-predation" type="range" min="0" max="3" step="0.1" value="1"></label>
 <label class="toggle-label">WEATHER <input id="cfg-weather" type="checkbox" checked> <span>Enable rain and weather</span></label>
 <button class="secondary" id="cfg-save">SAVE CHECKPOINT</button></div><p id="cfg-status">Connect to the backend to adjust the live engine.</p></section>
 <section class="phases"><article><b>PHASE 3</b><h2>Genetics & reproduction</h2><p>Heritable traits, mutation, inheritance and generation tracking.</p></article><article><b>PHASE 4</b><h2>Behaviour & intelligence</h2><p>Sensory channels, bounded memory, schooling and predator avoidance.</p></article><article><b>PHASE 5</b><h2>Ecosystem dynamics</h2><p>Water chemistry, trophic links, metabolism, mortality and disturbances.</p></article></section></main>
