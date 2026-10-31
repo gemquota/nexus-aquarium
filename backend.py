@@ -265,7 +265,14 @@ class Handler(BaseHTTPRequestHandler):
                     hp=HABITATS[candidate["habitat"]]; e.habitat=candidate["habitat"]
                     e.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"])
                 result={"config":e.config,"habitat":e.habitat}
-            elif self.path=="/control/tilt":\n                try:\n                    tx=float(body.get("x",0)); ty=float(body.get("y",0))\n                    if not all(map(lambda v:v==v and abs(v)<1e6,(tx,ty))): raise ValueError("tilt must be finite")\n                except (TypeError,ValueError) as exc:return self.send_json(400,{"error":str(exc)})\n                e.physics.currents.tilt_x=max(-1.0,min(1.0,tx)); e.physics.currents.tilt_y=max(-1.0,min(1.0,ty))\n                result={"tilt":{"x":e.physics.currents.tilt_x,"y":e.physics.currents.tilt_y}}\n            elif self.path=="/control/save":
+            elif self.path=="/control/tilt":
+                try:
+                    tx=float(body.get("x",0)); ty=float(body.get("y",0))
+                    if not all(map(lambda v:v==v and abs(v)<1e6,(tx,ty))): raise ValueError("tilt must be finite")
+                except (TypeError,ValueError) as exc:return self.send_json(400,{"error":str(exc)})
+                e.physics.currents.tilt_x=max(-1.0,min(1.0,tx)); e.physics.currents.tilt_y=max(-1.0,min(1.0,ty))
+                result={"tilt":{"x":e.physics.currents.tilt_x,"y":e.physics.currents.tilt_y}}
+            elif self.path=="/control/save":
                 if not self.service.state_path:return self.send_json(503,{"error":"checkpoint storage is disabled"})
                 e.save_state(self.service.state_path); result={"saved":True,"tick":e.tick}
             elif self.path=="/control/reset":
