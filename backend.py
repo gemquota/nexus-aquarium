@@ -108,7 +108,8 @@ class Engine:
                 if mate: mate.energy*=.9; mate.cooldown=30
                 parent.cooldown=30; self.births+=1
         self.behaviour.step(self.organisms,dt,self.rng)
-        self.social.step(self.organisms,dt,self.tick)\n        self.migration.step(self.organisms,self.habitat_map,dt)
+        self.social.step(self.organisms,dt,self.tick)
+        self.migration.step(self.organisms,self.habitat_map,dt)
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         self.nutrients.step(self.organisms,self.water,dt)
