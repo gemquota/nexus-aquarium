@@ -135,7 +135,7 @@ class Engine:
             self.physics.move(o,dt,self.sim_time)
         stages["behaviour_physics_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
         self.social.step(self.organisms,dt,self.tick)
-        self.migration.step(self.organisms,self.habitat_map,dt)
+        self.migration.step(self.organisms,self.habitat_map,dt,(self.sim_time%9600.0)/9600.0)
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng,self.config['predation_intensity'])
         self.nutrients.step(self.organisms,self.water,dt)
