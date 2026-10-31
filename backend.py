@@ -143,7 +143,7 @@ class Engine:
         species_counts={}
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":"temperate reef","engine":"NEXUS Python ecosystem"},
+          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":"coral_reef","engine":"NEXUS Python ecosystem"},
           "physics":self.physics.snapshot(),
           "water":asdict(self.water),
           "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
