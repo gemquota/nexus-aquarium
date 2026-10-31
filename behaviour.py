@@ -19,6 +19,7 @@ class BehaviourSystem:
   living=[o for o in organisms if o.alive]
   grid=SpatialGrid(18); grid.rebuild(living)
   for o in living:
+   if "goal_timer" in o.brain.learning: o.brain.learning["goal_timer"]=max(0.0,float(o.brain.learning["goal_timer"])-dt)
    profile=species_profile(o.species); traits=o.genome.traits
    agility=max(.1,min(1,float(traits.get("agility",.5))))
    turn=max(.1,min(1,float(traits.get("turn_rate",.5))))
