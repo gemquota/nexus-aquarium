@@ -1,11 +1,13 @@
 import math
 from biodiversity import species_profile
+from physics import SpatialGrid
 class BehaviourSystem:
  def __init__(self): self.decisions=0; self.school_links=0; self.flee_responses=0
  def step(self,organisms,dt,rng):
   living=[o for o in organisms if o.alive]
+  grid=SpatialGrid(4); grid.rebuild(living)
   for o in living:
-   profile=species_profile(o.species); nearby=[p for p in living if p.id!=o.id and (p.x-o.x)**2+(p.y-o.y)**2<64]
+   profile=species_profile(o.species); nearby=[p for p in grid.nearby(o.x,o.y,8) if p.id!=o.id]
    threats=[p for p in nearby if p.species=="shark" and o.species!="shark"]
    if threats:
     p=min(threats,key=lambda q:(q.x-o.x)**2+(q.y-o.y)**2); dx=o.x-p.x; dy=o.y-p.y; mag=max(.01,math.hypot(dx,dy))
