@@ -87,7 +87,8 @@ class Engine:
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
-        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt\n        self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
+        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
+        self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
         if self.config["weather_enabled"]:
             self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))
             self.weather="rain" if self.precipitation>.00001 else "clear"
@@ -268,8 +269,10 @@ class Handler(BaseHTTPRequestHandler):
                 candidate={**e.config,**{k:v for k,v in body.items() if k in e.config}}
                 try: Engine.validate_config(candidate)
                 except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
-                e.config=candidate
-                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.physics.waterline=e.physics.height*(1-e.water_fraction); e.physics.currents.base_x=.035*float(candidate["current_strength"]); e.physics.currents.base_y=.008*float(candidate["current_strength"]);\n                if candidate["initial_water_fraction"]!=e.config.get("initial_water_fraction"): e.water_fraction=float(candidate["initial_water_fraction"])\n                e.physics.waterline=e.physics.height*(1-e.water_fraction); e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed,base_habitat=candidate["habitat"])
+                old_initial=e.config.get("initial_water_fraction"); e.config=candidate
+                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.physics.waterline=e.physics.height*(1-e.water_fraction); e.physics.currents.base_x=.035*float(candidate["current_strength"]); e.physics.currents.base_y=.008*float(candidate["current_strength"]);
+                if candidate["initial_water_fraction"]!=old_initial: e.water_fraction=float(candidate["initial_water_fraction"])
+                e.physics.waterline=e.physics.height*(1-e.water_fraction); e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed,base_habitat=candidate["habitat"])
                 for organism in e.organisms:
                     organism.x=max(0,min(e.physics.width-1,organism.x)); organism.y=max(0,min(e.physics.height-1,organism.y))
                 if candidate["habitat"]!=e.habitat:
