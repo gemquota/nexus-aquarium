@@ -20,7 +20,7 @@ from migration import MigrationSystem
 from physics import SpatialGrid
 
 ENGINE_VERSION = 4
-DEFAULT_CONFIG = {"world_width":800,"world_height":240,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":240,"initial_water_fraction":0.10,"rain_rate":0.0008,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.0,"movement_scale":40.0,"predation_intensity":1.0}
+DEFAULT_CONFIG = {"world_width":1200,"world_height":360,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":30.0,"max_organisms":1500,"habitat":"coral_reef","initial_fluid_particles":180,"initial_water_fraction":0.22,"rain_rate":0.00035,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.4,"movement_scale":68.0,"predation_intensity":0.8}
 
 @dataclass
 class Genome:
@@ -94,7 +94,7 @@ class Engine:
         self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.movement_scale=float(self.config["movement_scale"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
         if self.config["weather_enabled"]:
             self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))
-            self.weather="rain" if self.precipitation>.00001 else "clear"
+            cloud_signal=__import__("math").sin(self.sim_time*.0017+1.2); self.weather="storm" if self.precipitation>.00045 and cloud_signal>.25 else ("rain" if self.precipitation>.00001 else ("overcast" if cloud_signal>.55 else "clear"))
             self.rainfall+=self.precipitation*dt
             self.water_fraction=min(1.0,self.water_fraction+self.precipitation*dt*.02)
         else:self.precipitation=0.0; self.weather="clear"
@@ -189,7 +189,7 @@ class Engine:
         species_counts={}
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"]},"config":self.config,"performance":dict(self.performance),
+          "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem","water_fraction":self.water_fraction,"waterline":self.config["world_height"]*(1-self.water_fraction),"sky_height":self.config["world_height"]*.25,"seabed_height":self.config["world_height"]*.08},"weather":{"condition":self.weather,"precipitation":self.precipitation,"rainfall":self.rainfall,"water_fraction":self.water_fraction,"enabled":self.config["weather_enabled"],"wind_speed":0.15+0.85*(.5+.5*__import__("math").sin(self.sim_time*.003)),"cloud_cover":max(0.0,min(1.0,.35+.3*__import__("math").sin(self.sim_time*.0017+1.2)+(.35 if self.weather=="rain" else 0.0))),"sunlight":max(0.0,__import__("math").sin((self.sim_time%1200)/1200*2*__import__("math").pi-__import__("math").pi/2))},"environment":{"day_phase":(self.sim_time%1200)/1200},"config":self.config,"performance":dict(self.performance),
           "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":self.environment.snapshot(),
           "water":asdict(self.water),
           "genetics":population_diversity(living),"nutrients":self.nutrients.snapshot(),"disease":self.disease.snapshot(),"social":self.social.snapshot(),"migration":self.migration.snapshot(),
