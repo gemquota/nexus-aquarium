@@ -10,6 +10,7 @@ from ecology import Ecology
 from life_cycles import life_stage, compatible, reproduction_probability
 from behaviour import BehaviourSystem
 from events import EventSystem
+from environment import EnvironmentalResponse
 
 ENGINE_VERSION = 3
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
@@ -54,7 +55,7 @@ class Engine:
     def __init__(self,seed=2026,config=None):
         self.config={**DEFAULT_CONFIG,**(config or {})}; self.validate_config(self.config)
         self.rng=random.Random(seed); self.seed=seed; self.tick=0; self.sim_time=0.; self.paused=False
-        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem()
+        self.physics=MarinePhysics(seed,self.config["world_width"],self.config["world_height"],self.config["initial_fluid_particles"]); self.ecology=Ecology(); self.behaviour=BehaviourSystem(); self.events=EventSystem(); self.environment=EnvironmentalResponse()
         self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
         self.disturbances=[]
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
@@ -102,13 +103,13 @@ class Engine:
         self.physics.step_particles(dt,self.sim_time)
         self.ecology.step(self.organisms,self.food_web,self.water,dt,self.rng)
         biomass=sum(o.energy for o in alive if o.alive); self.water.step(dt,biomass,self.rng)
-        self.events.step(self,dt)
+        self.events.step(self,dt)\n        self.environment.step(self.organisms,self.water,dt,self.habitat)
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
         data={"engine_version":ENGINE_VERSION,"config":self.config,"habitat":self.habitat,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
-              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,\n              "physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),
+              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,\n              "physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),
               "rng_state":self.rng.getstate(),
               "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
                 "age":o.age,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,
@@ -148,7 +149,7 @@ class Engine:
         for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
           "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem"},
-          "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),
+          "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":self.environment.snapshot(),
           "water":asdict(self.water),
           "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
             "species_count":len(species_counts),"species":species_counts,
