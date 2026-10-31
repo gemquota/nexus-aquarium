@@ -78,6 +78,8 @@ class EcologyTests(unittest.TestCase):
 
 
 class ReleaseARegressionTests(unittest.TestCase):
+    def test_invalid_habitat_is_rejected(self):
+        with self.assertRaises(ValueError): Engine(config={"habitat":"not_a_biome"})
     def test_habitat_profile_initializes_water_and_snapshot(self):
         engine=Engine(seed=3,config={"habitat":"deep_sea"})
         self.assertEqual(engine.habitat,"deep_sea")
