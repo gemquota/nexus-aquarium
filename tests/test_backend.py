@@ -47,5 +47,21 @@ class EngineFoundationTests(unittest.TestCase):
             with open(path,"w") as f: json.dump({"engine_version":999},f)
             with self.assertRaises(ValueError): Engine.load_state(path)
 
+
+class PhysicsTests(unittest.TestCase):
+    def test_particle_field_is_seeded_and_bounded(self):
+        from physics import MarinePhysics
+        a=MarinePhysics(77); b=MarinePhysics(77)
+        self.assertEqual([(p.x,p.y) for p in a.particles],[(p.x,p.y) for p in b.particles])
+        a.step_particles(.1,1.0)
+        self.assertTrue(all(0<=p.x<80 and 0<=p.y<24 for p in a.particles))
+        self.assertTrue(all(p.density>0 for p in a.particles))
+
+    def test_spatial_grid_neighbour_query(self):
+        from physics import FluidParticle, SpatialGrid
+        grid=SpatialGrid(2); a=FluidParticle(1,1); b=FluidParticle(2,1); c=FluidParticle(10,10)
+        grid.rebuild([a,b,c])
+        self.assertEqual(len(grid.nearby(1,1,2)),2)
+
 if __name__=="__main__":
     unittest.main()
