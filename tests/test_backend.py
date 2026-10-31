@@ -150,5 +150,35 @@ class ReleaseBSubsystemTests(unittest.TestCase):
         disease.step(engine.organisms,[],.1,engine.rng)
         self.assertEqual(disease.infected,0)
 
+class TiltAndPhenotypeTests(unittest.TestCase):
+    def test_tilt_changes_current_field_and_is_bounded(self):
+        from physics import MarinePhysics
+        physics=MarinePhysics(seed=4)
+        baseline=physics.currents.sample(40,12,0)
+        physics.currents.tilt_x=1.0
+        physics.currents.tilt_y=-1.0
+        steered=physics.currents.sample(40,12,0)
+        self.assertGreater(steered[0],baseline[0])
+        self.assertLess(steered[1],baseline[1])
+
+    def test_tilt_survives_checkpoint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=os.path.join(directory,"tilt.json")
+            engine=Engine(seed=5)
+            engine.physics.currents.tilt_x=.7
+            engine.physics.currents.tilt_y=-.4
+            engine.save_state(path)
+            restored=Engine.load_state(path)
+            self.assertAlmostEqual(restored.physics.currents.tilt_x,.7)
+            self.assertAlmostEqual(restored.physics.currents.tilt_y,-.4)
+
+    def test_organisms_have_individual_appearance_and_movement_traits(self):
+        engine=Engine(seed=6)
+        traits=[o.genome.traits for o in engine.organisms]
+        for key in ("agility","turn_rate","tracking","transparency","hue","pattern","fin_size"):
+            self.assertTrue(all(0<=item[key]<=1 for item in traits))
+        self.assertGreater(len({round(item["hue"],4) for item in traits}),1)
+        self.assertGreater(len({round(item["agility"],4) for item in traits}),1)
+
 if __name__=="__main__":
     unittest.main()
