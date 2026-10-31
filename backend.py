@@ -97,16 +97,11 @@ class Engine:
         else:self.precipitation=0.0; self.weather="clear"
         alive=[o for o in self.organisms if o.alive]
         for o in alive:
-            o.age+=dt; o.cooldown=max(0,o.cooldown-dt); o.energy=max(0,o.energy-dt*(.0008+o.genome.traits["metabolism"]*.0007))
-            threats=[p for p in alive if p.species=="shark" and o.species not in ("shark",) and (p.x-o.x)**2+(p.y-o.y)**2<36]
-            if threats:
-                o.state="fleeing"; o.brain.remember({"tick":self.tick,"event":"predator_nearby"})
-                p=threats[0]; o.vx+=(o.x-p.x)*.015*dt; o.vy+=(o.y-p.y)*.015*dt
-            elif o.species=="reef_fish": o.state="schooling"
-            else:o.state="foraging" if o.energy<.5 else "cruising"
-            self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
-            self.physics.move(o,dt,self.sim_time)
-            if o.energy<=.02 or o.health<=.01:o.alive=False; self.deaths+=1
+            o.age+=dt; o.cooldown=max(0,o.cooldown-dt)
+            o.energy=max(0,o.energy-dt*(.0008+o.genome.traits["metabolism"]*.0007))
+            if o.energy<=.02 or o.health<=.01:
+                o.alive=False; self.deaths+=1
+        alive=[o for o in self.organisms if o.alive]
         for parent in alive:
             if len(self.organisms)>=self.config["max_organisms"]: break
             if not parent.alive or life_stage(parent.species,parent.age)!="adult" or parent.energy<.72 or parent.cooldown>0: continue
@@ -121,6 +116,8 @@ class Engine:
                 if mate: mate.energy*=.9; mate.cooldown=30
                 parent.cooldown=30; self.births+=1
         self.behaviour.step(self.organisms,dt,self.rng)
+        for o in alive:
+            self.physics.move(o,dt,self.sim_time)
         self.social.step(self.organisms,dt,self.tick)
         self.migration.step(self.organisms,self.habitat_map,dt)
         self.physics.step_particles(dt,self.sim_time)
