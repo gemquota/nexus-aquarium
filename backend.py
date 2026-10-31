@@ -23,7 +23,7 @@ DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_
 
 @dataclass
 class Genome:
-    traits: dict = field(default_factory=lambda: {"speed":.5,"size":.5,"camouflage":.5,"metabolism":.5,"fecundity":.5,"sensory":.5,"resistance":.5})
+    traits: dict = field(default_factory=lambda: {"speed":.5,"size":.5,"camouflage":.5,"metabolism":.5,"fecundity":.5,"sensory":.5,"resistance":.5,"agility":.5,"turn_rate":.5,"tracking":.5,"transparency":.2,"hue":.5,"pattern":.5,"fin_size":.5})
     generation: int = 0
     def inherit(self, mate, rng):
         return Genome(recombine(self.traits,mate.traits,rng),max(self.generation,mate.generation)+1)
@@ -79,7 +79,7 @@ class Engine:
         x=float(x); y=float(y)
         if not all(map(lambda v: v==v and abs(v)<1e9,(x,y))): raise ValueError("organism coordinates must be finite")
         profile=species_profile(species)
-        if genome is None: genome=Genome({"speed":profile["speed"],"size":profile["size"],"camouflage":.5,"metabolism":.5,"fecundity":profile["fecundity"],"sensory":.5,"resistance":.5})
+        if genome is None: genome=Genome({"speed":profile["speed"],"size":profile["size"],"camouflage":self.rng.random(),"metabolism":.5,"fecundity":profile["fecundity"],"sensory":self.rng.random(),"resistance":.5,"agility":self.rng.random(),"turn_rate":self.rng.random(),"tracking":self.rng.random(),"transparency":self.rng.uniform(.05,.55),"hue":self.rng.random(),"pattern":self.rng.random(),"fin_size":self.rng.random()})
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
@@ -265,7 +265,7 @@ class Handler(BaseHTTPRequestHandler):
                     hp=HABITATS[candidate["habitat"]]; e.habitat=candidate["habitat"]
                     e.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"])
                 result={"config":e.config,"habitat":e.habitat}
-            elif self.path=="/control/save":
+            elif self.path=="/control/tilt":\n                try:\n                    tx=float(body.get("x",0)); ty=float(body.get("y",0))\n                    if not all(map(lambda v:v==v and abs(v)<1e6,(tx,ty))): raise ValueError("tilt must be finite")\n                except (TypeError,ValueError) as exc:return self.send_json(400,{"error":str(exc)})\n                e.physics.currents.tilt_x=max(-1.0,min(1.0,tx)); e.physics.currents.tilt_y=max(-1.0,min(1.0,ty))\n                result={"tilt":{"x":e.physics.currents.tilt_x,"y":e.physics.currents.tilt_y}}\n            elif self.path=="/control/save":
                 if not self.service.state_path:return self.send_json(503,{"error":"checkpoint storage is disabled"})
                 e.save_state(self.service.state_path); result={"saved":True,"tick":e.tick}
             elif self.path=="/control/reset":
