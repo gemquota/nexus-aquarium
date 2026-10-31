@@ -112,10 +112,23 @@ class Engine:
         return engine
 
     def snapshot(self):
+        living=[o for o in self.organisms if o.alive]
+        species_counts={}
+        for o in living: species_counts[o.species]=species_counts.get(o.species,0)+1
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
-          "water":asdict(self.water),"population":{"alive":sum(o.alive for o in self.organisms),"births":self.births,"deaths":self.deaths},
+          "world":{"width":80,"height":24,"habitat":"temperate reef","engine":"NEXUS Python ecosystem"},
+          "water":asdict(self.water),
+          "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
+            "species_count":len(species_counts),"species":species_counts,
+            "mean_energy":sum(o.energy for o in living)/len(living) if living else 0,
+            "mean_health":sum(o.health for o in living)/len(living) if living else 0},
+          "ecology":{"food_web_links":sum(len(v) for v in self.food_web.values()),
+            "active_disturbances":len(self.disturbances),"trophic_groups":len(self.food_web)},
           "food_web":self.food_web,"disturbances":self.disturbances,
-          "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,"generation":o.genome.generation,"genome":o.genome.traits,"senses":o.brain.senses,"memory":o.brain.memory[-8:]} for o in self.organisms]}
+          "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
+            "energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,"age":o.age,
+            "generation":o.genome.generation,"genome":o.genome.traits,"senses":o.brain.senses,
+            "memory":o.brain.memory[-8:]} for o in self.organisms]}
 
 class Service:
     def __init__(self,token,engine=None,state_path=""):
@@ -150,6 +163,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(403,{"error":"origin not allowed"})
         self.send_json(204,{})
     def do_GET(self):
+        if self.path=="/":
+            return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health",
+              "snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
         if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine"})
         if self.path!="/snapshot":return self.send_json(404,{"error":"not found"})
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
