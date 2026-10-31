@@ -7,3 +7,10 @@ def life_stage(species,age):
     return "juvenile" if age<threshold*.25 else "subadult" if age<threshold else "adult"
 def compatible(a,b): return a.id!=b.id and a.alive and b.alive and a.species==b.species
 def reproduction_probability(o,dt): return min(.08,dt*.002*species_profile(o.species)["fecundity"]*(.5+o.genome.traits.get("fecundity",.5)))
+
+ASEXUAL_SPECIES={"coral_polyp","kelp","seagrass","phytoplankton","zooplankton","bacteria"}
+def reproductive_mode(species):
+    return "asexual_or_fragmentation" if species in ASEXUAL_SPECIES else "sexual"
+def offspring_position(parent,mate=None):
+    if mate is None: return parent.x,parent.y
+    return (parent.x+mate.x)/2,(parent.y+mate.y)/2
