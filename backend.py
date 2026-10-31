@@ -75,6 +75,42 @@ class Engine:
                 for o in alive:
                     if o.alive:o.health=max(0,o.health-d["intensity"]*.0005*dt)
         self.disturbances=[d for d in self.disturbances if d["remaining"]>0]
+    def save_state(self,path):
+        """Write a portable JSON checkpoint using atomic replacement."""
+        if not path: return
+        data={"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
+              "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
+              "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
+              "rng_state":self.rng.getstate(),
+              "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
+                "age":o.age,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,
+                "cooldown":o.cooldown,"genome":asdict(o.genome),"brain":{"senses":list(o.brain.senses),
+                "memory":o.brain.memory,"learning":o.brain.learning}} for o in self.organisms]}
+        target=os.path.abspath(path); os.makedirs(os.path.dirname(target),exist_ok=True)
+        tmp=target+".tmp"
+        with open(tmp,"w",encoding="utf-8") as handle: json.dump(data,handle,separators=(",",":"))
+        os.replace(tmp,target)
+
+    @classmethod
+    def load_state(cls,path):
+        if not path or not os.path.isfile(path): return cls()
+        with open(path,encoding="utf-8") as handle: data=json.load(handle)
+        engine=cls(data.get("seed",2026))
+        engine.tick=data.get("tick",0); engine.sim_time=data.get("sim_time",0.0)
+        engine.paused=data.get("paused",False); engine.next_id=data.get("next_id",1)
+        engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
+        engine.water=Water(**data.get("water",{})); engine.food_web=data.get("food_web",engine.food_web)
+        engine.disturbances=data.get("disturbances",[])
+        def tuples(value): return tuple(tuples(v) for v in value) if isinstance(value,list) else value
+        if data.get("rng_state"): engine.rng.setstate(tuples(data["rng_state"]))
+        engine.organisms=[]
+        for item in data.get("organisms",[]):
+            genome=Genome(**item.get("genome",{})); brain_data=item.get("brain",{})
+            brain=Brain(tuple(brain_data.get("senses",Brain.senses)),brain_data.get("memory",[]),brain_data.get("learning",{}))
+            fields={k:item[k] for k in ("id","species","x","y","vx","vy","age","energy","health","alive","state","cooldown") if k in item}
+            fields["genome"]=genome; fields["brain"]=brain; engine.organisms.append(Organism(**fields))
+        return engine
+
     def snapshot(self):
         return {"tick":self.tick,"simulation_time":self.sim_time,"paused":self.paused,"seed":self.seed,
           "water":asdict(self.water),"population":{"alive":sum(o.alive for o in self.organisms),"births":self.births,"deaths":self.deaths},
@@ -82,22 +118,37 @@ class Engine:
           "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,"generation":o.genome.generation,"genome":o.genome.traits,"senses":o.brain.senses,"memory":o.brain.memory[-8:]} for o in self.organisms]}
 
 class Service:
-    def __init__(self,token,engine=None):
-        self.token=token; self.engine=engine or Engine(); self.lock=threading.RLock(); self.running=True
+    def __init__(self,token,engine=None,state_path=""):
+        self.token=token; self.state_path=state_path; self.engine=engine or Engine.load_state(state_path)
+        self.lock=threading.RLock(); self.running=True; self.last_save=time.monotonic()
         self.thread=threading.Thread(target=self.loop,daemon=True); self.thread.start()
     def loop(self):
         last=time.monotonic()
         while self.running:
             now=time.monotonic(); dt=min(.2,now-last); last=now
-            with self.lock:self.engine.step(dt)
+            with self.lock:
+                self.engine.step(dt)
+                if self.state_path and now-self.last_save>=15:
+                    self.engine.save_state(self.state_path); self.last_save=now
             time.sleep(1/30)
 class Handler(BaseHTTPRequestHandler):
     service=None
     def log_message(self,*args):pass
     def send_json(self,code,data):
-        raw=json.dumps(data).encode(); self.send_response(code); self.send_header("Content-Type","application/json"); self.send_header("Access-Control-Allow-Origin","*"); self.send_header("Access-Control-Allow-Headers","Authorization, Content-Type"); self.send_header("Access-Control-Allow-Methods","GET, POST, OPTIONS"); self.send_header("Content-Length",str(len(raw))); self.end_headers(); self.wfile.write(raw)
+        raw=json.dumps(data).encode(); self.send_response(code); self.send_header("Content-Type","application/json")
+        origin=self.headers.get("Origin","")
+        allowed=os.getenv("NEXUS_ALLOWED_ORIGIN","https://gemquota.github.io")
+        if origin==allowed: self.send_header("Access-Control-Allow-Origin",allowed); self.send_header("Vary","Origin")
+        self.send_header("Access-Control-Allow-Headers","Authorization, Content-Type")
+        self.send_header("Access-Control-Allow-Methods","GET, POST, OPTIONS")
+        self.send_header("Content-Length",str(len(raw))); self.end_headers()
+        if code!=204: self.wfile.write(raw)
     def authorized(self):return secrets.compare_digest(self.headers.get("Authorization","").removeprefix("Bearer "),self.service.token)
-    def do_OPTIONS(self):self.send_json(204,{})
+    def do_OPTIONS(self):
+        origin=self.headers.get("Origin","")
+        if origin!=os.getenv("NEXUS_ALLOWED_ORIGIN","https://gemquota.github.io"):
+            return self.send_json(403,{"error":"origin not allowed"})
+        self.send_json(204,{})
     def do_GET(self):
         if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine"})
         if self.path!="/snapshot":return self.send_json(404,{"error":"not found"})
@@ -106,7 +157,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(200,data)
     def do_POST(self):
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
-        try:body=json.loads(self.rfile.read(int(self.headers.get("Content-Length",0))) or b"{}")
+        length=int(self.headers.get("Content-Length",0))
+        if length>8192:return self.send_json(413,{"error":"request too large"})
+        try:body=json.loads(self.rfile.read(length) or b"{}")
         except Exception:return self.send_json(400,{"error":"invalid JSON"})
         with self.service.lock:
             e=self.service.engine
@@ -122,10 +175,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(200,result)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument("--host",default="127.0.0.1");p.add_argument("--port",type=int,default=8765);p.add_argument("--token",default=os.getenv("NEXUS_API_TOKEN",""));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument("--host",default=os.getenv("HOST","0.0.0.0"));p.add_argument("--port",type=int,default=int(os.getenv("PORT","8000")));p.add_argument("--token",default=os.getenv("NEXUS_API_TOKEN",""));a=p.parse_args()
     if len(a.token)<16:raise SystemExit("Set NEXUS_API_TOKEN to a secret of at least 16 characters.")
-    Handler.service=Service(a.token);print(f"NEXUS AQUARIUM backend on http://{a.host}:{a.port}")
-    try:ThreadingHTTPServer((a.host,a.port),Handler).serve_forever()
+    state_path=os.getenv("NEXUS_STATE_FILE","/data/nexus-state.json")
+    Handler.service=Service(a.token,state_path=state_path);print(f"NEXUS AQUARIUM backend on http://{a.host}:{a.port}")
+    server=ThreadingHTTPServer((a.host,a.port),Handler); server.daemon_threads=True
+    try:server.serve_forever()
     except KeyboardInterrupt:pass
-    finally:Handler.service.running=False
+    finally:
+        Handler.service.running=False
+        Handler.service.thread.join(timeout=3)
+        with Handler.service.lock:Handler.service.engine.save_state(state_path)
+        server.server_close()
 if __name__=="__main__":main()
