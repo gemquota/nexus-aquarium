@@ -3,8 +3,9 @@ from __future__ import annotations
 from biodiversity import HABITATS
 
 class HabitatMap:
-    def __init__(self,width=80,height=24,seed=0,cell_size=16):
+    def __init__(self,width=80,height=24,seed=0,cell_size=16,base_habitat="coral_reef"):
         self.width=max(1,int(width)); self.height=max(1,int(height)); self.cell_size=max(2,int(cell_size)); self.seed=int(seed)
+        if base_habitat not in HABITATS: raise ValueError("unknown base habitat")
         names=sorted(HABITATS); self.tiles={}
         cols=(self.width+self.cell_size-1)//self.cell_size
         rows=(self.height+self.cell_size-1)//self.cell_size
@@ -14,7 +15,7 @@ class HabitatMap:
                 index=(x*7+y*11+(self.seed%len(names)))%len(names)
                 if y==0 and x%3==0:index=(index+1)%len(names)
                 self.tiles[(x,y)]=names[index]
-    def at(self,x,y):
+    def set_base(self,habitat):\n        if habitat not in HABITATS: raise ValueError("unknown habitat")\n        self.tiles={key:habitat for key in self.tiles}\n    def at(self,x,y):
         key=(max(0,min((self.width-1)//self.cell_size,int(x)//self.cell_size)),
              max(0,min((self.height-1)//self.cell_size,int(y)//self.cell_size)))
         return self.tiles.get(key,"coral_reef")
