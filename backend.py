@@ -20,7 +20,7 @@ from migration import MigrationSystem
 from physics import SpatialGrid
 
 ENGINE_VERSION = 4
-DEFAULT_CONFIG = {"world_width":800,"world_height":240,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":240,"initial_water_fraction":0.10,"rain_rate":0.0008,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.0,"predation_intensity":1.0}
+DEFAULT_CONFIG = {"world_width":800,"world_height":240,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":240,"initial_water_fraction":0.10,"rain_rate":0.0008,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.0,"movement_scale":40.0,"predation_intensity":1.0}
 
 @dataclass
 class Genome:
@@ -74,6 +74,7 @@ class Engine:
         if not 0<=float(config["rain_rate"])<=0.1: raise ValueError("rain_rate must be between 0 and 0.1")
         if float(config["simulation_speed"])<0.1 or float(config["simulation_speed"])>10: raise ValueError("simulation_speed must be between 0.1 and 10")
         if float(config["current_strength"])<0 or float(config["current_strength"])>5: raise ValueError("current_strength must be between 0 and 5")
+        if not 1<=float(config["movement_scale"])<=100: raise ValueError("movement_scale must be between 1 and 100")
         if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
         if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
         if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
@@ -90,7 +91,7 @@ class Engine:
         if self.paused:return
         step_started=time.perf_counter(); stages={}; stage_started=step_started
         self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
-        self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
+        self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.movement_scale=float(self.config["movement_scale"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
         if self.config["weather_enabled"]:
             self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))
             self.weather="rain" if self.precipitation>.00001 else "clear"
@@ -281,7 +282,7 @@ class Handler(BaseHTTPRequestHandler):
                 try: Engine.validate_config(candidate)
                 except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
                 old_initial=e.config.get("initial_water_fraction"); e.config=candidate
-                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.physics.waterline=e.physics.height*(1-e.water_fraction); e.physics.currents.base_x=.035*float(candidate["current_strength"]); e.physics.currents.base_y=.008*float(candidate["current_strength"]);
+                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.physics.waterline=e.physics.height*(1-e.water_fraction); e.physics.currents.base_x=.035*float(candidate["current_strength"]); e.physics.currents.base_y=.008*float(candidate["current_strength"]); e.physics.movement_scale=float(candidate["movement_scale"]);
                 if candidate["initial_water_fraction"]!=old_initial: e.water_fraction=float(candidate["initial_water_fraction"])
                 e.physics.waterline=e.physics.height*(1-e.water_fraction); e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed,base_habitat=candidate["habitat"])
                 for organism in e.organisms:
