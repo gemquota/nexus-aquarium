@@ -8,7 +8,7 @@ PRODUCER_GROUPS={"macroalgae","seagrass","microorganism"}
 class Ecology:
     def __init__(self):
         self.detritus=0.0; self.feedings=0; self.predation_events=0; self.decomposed=0.0
-    def step(self,organisms,food_web,water,dt,rng):
+    def step(self,organisms,food_web,water,dt,rng,predation_intensity=1.0):
         living=[o for o in organisms if o.alive]
         grid=SpatialGrid(3.0); grid.rebuild(living)
         for o in living:
@@ -24,7 +24,7 @@ class Ecology:
             if candidates:
                 prey=min(candidates,key=lambda p:(p.x-o.x)**2+(p.y-o.y)**2)
                 distance=math.hypot(prey.x-o.x,prey.y-o.y)
-                if distance<2.8 and rng.random()<min(.9,dt*.7):
+                if distance<2.8 and rng.random()<min(.95,dt*.7*max(0.0,float(predation_intensity))):
                     prey.energy=max(0,prey.energy-.18)
                     o.energy=min(1,o.energy+.12)
                     self.feedings+=1
