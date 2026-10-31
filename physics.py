@@ -32,8 +32,8 @@ class CurrentField:
         self.phase=(seed%10000)/1000
         self.base_x=.035; self.base_y=.008; self.tilt_x=0.0; self.tilt_y=0.0
     def sample(self,x,y,t):
-        return (self.base_x+math.sin(y*.31+t*.17+self.phase)*.025,
-                self.base_y+math.cos(x*.19-t*.11+self.phase)*.012)
+        return (self.base_x+self.tilt_x*.045+math.sin(y*.31+t*.17+self.phase)*.025,
+                self.base_y+self.tilt_y*.025+math.cos(x*.19-t*.11+self.phase)*.012)
 
 class MarinePhysics:
     """Bounded, deterministic current/drag/buoyancy and SPH-inspired fluid particles."""
