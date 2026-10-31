@@ -38,7 +38,7 @@ class EngineFoundationTests(unittest.TestCase):
         with self.assertRaises(ValueError): Engine(config={"max_organisms":0})
 
     def test_organism_capacity_enforced(self):
-        engine=Engine(config={"max_organisms":20})
+        engine=Engine(config={"max_organisms":39})
         with self.assertRaises(RuntimeError): engine.add("reef_fish",1,1)
 
     def test_future_checkpoint_version_rejected(self):
