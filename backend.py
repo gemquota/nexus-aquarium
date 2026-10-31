@@ -18,7 +18,7 @@ from disease import DiseaseSystem
 from social import SocialSystem
 from migration import MigrationSystem
 
-ENGINE_VERSION = 3
+ENGINE_VERSION = 4
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
 
 @dataclass
@@ -66,7 +66,7 @@ class Engine:
         for i,name in enumerate(extras): self.add(name,5+(i*13)%70,2+(i*7)%20,vx=species_profile(name)["speed"]*.02)
     @staticmethod
     def validate_config(config):
-        for key in ("world_width","world_height","max_organisms"):
+        for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
             if int(config[key])<1: raise ValueError(f"{key} must be positive")
         if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
         if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
@@ -218,11 +218,11 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health","snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
         if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION})
         if self.path=="/catalogue":return self.send_json(200,{"species":{k:{"group":v["group"],"trophic":v["trophic"],"habitats":v["habitats"],"temperature":v["temperature"],"oxygen_min":v["oxygen_min"]} for k,v in __import__("biodiversity").SPECIES.items()},"habitats":HABITATS})
-        if self.path not in ("/snapshot","/metrics"):return self.send_json(404,{"error":"not found"})
+        if self.path=="/events":\n            if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})\n            with self.service.lock: history=self.service.engine.events.history[-100:]\n            return self.send_json(200,{"events":history})\n        if self.path not in ("/snapshot","/metrics"):return self.send_json(404,{"error":"not found"})
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
         with self.service.lock:
             data=self.service.engine.snapshot()
-            if self.path=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics")}
+            if self.path=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics","genetics","nutrients","disease","social","migration","environment","habitat_map")}
         self.send_json(200,data)
     def do_POST(self):
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
@@ -266,7 +266,7 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path=="/control/reset":
                 try: seed=int(body.get("seed",e.seed))
                 except (TypeError,ValueError): return self.send_json(400,{"error":"seed must be an integer"})
-                self.service.engine=Engine(seed); result={"reset":True,"seed":seed}
+                self.service.engine=Engine(seed,config=e.config); result={"reset":True,"seed":seed}
             else:return self.send_json(404,{"error":"unknown control"})
         self.send_json(200,result)
 
