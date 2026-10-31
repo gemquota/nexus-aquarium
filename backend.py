@@ -141,7 +141,8 @@ class Engine:
         engine.births=data.get("births",0); engine.deaths=data.get("deaths",0)
         engine.water=Water(**data.get("water",{})); engine.habitat=data.get("habitat",engine.config.get("habitat","coral_reef")); engine.food_web=data.get("food_web",engine.food_web)
         engine.disturbances=data.get("disturbances",[])
-        if data.get("physics_state"): engine.physics.restore(data["physics_state"])\n        engine.ecology.restore(data.get("ecology_state",{})); engine.behaviour.restore(data.get("behaviour_state",{})); engine.events.restore(data.get("events_state",{})); engine.environment.restore(data.get("environment_state",{}))
+        if data.get("physics_state"): engine.physics.restore(data["physics_state"])
+        engine.ecology.restore(data.get("ecology_state",{})); engine.behaviour.restore(data.get("behaviour_state",{})); engine.events.restore(data.get("events_state",{})); engine.environment.restore(data.get("environment_state",{}))
         def tuples(value): return tuple(tuples(v) for v in value) if isinstance(value,list) else value
         if data.get("rng_state"): engine.rng.setstate(tuples(data["rng_state"]))
         engine.organisms=[]
