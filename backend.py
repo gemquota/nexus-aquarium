@@ -205,6 +205,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path=="/":
             return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health","snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
         if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION})
+        if self.path=="/catalogue":return self.send_json(200,{"species":{k:{"group":v["group"],"trophic":v["trophic"],"habitats":v["habitats"],"temperature":v["temperature"],"oxygen_min":v["oxygen_min"]} for k,v in __import__("biodiversity").SPECIES.items()},"habitats":HABITATS})
         if self.path not in ("/snapshot","/metrics"):return self.send_json(404,{"error":"not found"})
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
         with self.service.lock:
