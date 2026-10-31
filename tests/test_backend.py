@@ -262,3 +262,25 @@ class ScalingRegressionTests(unittest.TestCase):
         engine.step(0.03)
         self.assertGreater(engine.tick,0)
         self.assertGreater(engine.behaviour.decisions,0)
+
+
+class PerformanceTelemetryTests(unittest.TestCase):
+    def test_step_reports_bounded_performance_telemetry(self):
+        engine=Engine(seed=20261031)
+        engine.step(1/30)
+        metrics=engine.snapshot()["performance"]
+        self.assertEqual(metrics["samples"],1)
+        self.assertGreaterEqual(metrics["step_ms"],0)
+        self.assertGreaterEqual(metrics["step_ema_ms"],0)
+        self.assertIn(metrics["slowest_stage"],("life_support_ms","reproduction_ms","behaviour_physics_ms","ecosystem_ms"))
+        self.assertEqual(metrics["organisms"],len(engine.organisms))
+        self.assertEqual(metrics["alive"],sum(1 for item in engine.organisms if item.alive))
+        self.assertGreaterEqual(metrics["budget_utilization"],0)
+
+    def test_performance_telemetry_is_not_advanced_while_paused(self):
+        engine=Engine(seed=20261032)
+        engine.step(1/30)
+        before=engine.snapshot()["performance"]["samples"]
+        engine.paused=True
+        engine.step(1/30)
+        self.assertEqual(engine.snapshot()["performance"]["samples"],before)
