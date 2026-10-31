@@ -5,6 +5,7 @@ import argparse, json, os, random, secrets, threading, time
 from dataclasses import dataclass, field, asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from physics import MarinePhysics
+from biodiversity import species_profile
 
 ENGINE_VERSION = 2
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000}
