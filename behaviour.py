@@ -18,9 +18,17 @@ class BehaviourSystem:
  def step(self,organisms,dt,rng):
   living=[o for o in organisms if o.alive]
   grid=SpatialGrid(18); grid.rebuild(living)
+  # The seabed is the highest occupied y-coordinate in this simplified world.
+  # Compute it once per tick; scanning the entire population per benthic animal
+  # made this branch quadratic at larger populations.
+  seabed_y=max((item.y for item in living),default=0.0)
+  profiles={}
   for o in living:
    if "goal_timer" in o.brain.learning: o.brain.learning["goal_timer"]=max(0.0,float(o.brain.learning["goal_timer"])-dt)
-   profile=species_profile(o.species); traits=o.genome.traits
+   profile=profiles.get(o.species)
+   if profile is None:
+    profile=species_profile(o.species); profiles[o.species]=profile
+   traits=o.genome.traits
    agility=max(.1,min(1,float(traits.get("agility",.5))))
    turn=max(.1,min(1,float(traits.get("turn_rate",.5))))
    tracking=max(.1,min(1,float(traits.get("tracking",.5))))
@@ -65,7 +73,7 @@ class BehaviourSystem:
     else:
      state="exploring"; ax+=math.sin(o.age*.55+o.id)*speed*.45; ay+=math.cos(o.age*.41+o.id)*speed*.25
    elif o.species in BENTHIC:
-    target_y=max(o.y,min(o.y+2.0, self._seabed_y(o,organisms)))
+    target_y=max(o.y,min(o.y+2.0,seabed_y))
     ay+=(target_y-o.y)*.22; ax+=math.sin(o.age*.2+o.id)*speed*.2
     state="benthic_foraging" if o.energy<.75 else "resting"
     if state=="resting": self.resting+=1
@@ -120,9 +128,6 @@ class BehaviourSystem:
    current=next((p for p in candidates if p.id==o.brain.learning.get("goal_id")),None)
    if current:return current
   return min(candidates,key=lambda p:self._distance2(o,p))
- def _seabed_y(self,o,organisms):
-  # In this coordinate system the seabed is the high-y boundary.
-  return max((p.y for p in organisms if p.alive),default=o.y)
  def state(self):
   return {"decisions":self.decisions,"school_links":self.school_links,"flee_responses":self.flee_responses,"hunts":self.hunts,"foraging":self.foraging,"resting":self.resting,"goal_changes":self.goal_changes,"memory_events":self.memory_events,"patrols":self.patrols,"migrations":self.migrations}
  def restore(self,d):
