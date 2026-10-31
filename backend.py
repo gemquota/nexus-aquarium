@@ -63,7 +63,7 @@ class Engine:
         for i in range(18): self.add("reef_fish",8+(i*7)%64,5+(i*3)%16,vx=.1 if i%2 else -.1)
         self.add("shark",40,10,vx=.08); self.add("jellyfish",25,18,vy=.04)
         extras=("ray","dolphin","whale","crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","phytoplankton","zooplankton","bacteria")
-        for i,name in enumerate(extras): self.add(name,50+(i*131)%700,self.config["world_height"]*(.90+self.rng.random()*.08),vx=species_profile(name)["speed"]*.25)
+        for i,name in enumerate(extras): self.add(name,30+(i*131)%(self.config["world_width"]-60),self.config["world_height"]*(.90+self.rng.random()*.08),vx=species_profile(name)["speed"]*.4,vy=self.rng.uniform(-.06,.06))
     @staticmethod
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
@@ -87,7 +87,7 @@ class Engine:
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
-        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
+        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt\n        self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
         if self.config["weather_enabled"]:
             self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))
             self.weather="rain" if self.precipitation>.00001 else "clear"
@@ -135,7 +135,7 @@ class Engine:
         data={"engine_version":ENGINE_VERSION,"config":self.config,"habitat":self.habitat,"seed":self.seed,"tick":self.tick,"sim_time":self.sim_time,"paused":self.paused,
               "next_id":self.next_id,"births":self.births,"deaths":self.deaths,
               "water":asdict(self.water),"food_web":self.food_web,"disturbances":self.disturbances,
-              "physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),"nutrient_state":self.nutrients.state(),"disease_state":self.disease.state(),"social_state":self.social.state(),"migration_state":self.migration.state(),
+              "weather_state":{"water_fraction":self.water_fraction,"rainfall":self.rainfall,"weather":self.weather,"precipitation":self.precipitation},"physics_state":self.physics.state(),"ecology_state":self.ecology.state(),"behaviour_state":self.behaviour.state(),"events_state":self.events.state(),"environment_state":self.environment.snapshot(),"nutrient_state":self.nutrients.state(),"disease_state":self.disease.state(),"social_state":self.social.state(),"migration_state":self.migration.state(),
               "rng_state":self.rng.getstate(),
               "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
                 "age":o.age,"energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,
@@ -269,7 +269,7 @@ class Handler(BaseHTTPRequestHandler):
                 try: Engine.validate_config(candidate)
                 except (ValueError,TypeError) as exc:return self.send_json(400,{"error":str(exc)})
                 e.config=candidate
-                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed,base_habitat=candidate["habitat"])
+                e.physics.width=candidate["world_width"]; e.physics.height=candidate["world_height"]; e.physics.waterline=e.physics.height*(1-e.water_fraction); e.physics.currents.base_x=.035*float(candidate["current_strength"]); e.physics.currents.base_y=.008*float(candidate["current_strength"]);\n                if candidate["initial_water_fraction"]!=e.config.get("initial_water_fraction"): e.water_fraction=float(candidate["initial_water_fraction"])\n                e.physics.waterline=e.physics.height*(1-e.water_fraction); e.habitat_map=HabitatMap(e.physics.width,e.physics.height,e.seed,base_habitat=candidate["habitat"])
                 for organism in e.organisms:
                     organism.x=max(0,min(e.physics.width-1,organism.x)); organism.y=max(0,min(e.physics.height-1,organism.y))
                 if candidate["habitat"]!=e.habitat:
