@@ -62,7 +62,7 @@ class Engine:
         self.performance={"step_ms":0.0,"step_ema_ms":0.0,"stages_ms":{},"slowest_stage":"none","samples":0}; self.organisms=[]; self.next_id=1; self.habitat=self.config["habitat"]; hp=HABITATS[self.habitat]; self.water=Water(temperature=hp["temperature"],salinity=hp["salinity"],oxygen=hp["oxygen"],ph=hp["ph"],turbidity=hp["turbidity"]); self.births=0; self.deaths=0; self.food_web={"reef_fish":["zooplankton","shrimp"],"shark":["reef_fish","eel","ray"],"jellyfish":["zooplankton"],"dolphin":["reef_fish"],"whale":["zooplankton"],"octopus":["crab","shrimp"],"sea_turtle":["seagrass","jellyfish"],"sea_urchin":["kelp"],"clam":["phytoplankton"],"zooplankton":["phytoplankton"]}
         self.disturbances=[]
         self.moon_phase=0.0; self.tide_height=0.0; self.plankton_bloom=0.0; self.bloom_phase=0.0
-        self.seabirds=[{"id":i+1,"x":(i*173+65)%self.config["world_width"],"y":-12.0-i*1.8,"vx":(0.8 if i%2==0 else -0.8),"vy":0.0,"state":"soaring","hunger":0.35+(i%3)*.1,"dive_cooldown":8.0+i*2,"catches":0} for i in range(7)]
+        self.seabirds=[{"id":i+1,"x":(i*173+65)%self.config["world_width"],"y":8.0+i*1.8,"vx":(0.8 if i%2==0 else -0.8),"vy":0.0,"state":"soaring","hunger":0.35+(i%3)*.1,"dive_cooldown":8.0+i*2,"catches":0} for i in range(7)]
         self.seabird_catches=0
         for i in range(18): self.add("reef_fish",(i*43+35)%(self.config["world_width"]-20)+10,self.config["world_height"]*(.90+self.rng.random()*.08),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.08,.08))
         self.add("shark",self.config["world_width"]*.42,self.config["world_height"]*.94,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,self.config["world_height"]*.93,vy=.12)
@@ -177,14 +177,14 @@ class Engine:
                         prey.energy=max(0.0,prey.energy-.22); bird["hunger"]=max(0.0,bird["hunger"]-.45)
                         bird["catches"]+=1; self.seabird_catches+=1
                         if prey.energy<=.02: prey.alive=False; self.deaths+=1
-                    bird["state"]="soaring"; bird["dive_cooldown"]=12.0; bird["y"]=-8.0
+                    bird["state"]="soaring"; bird["dive_cooldown"]=12.0; bird["y"]=12.0
             else:
                 bird["x"]=(bird["x"]+bird["vx"]*dt*2.4)%width
-                bird["y"]=-12.0+math.sin(self.sim_time*.7+bird["id"])*3.0
+                bird["y"]=12.0+math.sin(self.sim_time*.7+bird["id"])*3.0
                 if bird["dive_cooldown"]<=0 and bird["hunger"]>.5 and fish:
                     school=max(fish,key=lambda f:sum(1 for other in fish if abs(other.x-f.x)<18 and abs(other.y-f.y)<12))
                     if abs(school.x-bird["x"])<65:
-                        bird["state"]="diving"; bird["x"]=school.x; bird["y"]=-4.0
+                        bird["state"]="diving"; bird["x"]=school.x; bird["y"]=max(8.0,surface-24.0)
     def save_state(self,path):
         """Write a portable JSON checkpoint using atomic replacement."""
         if not path: return
