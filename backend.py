@@ -68,6 +68,7 @@ class Engine:
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
             if int(config[key])<1: raise ValueError(f"{key} must be positive")
+        if config["habitat"] not in HABITATS: raise ValueError("unknown habitat profile")
         if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
         if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
         if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
