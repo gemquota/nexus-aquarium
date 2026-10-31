@@ -2,3 +2,5 @@
 #species-filter{margin-left:12px;background:#082534;color:#a9d5d5;border:1px solid #245063;border-radius:4px;padding:6px;font-size:9px}.trend-module{grid-column:1/-1;min-height:180px}.trend-module canvas{display:block;width:100%;height:130px;margin-top:12px}.viewer-toolbar>div:first-child{display:flex;align-items:center;flex-wrap:wrap;gap:4px}@media(max-width:480px){#species-filter{max-width:125px}.trend-module{grid-column:auto}}
 
 #habitat-select{background:#03131d;color:#d9f4ed;border:1px solid #245063;border-radius:5px;padding:11px;font-size:10px;min-width:150px}.connect .row button{white-space:nowrap}
+
+.config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end}.config-grid label{display:grid;gap:6px;color:#83b9bf;font-size:9px;letter-spacing:.1em}.config-grid input,.config-grid select{width:100%;min-width:0;background:#03131d;border:1px solid #245063;border-radius:5px;padding:11px;color:#e3f8f5}.config-grid button{min-height:40px}.connect>p:last-child{font-size:11px;color:#9bb9c4;overflow-wrap:anywhere}
