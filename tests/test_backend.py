@@ -241,3 +241,24 @@ class IndividualBehaviourTests(unittest.TestCase):
             clone=next(o for o in restored.organisms if o.id==original.id)
             self.assertEqual(clone.brain.learning.get("goal_kind"),original.brain.learning.get("goal_kind"))
             self.assertEqual(clone.brain.learning.get("goal_x"),original.brain.learning.get("goal_x"))
+
+
+class ScalingRegressionTests(unittest.TestCase):
+    def test_spatial_feeding_ignores_distant_prey(self):
+        engine=Engine(seed=101)
+        engine.organisms=[]
+        predator=engine.add("shark",10,10)
+        predator.energy=.2
+        near=engine.add("reef_fish",11,10)
+        far=engine.add("reef_fish",700,200)
+        engine.ecology.step(engine.organisms,engine.food_web,engine.water,1.0,engine.rng)
+        self.assertLess(near.energy,1.0)
+        self.assertEqual(far.energy,0.9)
+
+    def test_large_population_spatial_subsystems_complete(self):
+        engine=Engine(seed=102,config={"max_organisms":1200})
+        for i in range(900):
+            engine.add("reef_fish",float((i*17)%790),float(216+(i%20)))
+        engine.step(0.03)
+        self.assertGreater(engine.tick,0)
+        self.assertGreater(engine.behaviour.decisions,0)
