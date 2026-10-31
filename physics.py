@@ -67,6 +67,14 @@ class MarinePhysics:
             p.density=sum(max(0,1-(math.hypot(q.x-p.x,q.y-p.y)/self.smoothing_radius)**2)**3 for q in neighbours)
             p.density=max(.05,p.density)
             p.pressure=max(-.2,min(2.0,.35*(p.density-self.rest_density)))
+    def state(self):
+        return {"particles":[{"x":p.x,"y":p.y,"vx":p.vx,"vy":p.vy,"density":p.density,"pressure":p.pressure} for p in self.particles],
+                "phase":self.currents.phase,"base_x":self.currents.base_x,"base_y":self.currents.base_y}
+    def restore(self,data):
+        self.particles=[FluidParticle(**p) for p in data.get("particles",[])][:20000]
+        self.currents.phase=float(data.get("phase",self.currents.phase))
+        self.currents.base_x=float(data.get("base_x",self.currents.base_x)); self.currents.base_y=float(data.get("base_y",self.currents.base_y))
+        self.grid.rebuild(self.particles)
     def snapshot(self):
         return {"particle_count":len(self.particles),"mean_density":sum(p.density for p in self.particles)/max(1,len(self.particles)),
                 "mean_pressure":sum(p.pressure for p in self.particles)/max(1,len(self.particles)),
