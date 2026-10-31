@@ -11,6 +11,7 @@ from life_cycles import life_stage, compatible, reproduction_probability, reprod
 from behaviour import BehaviourSystem
 from events import EventSystem
 from environment import EnvironmentalResponse
+from genetics import recombine, population_diversity
 
 ENGINE_VERSION = 3
 DEFAULT_CONFIG = {"world_width":80,"world_height":24,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":15.0,"max_organisms":5000,"habitat":"coral_reef","initial_fluid_particles":48}
@@ -20,12 +21,8 @@ class Genome:
     traits: dict = field(default_factory=lambda: {"speed":.5,"size":.5,"camouflage":.5,"metabolism":.5,"fecundity":.5,"sensory":.5,"resistance":.5})
     generation: int = 0
     def inherit(self, mate, rng):
-        out={}
-        for k in self.traits.keys()|mate.traits.keys():
-            v=self.traits.get(k,.5) if rng.random()<.5 else mate.traits.get(k,.5)
-            if rng.random()<.025: v+=rng.gauss(0,.12)
-            out[k]=max(0,min(1,v))
-        return Genome(out,max(self.generation,mate.generation)+1)
+        return Genome(recombine(self.traits,mate.traits,rng),max(self.generation,mate.generation)+1)
+
 
 @dataclass
 class Brain:
@@ -161,7 +158,7 @@ class Engine:
           "world":{"width":self.config["world_width"],"height":self.config["world_height"],"habitat":self.habitat,"engine":"NEXUS Python ecosystem"},
           "physics":self.physics.snapshot(),"ecology_metrics":self.ecology.snapshot(),"behaviour":self.behaviour.snapshot(),"event_metrics":self.events.snapshot(self),"environment":self.environment.snapshot(),
           "water":asdict(self.water),
-          "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
+          "genetics":population_diversity(living),\n          "population":{"alive":len(living),"total":len(self.organisms),"births":self.births,"deaths":self.deaths,
             "species_count":len(species_counts),"species":species_counts,
             "mean_energy":sum(o.energy for o in living)/len(living) if living else 0,
             "mean_health":sum(o.health for o in living)/len(living) if living else 0},
