@@ -68,7 +68,11 @@ class Engine:
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
             if int(config[key])<1: raise ValueError(f"{key} must be positive")
-        if config["habitat"] not in HABITATS: raise ValueError("unknown habitat profile")\n        if not 0.01<=float(config["initial_water_fraction"])<=1: raise ValueError("initial_water_fraction must be between 0.01 and 1")\n        if not 0<=float(config["rain_rate"])<=0.1: raise ValueError("rain_rate must be between 0 and 0.1")\n        if float(config["simulation_speed"])<0.1 or float(config["simulation_speed"])>10: raise ValueError("simulation_speed must be between 0.1 and 10")\n        if float(config["current_strength"])<0 or float(config["current_strength"])>5: raise ValueError("current_strength must be between 0 and 5")
+        if config["habitat"] not in HABITATS: raise ValueError("unknown habitat profile")
+        if not 0.01<=float(config["initial_water_fraction"])<=1: raise ValueError("initial_water_fraction must be between 0.01 and 1")
+        if not 0<=float(config["rain_rate"])<=0.1: raise ValueError("rain_rate must be between 0 and 0.1")
+        if float(config["simulation_speed"])<0.1 or float(config["simulation_speed"])>10: raise ValueError("simulation_speed must be between 0.1 and 10")
+        if float(config["current_strength"])<0 or float(config["current_strength"])>5: raise ValueError("current_strength must be between 0 and 5")
         if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
         if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
         if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
@@ -83,7 +87,13 @@ class Engine:
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
     def step(self,dt=1/30):
         if self.paused:return
-        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt\n        if self.config["weather_enabled"]:\n            self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))\n            self.weather="rain" if self.precipitation>.00001 else "clear"\n            self.rainfall+=self.precipitation*dt\n            self.water_fraction=min(1.0,self.water_fraction+self.precipitation*dt*.02)\n        else:self.precipitation=0.0; self.weather="clear"
+        self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
+        if self.config["weather_enabled"]:
+            self.precipitation=min(1.0,max(0.0,self.config["rain_rate"]*(.6+.4*(1+__import__("math").sin(self.sim_time*.015)))))
+            self.weather="rain" if self.precipitation>.00001 else "clear"
+            self.rainfall+=self.precipitation*dt
+            self.water_fraction=min(1.0,self.water_fraction+self.precipitation*dt*.02)
+        else:self.precipitation=0.0; self.weather="clear"
         alive=[o for o in self.organisms if o.alive]
         for o in alive:
             o.age+=dt; o.cooldown=max(0,o.cooldown-dt); o.energy=max(0,o.energy-dt*(.0008+o.genome.traits["metabolism"]*.0007))
@@ -93,7 +103,8 @@ class Engine:
                 p=threats[0]; o.vx+=(o.x-p.x)*.015*dt; o.vy+=(o.y-p.y)*.015*dt
             elif o.species=="reef_fish": o.state="schooling"
             else:o.state="foraging" if o.energy<.5 else "cruising"
-            self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)\n            self.physics.move(o,dt,self.sim_time)
+            self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
+            self.physics.move(o,dt,self.sim_time)
             if o.energy<=.02 or o.health<=.01:o.alive=False; self.deaths+=1
         for parent in alive:
             if len(self.organisms)>=self.config["max_organisms"]: break
