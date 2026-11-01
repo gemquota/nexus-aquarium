@@ -46,3 +46,7 @@ Koyeb's Free Instance has no persistent volumes and scales to zero after one hou
 
 ## Dashboard
 [Open the GitHub Pages dashboard](https://gemquota.github.io/nexus-aquarium/). Pages serves the UI only; Koyeb runs the Python API.
+
+## Side-view sprite library
+
+See [`assets/sprites/README.md`](assets/sprites/README.md) for the side-view asset plan, vetted sprite packs, licence notes and safe local import instructions. The source catalogue is [`assets/sprites/sources.json`](assets/sprites/sources.json). Third-party binaries are not included until their licence permits public redistribution or they are provided through an appropriately licensed private asset host.
