@@ -61,7 +61,7 @@ class BehaviourSystem:
      dx=target.x-o.x; dy=target.y-o.y; mag=max(.01,math.hypot(dx,dy))
      ax+=dx/mag*speed*.9; ay+=dy/mag*speed*.9; state="foraging"; self.foraging+=1
     else: state="searching"; ax+=math.sin(o.age*.22+o.id)*speed*.3; ay+=math.cos(o.age*.19+o.id)*speed*.2
-   elif o.species in ("reef_fish","dolphin","seal"):
+   elif o.species in ("reef_fish","dolphin","seal","sardine","mackerel","surface_fish","pelagic_fish"):
     school=[p for p in nearby if p.species==o.species]
     if school:
      cx=sum(p.x for p in school)/len(school)-o.x; cy=sum(p.y for p in school)/len(school)-o.y
