@@ -19,11 +19,12 @@ function loadEntry(entry){
   image.onerror=()=>{state.failed=true};
   image.src=entry.src;images.set(key,state);return state;
 }
-function find(kind,species){
+function find(kind,species,seed=0){
   const name=speciesAliases[normalise(species)]||normalise(species);
-  return entries.find(e=>e.kind===kind&&e.species===name)
-    ||entries.find(e=>e.kind===kind&&e.species==='generic')
-    ||entries.find(e=>e.kind===kind&&e.species==='');
+  const exact=entries.find(e=>e.kind===kind&&e.species===name);
+  if(exact)return exact;
+  const generic=entries.filter(e=>e.kind===kind&&(e.species==='generic'||e.species===''));
+  return generic.length?generic[Math.abs(Number(seed)||0)%generic.length]:null;
 }
 function frame(entry,state,time){
   const fw=Number(entry.frame_width)||state.image.naturalWidth;
@@ -43,25 +44,25 @@ function drawImage(ctx,entry,x,y,w,h,time,anchorX=.5,anchorY=.5,flip=false,angle
 function drawOrganism(ctx,o,x,y,opts={}){
   const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature',entry=find(kind,species);
   if(!entry)return false;
-  const time=Number(opts.time)||0,zoom=Math.max(.1,Number(opts.zoom)||1),size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
+  const time=Number(opts.time)||0,size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
   if(kind==='plant'){
-    const h=(Number(entry.render_height)||12)*size,w=(Number(entry.render_width)||Math.max(3,h*.55))*size;
+    const h=(Number(entry.render_height)||(species==='mangrove'?6:species==='kelp'?3.5:2.4))*size,w=(Number(entry.render_width)||Math.max(1.2,h*.55))*size;
     const baseY=Number.isFinite(opts.plantBaseY)?opts.plantBaseY:y;
     const sway=Math.sin(time*1.25+(Number(o.id)||0)*.71)*.045;
     return drawImage(ctx,entry,x,baseY,w,h,time,Number(entry.anchor_x??.5),1,false,sway);
   }
-  const w=(Number(entry.render_width)||7)*size,h=(Number(entry.render_height)||4)*size;
+  const large=['whale','shark','dolphin','ray'].includes(species),tiny=['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','lanternfish'].includes(species);\n  const w=(Number(entry.render_width)||(large?6.2:tiny?1.8:3.2))*size,h=(Number(entry.render_height)||(large?3.4:tiny?1.2:2.0))*size;
   const angle=Math.atan2(Number(o.vy)||0,Number(o.vx)||.01);
   return drawImage(ctx,entry,x,y,w,h,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),Number(o.vx)<0,angle);
 }
 function drawBird(ctx,bird,x,y,opts={}){
-  const entry=find('bird',bird.species)||find('bird','generic');if(!entry)return false;
+  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
   const w=Number(entry.render_width)||12,h=Number(entry.render_height)||7;
   const flap=bird.state==='gliding'?0:Math.sin((Number(opts.time)||0)*9+(Number(opts.index)||0))*0.035;
   return drawImage(ctx,entry,x,y,w,h,Number(opts.time)||0,.5,.5,Number(bird.vx)<0,flap);
 }
 function drawIsland(ctx,island,x,y,radius){
-  const entry=find('island',island.kind||island.species||'generic');if(!entry)return false;
+  const entry=find('island',island.kind||island.species||'generic',island.id||island.x||0);if(!entry)return false;
   const w=Number(entry.render_width)||Math.max(12,radius*3.6),h=Number(entry.render_height)||Math.max(5,radius*.9);
   return drawImage(ctx,entry,x,y,w,h,0,.5,.8,false,0);
 }
