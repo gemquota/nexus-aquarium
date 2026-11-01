@@ -402,8 +402,8 @@ class MarineDiversityTests(unittest.TestCase):
 class ExpandedWorldQualityTests(unittest.TestCase):
     def test_default_world_is_expanded_tenfold(self):
         engine=Engine(seed=71)
-        self.assertEqual(engine.config["world_width"],24000)
-        self.assertEqual(engine.config["world_height"],7200)
+        self.assertEqual(engine.config["world_width"],240000)
+        self.assertEqual(engine.config["world_height"],72000)
         self.assertGreaterEqual(len(engine.organisms),39)
     def test_seeded_reef_fish_and_benthic_life_are_not_buried(self):
         engine=Engine(seed=73)
