@@ -68,6 +68,7 @@ class Engine:
         self.floating_islets=[{"id":i+1,"x":(i*317+180)%self.config["world_width"],"y":self.config["world_height"]*(1-self.water_fraction)-2.5,"radius":5.0+(i%3)*2.0,"vegetation":0.35+(i%4)*.12} for i in range(3)]
         self.seabird_catches=0
         self._seeding=True
+        h=self.config["world_height"]; surface=h*(1-self.water_fraction)
         for i in range(18): self.add("reef_fish",self.config["world_width"]*(.20+i*.60/17),surface+self.water_fraction*h*(.34+self.rng.random()*.20),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.025,.025))
         self.add("shark",self.config["world_width"]*.42,surface+self.water_fraction*h*.58,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,surface+self.water_fraction*h*.42,vy=.06)
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
