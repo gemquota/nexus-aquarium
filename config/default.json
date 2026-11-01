@@ -1,6 +1,6 @@
 {
-  "world_width": 240000,
-  "world_height": 72000,
+  "world_width": 3000000,
+  "world_height": 1000000,
   "fixed_dt": 0.0333333333,
   "max_frame_dt": 0.2,
   "checkpoint_interval": 15,
