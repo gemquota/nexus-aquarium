@@ -96,7 +96,7 @@ function buildAccordionInterface(){
    ['02 · ENVIRONMENT & REEF','Water chemistry, ecosystem health and coral condition',[1,2,5]],
    ['03 · BEHAVIOUR & BIOGEOCHEMISTRY','Behavioural responses, nutrient cycles and social systems',[8,9,10]],
    ['04 · EVENTS & DISTURBANCES','Active ecosystem events and interventions',[4]],
-   ['05 · ENGINE & PERFORMANCE','Runtime load and historical trends',[5,11]]
+   ['05 · ENGINE & PERFORMANCE','Runtime load and historical trends',[7,11]]
   ];
   modules.replaceChildren();
   const toolbar=document.createElement('div');toolbar.className='module-accordion-toolbar';
@@ -115,6 +115,81 @@ function buildAccordionInterface(){
  }
 }
 buildAccordionInterface();
+
+function installDashboardWorkspace(){
+ const main=document.querySelector('main'),viewer=document.querySelector('.viewer-shell');
+ if(!main||!viewer||main.querySelector('.dashboard-workspace'))return;
+ const workspace=document.createElement('section');workspace.className='dashboard-workspace';
+ const viewport=document.createElement('div');viewport.className='viewport-pane';
+ const bottom=document.createElement('div');bottom.className='bottom-pane';bottom.id='dashboard-bottom';
+ const bar=document.createElement('div');bar.className='workspace-toolbar';
+ bar.innerHTML='<div class="workspace-label">OBSERVATORY LAYOUT</div><div class="workspace-controls"><button type="button" class="tool" id="viewport-lock" aria-pressed="true">🔒 VIEW LOCKED</button><label class="viewport-size-control">VIEW <input id="viewport-size" type="range" min="25" max="75" step="1" value="50"><output id="viewport-size-value">50%</output></label><button type="button" class="tool" id="bottom-toggle-inline" aria-expanded="true">▾ PANELS</button></div>';
+ viewport.append(viewer);workspace.append(bar,viewport,bottom);
+ const rest=[...main.children];let reached=false;
+ for(const node of rest){if(node===viewer){reached=true;continue}if(!reached||node.tagName==='FOOTER')continue;bottom.append(node)}
+ main.insertBefore(workspace,main.querySelector('footer'));
+ const state={locked:true,collapsed:false,ratio:50};
+ const apply=()=>{workspace.style.setProperty('--viewport-ratio',state.ratio+'%');workspace.classList.toggle('viewport-locked',state.locked);workspace.classList.toggle('bottom-collapsed',state.collapsed);$('viewport-lock').textContent=state.locked?'🔒 VIEW LOCKED':'🔓 VIEW UNLOCKED';$('viewport-lock').setAttribute('aria-pressed',String(state.locked));$('viewport-size').value=state.ratio;$('viewport-size-value').textContent=state.ratio+'%';['bottom-toggle','bottom-toggle-inline'].forEach(id=>{const b=$(id);if(b){b.textContent=state.collapsed?'▴ PANELS':'▾ PANELS';b.setAttribute('aria-expanded',String(!state.collapsed))}});};
+ $('viewport-lock').onclick=()=>{state.locked=!state.locked;apply()};
+ const toggle=()=>{state.collapsed=!state.collapsed;apply()};
+ $('bottom-toggle').onclick=toggle;$('bottom-toggle-inline').onclick=toggle;
+ $('viewport-size').addEventListener('input',e=>{state.ratio=Number(e.target.value);apply()});
+ apply();
+ // Restore saved arrangement and per-widget dimensions without storing telemetry.
+ const KEY='nexus-aquarium.layout.v2';let saved={};
+ try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
+ const persist=()=>{try{const layout={groups:[...bottom.querySelectorAll('.module-group')].map(x=>x.dataset.layoutId),widgets:{},sizes:{}};bottom.querySelectorAll('.module-widget').forEach(x=>{layout.widgets[x.dataset.layoutId]=x.parentElement.dataset.groupId;layout.sizes[x.dataset.layoutId]={w:x.style.getPropertyValue('--widget-span')||'',h:x.style.getPropertyValue('--widget-height')||''}});localStorage.setItem(KEY,JSON.stringify(layout))}catch(e){}};
+ // Stable ids are derived from the module's visible title, not live values.
+ const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+ bottom.querySelectorAll('.module-group').forEach((g,i)=>{g.dataset.layoutId='group-'+slug(g.querySelector(':scope>summary')?.textContent||String(i));g.dataset.groupId=g.dataset.layoutId});
+ bottom.querySelectorAll('.module-widget').forEach((w,i)=>{w.dataset.layoutId='widget-'+slug(w.querySelector('.module-title')?.textContent||String(i))});
+ if(Array.isArray(saved.groups)){const parent=bottom.querySelector('.modules');const map=new Map([...parent.querySelectorAll(':scope>.module-group')].map(x=>[x.dataset.layoutId,x]));saved.groups.forEach(id=>{const node=map.get(id);if(node)parent.append(node)})}
+ Object.entries(saved.sizes||{}).forEach(([id,size])=>{const w=bottom.querySelector('[data-layout-id="'+id+'"]');if(w&&size){if(size.w)w.style.setProperty('--widget-span',size.w);if(size.h)w.style.setProperty('--widget-height',size.h)}});
+ const enableLongPress=(handle,target,kind)=>{
+  let timer=null,start=null,dragging=false,origin=null;
+  handle.addEventListener('pointerdown',e=>{
+   if(e.button!==undefined&&e.button!==0)return;
+   start={x:e.clientX,y:e.clientY};dragging=false;
+   timer=setTimeout(()=>{
+    dragging=true;target.classList.add('layout-active');
+    if(kind==='resize'){origin={w:target.getBoundingClientRect().width,h:target.getBoundingClientRect().height};target.style.setProperty('--widget-width-start',origin.w+'px');target.style.setProperty('--widget-height-start',origin.h+'px')}
+    else{target.classList.add('layout-dragging');try{handle.setPointerCapture(e.pointerId)}catch(_){}}
+    if(navigator.vibrate)navigator.vibrate(18);
+   },420);
+  });
+  handle.addEventListener('pointermove',e=>{
+   if(!start)return;
+   if(!dragging&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>12){clearTimeout(timer);timer=null;return}
+   if(!dragging)return;
+   if(kind==='resize'){const w=Math.max(150,origin.w+e.clientX-start.x),h=Math.max(110,origin.h+e.clientY-start.y);target.style.setProperty('--widget-width',w+'px');target.style.setProperty('--widget-height',h+'px')}
+   else{
+    const parent=target.parentElement,items=[...parent.children].filter(x=>x!==target);
+    const next=items.find(x=>{const r=x.getBoundingClientRect();return e.clientY<r.top+r.height/2});
+    if(next)parent.insertBefore(target,next);else parent.append(target);
+   }
+  });
+  const finish=()=>{clearTimeout(timer);timer=null;if(dragging){target.classList.remove('layout-active','layout-dragging');persist()}start=null;origin=null;dragging=false};
+  handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',finish);handle.addEventListener('lostpointercapture',finish);
+ };
+ const lockButton=$('module-layout-lock');
+ const modules=bottom.querySelector('.modules');
+ const lock=()=>{const unlocked=modules.classList.toggle('layout-unlocked');lockButton.textContent=unlocked?'🔓':'🔒';lockButton.setAttribute('aria-pressed',String(unlocked));modules.querySelectorAll('.module-group').forEach(g=>g.classList.toggle('layout-unlocked',unlocked));modules.querySelectorAll('.module-widget').forEach(w=>w.classList.toggle('layout-unlocked',unlocked))};
+ const toolbar=modules?.querySelector('.module-accordion-toolbar');
+ if(toolbar){lockButton=document.createElement('button');lockButton.type='button';lockButton.id='module-layout-lock';lockButton.className='secondary layout-lock';lockButton.textContent='🔒';lockButton.title='Unlock to long-press group or module headers to move, or bottom-right handles to resize';lockButton.setAttribute('aria-pressed','false');toolbar.prepend(lockButton);lockButton.onclick=lock}
+ const activate=()=>{
+  if(!modules)return;
+  modules.querySelectorAll('.module-group').forEach(g=>{
+   const summary=g.querySelector(':scope>summary');if(summary)enableLongPress(summary,g,'move');
+   g.querySelectorAll('.module-widget').forEach(w=>{
+    const ws=w.querySelector(':scope>summary');if(ws)enableLongPress(ws,w,'move');
+    if(!w.querySelector('.widget-resize-handle')){const grip=document.createElement('span');grip.className='widget-resize-handle';grip.setAttribute('aria-label','Long press and drag to resize');grip.title='Long press and drag to resize';w.append(grip);enableLongPress(grip,w,'resize')}
+   });
+  });
+ };
+ activate();
+ const observer=new MutationObserver(()=>activate());observer.observe(modules,{childList:true,subtree:true});
+}
+installDashboardWorkspace();
 
 document.querySelectorAll('button,select,input,label,.module-title,[data-tooltip]').forEach(el=>{if(!el.title){const label=el.getAttribute('aria-label')||el.textContent.trim()||el.id.replaceAll('-',' ');el.title=(el.dataset.tooltip||label)+' · NEXUS AQUARIUM';}el.addEventListener('focus',()=>showTip(el));el.addEventListener('click',()=>showTip(el));});
 function showTip(el){const text=el.dataset.tooltip||el.title;if(!text)return;let tip=$('touch-tooltip');if(!tip){tip=document.createElement('div');tip.id='touch-tooltip';tip.className='touch-tooltip';document.body.appendChild(tip)}tip.textContent=text.replace(/ · NEXUS AQUARIUM.*/,'');tip.classList.add('visible');clearTimeout(tip._timer);tip._timer=setTimeout(()=>tip.classList.remove('visible'),2600)}
