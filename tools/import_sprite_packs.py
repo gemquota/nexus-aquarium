@@ -74,7 +74,7 @@ def main():
    files.append({"path":dest.relative_to(ROOT).as_posix(),"source_path":rel.as_posix(),"bytes":info.file_size})
    if suffix in IMAGE_SUFFIXES:
     kind,species=classify(rel)
-    if kind!="prop":
+    if kind!="prop" and not any(token in rel.stem.lower() for token in ("sheet","atlas","spritesheet")):
      assets.append({"kind":kind,"species":species,"src":"/"+dest.relative_to(ROOT).as_posix(),"source_pack":a.pack,"filename":rel.name,"frames":1,"fps":6})
  manifest={"schema_version":1,"pack":a.pack,"projection":"side_view","public":a.public,"files":files,"image_count":sum(x["path"].lower().endswith(tuple(IMAGE_SUFFIXES)) for x in files),"assets":assets}
  (target/"import-manifest.json").write_text(json.dumps(manifest,indent=2)+"\n",encoding="utf-8")
