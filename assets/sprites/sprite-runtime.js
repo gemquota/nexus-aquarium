@@ -5,7 +5,8 @@
 (()=>{'use strict';
 const MANIFEST_URL=new URL('./runtime-manifest.json',document.currentScript.src).href;
 const images=new Map(),entries=[];
-const plantSpecies=new Set(['kelp','seagrass','sea_lettuce','mangrove','sargassum','seaweed','macroalgae','eelgrass']);
+const plantSpecies=new Set(['kelp','seagrass','sea_lettuce','mangrove','sargassum','seaweed','macroalgae','eelgrass','coral','coral_polyp']);
+const speciesAliases={sea_turtle:'turtle',coral_polyp:'coral',reef_fish:'generic',surface_fish:'generic',pelagic_fish:'generic',deepwater_fish:'generic',gull:'seagull'};
 const birdSpecies=new Set(['seagull','gull','pelican','albatross','tern','cormorant','frigatebird','macaw','parrot']);
 const normalise=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 function loadEntry(entry){
@@ -19,7 +20,7 @@ function loadEntry(entry){
   image.src=entry.src;images.set(key,state);return state;
 }
 function find(kind,species){
-  const name=normalise(species);
+  const name=speciesAliases[normalise(species)]||normalise(species);
   return entries.find(e=>e.kind===kind&&e.species===name)
     ||entries.find(e=>e.kind===kind&&e.species==='generic')
     ||entries.find(e=>e.kind===kind&&e.species==='');
