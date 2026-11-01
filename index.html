@@ -1,5 +1,30 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#03131d"><title>NEXUS // AQUARIUM</title><link rel="stylesheet" href="style.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#03131d"><title>NEXUS // AQUARIUM</title><link rel="stylesheet" href="style.css"><style>
+/* Nested, semantic accordion control room */
+#configuration .config-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.accordion-toolbar,.module-accordion-toolbar{display:flex;gap:8px;flex-wrap:wrap;grid-column:1/-1}
+.config-group,.module-group{border:1px solid #1b4a5b;border-radius:9px;background:#041925;overflow:hidden}
+.config-group>summary,.module-group>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;cursor:pointer;color:#b9eee5;font-size:11px;font-weight:800;letter-spacing:.09em}
+.config-group>summary::-webkit-details-marker,.module-group>summary::-webkit-details-marker,.module-widget>summary::-webkit-details-marker{display:none}
+.config-group>summary:before,.module-group>summary:before{content:'＋';color:#64e6d5;font-size:16px;margin-right:5px}
+.config-group[open]>summary:before,.module-group[open]>summary:before{content:'−'}
+.config-group>summary small,.module-group>summary small{margin-left:auto;color:#719aa6;font-size:10px;font-weight:400;letter-spacing:0;text-align:right}
+.config-subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:15px;padding:4px 16px 18px}
+.config-operations{display:flex;gap:8px;flex-wrap:wrap}
+.modules{display:flex;flex-direction:column;gap:12px}
+.module-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:10px;padding:0 12px 13px}
+.module-widget{min-width:0;border:1px solid #174353;border-radius:8px;background:#061c29;overflow:hidden}
+.module-widget>summary{list-style:none;cursor:pointer;padding:13px}
+.module-widget-title{display:block}
+.module-widget-title .module-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.module-widget-title .module-title:after{content:'⌄';color:#64e6d5;font-size:16px}
+.module-widget[open]>.module-widget-title .module-title:after{content:'⌃'}
+.module-widget-body{padding:0 14px 15px}
+.module-widget-body .subline{margin-top:10px}
+.module-widget-body #trend-chart{max-width:100%}
+.module-accordion-toolbar{padding-bottom:2px}
+@media(max-width:600px){.config-group>summary,.module-group>summary{align-items:flex-start;flex-wrap:wrap}.config-group>summary small,.module-group>summary small{width:100%;margin-left:25px;text-align:left}.module-group-grid{grid-template-columns:1fr}.accordion-toolbar button,.module-accordion-toolbar button{flex:1;font-size:9px;padding:9px 7px}}
+</style></head>
 <body><header><div class="brand">NEXUS <span>//</span> AQUARIUM</div><div class="header-right"><span class="status" id="status">LOCAL PREVIEW</span><a href="https://github.com/gemquota/nexus-aquarium" target="_blank" rel="noreferrer">SOURCE ↗</a></div></header>
 <main><section class="hero"><div><p class="eyebrow">AUTONOMOUS MARINE BIOSPHERE · CONTROL ROOM</p><h1>A living ocean.<br><em>Emergent by design.</em></h1><p>Explore the same authoritative Python simulation through a responsive, touch-first observatory.</p><div class="actions"><button id="pause">PAUSE ENGINE</button><button class="secondary" id="step">STEP 30 TICKS</button></div></div><div class="headline-metrics"><div><b id="count">—</b><small>LIVE ORGANISMS</small></div><div><b id="tick">—</b><small>SIMULATION TICK</small></div><div><b id="oxygen">—</b><small>DISSOLVED O₂</small></div></div></section>
 <section class="viewer-shell"><div class="viewer-toolbar"><div><strong>PELAGIC VIEW</strong><span id="view-label">300000 × 100000 WORLD</span><select id="species-filter" aria-label="Filter species"><option value="all">ALL SPECIES</option></select></div><div class="view-actions"><button class="tool" id="tilt-enable">ENABLE TILT</button><button class="tool" id="tilt-zero">NEUTRAL</button><button class="tool" id="zoom-out" aria-label="Zoom out">−</button><button class="tool" id="zoom-overview">WORLD</button><button class="tool" id="zoom-reset">HOME</button><button class="tool" id="zoom-in" aria-label="Zoom in">+</button><button class="tool" id="fullscreen">FULL</button></div></div>

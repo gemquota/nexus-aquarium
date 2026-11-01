@@ -58,6 +58,64 @@ function queueLiveConfig(){updateSliderLabels();clearTimeout(configTimer);config
 Object.keys(configFields).forEach(id=>$(id)?.addEventListener('input',queueLiveConfig));$('cfg-weather')?.addEventListener('change',queueLiveConfig);updateSliderLabels();
 $('cfg-save').onclick=async()=>{try{await request('/control/save',{});$('cfg-status').textContent='Checkpoint saved.'}catch(e){$('cfg-status').textContent=e.message}};
 $('cfg-reset').onclick=async()=>{if(!api)return $('cfg-status').textContent='Connect to the backend first.';if(!confirm('Reset the entire aquarium to the new default world and settings? Current simulation progress will be lost.'))return;try{await request('/control/reset',{seed:data().seed||2026});await refresh();$('cfg-status').textContent='New default world loaded.'}catch(e){$('cfg-status').textContent='Reset failed: '+e.message}};
+
+function buildAccordionInterface(){
+ const config=$('configuration'),grid=config?.querySelector('.config-grid');
+ if(grid&&!grid.dataset.organized){
+  grid.dataset.organized='1';
+  const controls=[...grid.children],groups=[
+   ['01 · WORLD & HABITAT','Spatial scale and water column',['cfg-width','cfg-height','cfg-water']],
+   ['02 · TIME & MOVEMENT','Simulation clock and organism locomotion',['cfg-speed','cfg-motion']],
+   ['03 · ECOSYSTEM DYNAMICS','Population pressure and circulation',['cfg-capacity','cfg-current','cfg-predation']],
+   ['04 · WEATHER & CLIMATE','Atmospheric forcing and precipitation',['cfg-rain','cfg-weather']],
+   ['05 · PHYSICS & RESOLUTION','Numerical stability and fluid detail',['cfg-fixed','cfg-frame','cfg-fluid']],
+   ['06 · STORAGE & OPERATIONS','Persistence and engine maintenance',['cfg-checkpoint']]
+  ];
+  const actions=controls.filter(el=>el.tagName==='BUTTON');
+  grid.replaceChildren();
+  const toolbar=document.createElement('div');toolbar.className='accordion-toolbar';
+  toolbar.innerHTML='<button type="button" class="secondary" data-config-open>EXPAND ALL</button><button type="button" class="secondary" data-config-close>COLLAPSE ALL</button>';
+  grid.append(toolbar);
+  for(const [title,desc,ids] of groups){
+   const section=document.createElement('details');section.className='config-group';section.open=title.startsWith('01')||title.startsWith('02');
+   const summary=document.createElement('summary');summary.innerHTML='<span>'+title+'</span><small>'+desc+'</small>';section.append(summary);
+   const inner=document.createElement('div');inner.className='config-subgrid';
+   for(const id of ids){const el=controls.find(node=>node.querySelector?.('#'+id));if(el)inner.append(el)}
+   section.append(inner);grid.append(section);
+  }
+  const ops=document.createElement('div');ops.className='config-operations';actions.forEach(el=>ops.append(el));grid.append(ops);
+  grid.querySelector('[data-config-open]').onclick=()=>grid.querySelectorAll('details').forEach(x=>x.open=true);
+  grid.querySelector('[data-config-close]').onclick=()=>grid.querySelectorAll('details').forEach(x=>x.open=false);
+ }
+ const modules=document.querySelector('.modules');
+ if(modules&&!modules.dataset.organized){
+  modules.dataset.organized='1';
+  const cards=[...modules.children];
+  const groups=[
+   ['01 · ECOSYSTEM & BIODIVERSITY','Population, trophic structure and organism inspection',[0,3,6]],
+   ['02 · ENVIRONMENT & REEF','Water chemistry, adaptation and coral condition',[1,8,9]],
+   ['03 · BEHAVIOUR & BIOGEOCHEMISTRY','Behavioural responses, nutrient cycles and social systems',[7,10]],
+   ['04 · EVENTS & DISTURBANCES','Active ecosystem events and interventions',[4]],
+   ['05 · ENGINE & PERFORMANCE','Runtime load and historical trends',[5,11]]
+  ];
+  modules.replaceChildren();
+  const toolbar=document.createElement('div');toolbar.className='module-accordion-toolbar';
+  toolbar.innerHTML='<button type="button" class="secondary" data-modules-open>EXPAND ALL GROUPS</button><button type="button" class="secondary" data-modules-close>COLLAPSE ALL GROUPS</button><button type="button" class="secondary" data-widgets-toggle>MINIMISE ALL WIDGETS</button>';
+  modules.append(toolbar);
+  for(const [title,desc,indices] of groups){
+   const group=document.createElement('details');group.className='module-group';group.open=true;
+   const summary=document.createElement('summary');summary.innerHTML='<span>'+title+'</span><small>'+desc+'</small>';group.append(summary);
+   const grid=document.createElement('div');grid.className='module-group-grid';
+   indices.forEach(i=>{const card=cards[i];if(!card)return;const head=card.querySelector('.module-title');if(!head)return;const label=head.cloneNode(true);head.remove();const widget=document.createElement('details');widget.className='module-widget';widget.open=true;const ws=document.createElement('summary');ws.className='module-widget-title';ws.append(label);widget.append(ws);const body=document.createElement('div');body.className='module-widget-body';while(card.firstChild)body.append(card.firstChild);widget.append(body);grid.append(widget)});
+   group.append(grid);modules.append(group);
+  }
+  modules.querySelector('[data-modules-open]').onclick=()=>modules.querySelectorAll('.module-group').forEach(x=>x.open=true);
+  modules.querySelector('[data-modules-close]').onclick=()=>modules.querySelectorAll('.module-group').forEach(x=>x.open=false);
+  modules.querySelector('[data-widgets-toggle]').onclick=e=>{const widgets=[...modules.querySelectorAll('.module-widget')],all=widgets.every(x=>!x.open);widgets.forEach(x=>x.open=all);e.currentTarget.textContent=all?'MINIMISE ALL WIDGETS':'EXPAND ALL WIDGETS'};
+ }
+}
+buildAccordionInterface();
+
 document.querySelectorAll('button,select,input,label,.module-title,[data-tooltip]').forEach(el=>{if(!el.title){const label=el.getAttribute('aria-label')||el.textContent.trim()||el.id.replaceAll('-',' ');el.title=(el.dataset.tooltip||label)+' · NEXUS AQUARIUM';}el.addEventListener('focus',()=>showTip(el));el.addEventListener('click',()=>showTip(el));});
 function showTip(el){const text=el.dataset.tooltip||el.title;if(!text)return;let tip=$('touch-tooltip');if(!tip){tip=document.createElement('div');tip.id='touch-tooltip';tip.className='touch-tooltip';document.body.appendChild(tip)}tip.textContent=text.replace(/ · NEXUS AQUARIUM.*/,'');tip.classList.add('visible');clearTimeout(tip._timer);tip._timer=setTimeout(()=>tip.classList.remove('visible'),2600)}
 
