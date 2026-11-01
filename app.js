@@ -93,8 +93,8 @@ function buildAccordionInterface(){
   const cards=[...modules.children];
   const groups=[
    ['01 · ECOSYSTEM & BIODIVERSITY','Population, trophic structure and organism inspection',[0,3,6]],
-   ['02 · ENVIRONMENT & REEF','Water chemistry, adaptation and coral condition',[1,8,9]],
-   ['03 · BEHAVIOUR & BIOGEOCHEMISTRY','Behavioural responses, nutrient cycles and social systems',[7,10]],
+   ['02 · ENVIRONMENT & REEF','Water chemistry, ecosystem health and coral condition',[1,2,5]],
+   ['03 · BEHAVIOUR & BIOGEOCHEMISTRY','Behavioural responses, nutrient cycles and social systems',[8,9,10]],
    ['04 · EVENTS & DISTURBANCES','Active ecosystem events and interventions',[4]],
    ['05 · ENGINE & PERFORMANCE','Runtime load and historical trends',[5,11]]
   ];
