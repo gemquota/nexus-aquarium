@@ -154,8 +154,9 @@ function installDashboardWorkspace(){
    start={x:e.clientX,y:e.clientY};dragging=false;
    timer=setTimeout(()=>{
     dragging=true;target.classList.add('layout-active');
+    try{handle.setPointerCapture(e.pointerId)}catch(_){}
     if(kind==='resize'){origin={w:target.getBoundingClientRect().width,h:target.getBoundingClientRect().height};target.style.setProperty('--widget-width-start',origin.w+'px');target.style.setProperty('--widget-height-start',origin.h+'px')}
-    else{target.classList.add('layout-dragging');try{handle.setPointerCapture(e.pointerId)}catch(_){}}
+    else{target.classList.add('layout-dragging')}
     if(navigator.vibrate)navigator.vibrate(18);
    },420);
   });
