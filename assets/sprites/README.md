@@ -53,3 +53,18 @@ The importer only stages files; it does not auto-publish them or alter the simul
 ## Licence discipline
 
 The project repository is public. Only commit asset files whose licence permits redistribution in a public repository (for example, CC0). A licence allowing use in a commercial game does not automatically allow publishing the raw asset files in a public source repository.
+## Sprite renderer integration
+
+The browser now loads `sprite-runtime.js` before the aquarium renderer. It reads `runtime-manifest.json` and can draw imported side-view creature, plant, seabird and island sprites. If an image is absent or fails to load, the existing procedural renderer remains the fallback. The simulation and its data model are unchanged.
+
+### Importing the free Kenney fish pack
+
+Open [Kenney's Fish Pack on OpenGameArt](https://opengameart.org/node/79308), download `kenney_fish-pack_2.0.zip`, and place it in `asset_staging/`. It is listed as CC0 and in the site's side-scroll sprite collection. Then run:
+
+```sh
+python3 tools/import_sprite_packs.py asset_staging/kenney_fish-pack_2.0.zip --pack kenney-fish --public
+```
+
+This writes the extracted CC0 image files to `assets/sprites/imported/kenney-fish/` and updates `runtime-manifest.json`. Review the generated import manifest, then commit the imported files and manifest. The importer deliberately skips unparsed atlas/spritesheet images to avoid stretching an entire sheet as one fish. Individual PNGs are used as static sprites until frame metadata is available.
+
+For paid packs, omit `--public`; the files remain in the ignored `local_assets/` folder and must not be pushed to the public repository. Private licensed packs are not yet wired into public GitHub Pages hosting.
