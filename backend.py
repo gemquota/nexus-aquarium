@@ -21,7 +21,7 @@ from coral import CoralReefSystem
 from physics import SpatialGrid
 
 ENGINE_VERSION = 4
-DEFAULT_CONFIG = {"world_width":2400,"world_height":720,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":30.0,"max_organisms":1500,"habitat":"coral_reef","initial_fluid_particles":180,"initial_water_fraction":0.22,"rain_rate":0.00035,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.4,"movement_scale":68.0,"predation_intensity":0.8}
+DEFAULT_CONFIG = {"world_width":24000,"world_height":7200,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":30.0,"max_organisms":1500,"habitat":"coral_reef","initial_fluid_particles":180,"initial_water_fraction":0.22,"rain_rate":0.00035,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.4,"movement_scale":68.0,"predation_intensity":0.8}
 
 @dataclass
 class Genome:
@@ -67,6 +67,7 @@ class Engine:
         self.seabirds=[{"id":i+1,"species":bird_species[i%len(bird_species)],"x":(i*173+65)%self.config["world_width"],"y":8.0+i*1.8,"vx":(0.8 if i%2==0 else -0.8),"vy":0.0,"state":"soaring","hunger":0.35+(i%3)*.1,"dive_cooldown":8.0+i*2,"catches":0} for i in range(12)]
         self.floating_islets=[{"id":i+1,"x":(i*317+180)%self.config["world_width"],"y":self.config["world_height"]*(1-self.water_fraction)-2.5,"radius":5.0+(i%3)*2.0,"vegetation":0.35+(i%4)*.12} for i in range(3)]
         self.seabird_catches=0
+        self._seeding=True
         for i in range(18): self.add("reef_fish",(i*43+35)%(self.config["world_width"]-20)+10,self.config["world_height"]*(.90+self.rng.random()*.08),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.08,.08))
         self.add("shark",self.config["world_width"]*.42,self.config["world_height"]*.94,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,self.config["world_height"]*.93,vy=.12)
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
@@ -79,6 +80,7 @@ class Engine:
             zone=species_profile(name).get("zone","benthic")
             y=surface+8 if zone=="surface" else (surface+self.water_fraction*h*.48 if zone=="open_water" else (h*.88 if zone=="deep" else (h*.94 if zone=="benthic" else surface-1)))
             self.add(name,30+(i*131)%(self.config["world_width"]-60),y,vx=species_profile(name)["speed"]*.4,vy=self.rng.uniform(-.04,.04))
+        self._seeding=False
     @staticmethod
     def validate_config(config):
         for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
@@ -94,7 +96,9 @@ class Engine:
         if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
 
     def add(self,species,x,y,vx=0,vy=0,genome=None):
-        if len(self.organisms)>=self.config["max_organisms"]: raise RuntimeError("organism capacity reached")
+        if len(self.organisms)>=self.config["max_organisms"]:
+            if getattr(self,"_seeding",False): return None
+            raise RuntimeError("organism capacity reached")
         if not species or not isinstance(species,str): raise ValueError("species must be a non-empty string")
         x=float(x); y=float(y)
         if not all(map(lambda v: v==v and abs(v)<1e9,(x,y))): raise ValueError("organism coordinates must be finite")
