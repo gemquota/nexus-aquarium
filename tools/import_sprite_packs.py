@@ -30,7 +30,7 @@ ALIASES={
  "mangrove":["mangrove"],"coral":["coral"],"island":["island","shore","coast"]
 }
 def safe_member(info):
- name=info.filename.replace("\\\\","/")
+ name=info.filename.replace("\\","/")
  path=PurePosixPath(name);mode=info.external_attr>>16
  if path.is_absolute() or any(p in ("",".","..") for p in path.parts) or stat.S_ISLNK(mode) or info.is_dir():return None
  return path
