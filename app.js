@@ -146,6 +146,7 @@ function installDashboardWorkspace(){
  if(Array.isArray(saved.groups)){const parent=bottom.querySelector('.modules');const map=new Map([...parent.querySelectorAll(':scope>.module-group')].map(x=>[x.dataset.layoutId,x]));saved.groups.forEach(id=>{const node=map.get(id);if(node)parent.append(node)})}
  Object.entries(saved.sizes||{}).forEach(([id,size])=>{const w=bottom.querySelector('[data-layout-id="'+id+'"]');if(w&&size){if(size.w)w.style.setProperty('--widget-span',size.w);if(size.h)w.style.setProperty('--widget-height',size.h)}});
  const enableLongPress=(handle,target,kind)=>{
+  if(handle.dataset.longPressReady==='1')return;handle.dataset.longPressReady='1';
   let timer=null,start=null,dragging=false,origin=null;
   handle.addEventListener('pointerdown',e=>{
    if(!modules.classList.contains('layout-unlocked'))return;
