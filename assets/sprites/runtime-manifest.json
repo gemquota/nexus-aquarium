@@ -1,5 +1,1095 @@
 {
   "schema_version": 1,
   "projection": "side_view",
-  "assets": []
+  "assets": [
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_c.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_c.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_d.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_d.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_e.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_e.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_f.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_f.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_g.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_g.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/background_seaweed_h.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_h.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_blue.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_blue_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_blue_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_blue_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_brown.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_brown.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_brown_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_brown_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_green.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_green_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_green_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_green_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_grey.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_grey_long_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_grey_long_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_grey_long_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_grey_long_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_grey_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_orange.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_orange_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_orange_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_orange_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_pink.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_pink_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_pink_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_pink_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_red.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_red_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_red_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/fish_red_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_grass_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_grass_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_grass_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_grass_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_c.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_c.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_c_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_c_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_d.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_d.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_green_d_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_d_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_orange_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_orange_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_orange_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_orange_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_c.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_c.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_c_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_c_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_d.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_d.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Default/seaweed_pink_d_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_d_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_c.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_c.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_d.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_d.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_e.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_e.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_f.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_f.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_g.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_g.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/background_seaweed_h.png",
+      "source_pack": "kenney-fish",
+      "filename": "background_seaweed_h.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_blue.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_blue_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_blue_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_blue_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_blue_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_brown.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_brown.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_brown_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_brown_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_green.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_green_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_green_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_green_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_green_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_grey.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_grey_long_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_grey_long_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_grey_long_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_grey_long_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_long_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_grey_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_grey_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_orange.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_orange_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_orange_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_orange_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_orange_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_pink.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_pink_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_pink_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_pink_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_pink_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_red.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_red_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_red_skeleton.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red_skeleton.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "creature",
+      "species": "generic",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/fish_red_skeleton_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "fish_red_skeleton_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_grass_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_grass_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_grass_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_grass_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_grass_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_c.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_c.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_c_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_c_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_d.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_d.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_green_d_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_green_d_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_orange_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_orange_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_orange_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_orange_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_orange_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_a.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_a.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_a_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_a_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_b.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_b.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_b_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_b_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_c.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_c.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_c_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_c_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_d.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_d.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "plant",
+      "species": "seaweed",
+      "src": "/assets/sprites/imported/kenney-fish/PNG/Double/seaweed_pink_d_outline.png",
+      "source_pack": "kenney-fish",
+      "filename": "seaweed_pink_d_outline.png",
+      "frames": 1,
+      "fps": 6
+    },
+    {
+      "kind": "bird",
+      "species": "generic",
+      "src": "/assets/sprites/imported/inmenus-bird-cc0/bird.png",
+      "source_pack": "inmenus-bird-cc0",
+      "filename": "bird.png",
+      "frames": 1,
+      "fps": 6
+    }
+  ]
 }

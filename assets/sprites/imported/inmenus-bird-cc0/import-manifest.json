@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "pack": "inmenus-bird-cc0",
+  "projection": "side_view",
+  "public": true,
+  "files": [
+    {
+      "path": "assets/sprites/imported/inmenus-bird-cc0/bird.png",
+      "source_path": "bird.png",
+      "bytes": 18727
+    }
+  ],
+  "image_count": 1,
+  "assets": [
+    {
+      "kind": "bird",
+      "species": "generic",
+      "src": "/assets/sprites/imported/inmenus-bird-cc0/bird.png",
+      "source_pack": "inmenus-bird-cc0",
+      "filename": "bird.png",
+      "frames": 1,
+      "fps": 6
+    }
+  ]
+}
