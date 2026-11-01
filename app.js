@@ -148,6 +148,7 @@ function installDashboardWorkspace(){
  const enableLongPress=(handle,target,kind)=>{
   let timer=null,start=null,dragging=false,origin=null;
   handle.addEventListener('pointerdown',e=>{
+   if(!modules.classList.contains('layout-unlocked'))return;
    if(e.button!==undefined&&e.button!==0)return;
    start={x:e.clientX,y:e.clientY};dragging=false;
    timer=setTimeout(()=>{
@@ -161,7 +162,7 @@ function installDashboardWorkspace(){
    if(!start)return;
    if(!dragging&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>12){clearTimeout(timer);timer=null;return}
    if(!dragging)return;
-   if(kind==='resize'){const w=Math.max(150,origin.w+e.clientX-start.x),h=Math.max(110,origin.h+e.clientY-start.y);target.style.setProperty('--widget-width',w+'px');target.style.setProperty('--widget-height',h+'px')}
+   if(kind==='resize'){const w=Math.max(150,origin.w+e.clientX-start.x),h=Math.max(110,origin.h+e.clientY-start.y),grid=target.parentElement,cell=Math.max(1,grid.getBoundingClientRect().width/(innerWidth<=650?2:4));target.style.setProperty('--widget-span',String(Math.max(1,Math.min(innerWidth<=650?2:4,Math.round(w/cell)))));target.style.setProperty('--widget-height',h+'px')}
    else{
     const parent=target.parentElement,items=[...parent.children].filter(x=>x!==target);
     const next=items.find(x=>{const r=x.getBoundingClientRect();return e.clientY<r.top+r.height/2});
@@ -171,7 +172,7 @@ function installDashboardWorkspace(){
   const finish=()=>{clearTimeout(timer);timer=null;if(dragging){target.classList.remove('layout-active','layout-dragging');persist()}start=null;origin=null;dragging=false};
   handle.addEventListener('pointerup',finish);handle.addEventListener('pointercancel',finish);handle.addEventListener('lostpointercapture',finish);
  };
- const lockButton=$('module-layout-lock');
+ let lockButton=$('module-layout-lock');
  const modules=bottom.querySelector('.modules');
  const lock=()=>{const unlocked=modules.classList.toggle('layout-unlocked');lockButton.textContent=unlocked?'🔓':'🔒';lockButton.setAttribute('aria-pressed',String(unlocked));modules.querySelectorAll('.module-group').forEach(g=>g.classList.toggle('layout-unlocked',unlocked));modules.querySelectorAll('.module-widget').forEach(w=>w.classList.toggle('layout-unlocked',unlocked))};
  const toolbar=modules?.querySelector('.module-accordion-toolbar');

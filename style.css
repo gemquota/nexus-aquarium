@@ -82,3 +82,6 @@ footer{display:none}
  .connect .row{margin-top:8px}
 }
 @media(max-width:380px){.workspace-controls .tool{font-size:8px;padding:5px}.viewport-size-control input{width:54px}.module-group-grid{gap:5px!important}.module-widget{min-height:100px}}
+
+.module-widget{width:100%;min-width:0}
+.module-widget.layout-active{user-select:none}
