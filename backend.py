@@ -70,8 +70,6 @@ class Engine:
         self._seeding=True
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
         for i in range(18): self.add("reef_fish",self.config["world_width"]*(.20+i*.60/17),surface+self.water_fraction*h*(.34+self.rng.random()*.20),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.025,.025))
-        for i in range(24): self.add("sardine",(i*37+18)%self.config["world_width"],surface+24+(i%5)*3,vx=.55 if i%2 else -.55,vy=self.rng.uniform(-.02,.02))
-        for i in range(12): self.add("mackerel",(i*83+42)%self.config["world_width"],surface+self.water_fraction*h*(.30+(i%4)*.035),vx=.42 if i%2 else -.42)
         self.add("shark",self.config["world_width"]*.42,surface+self.water_fraction*h*.58,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,surface+self.water_fraction*h*.42,vy=.06)
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
         for i in range(10): self.add(("surface_fish","sardine")[i%2],(i*71+45)%self.config["world_width"],surface+12+(i%3)*5,vx=.45 if i%2 else -.45)
@@ -83,9 +81,6 @@ class Engine:
             zone=species_profile(name).get("zone","benthic")
             y=surface+8 if zone=="surface" else (surface+self.water_fraction*h*.48 if zone=="open_water" else (h*.84 if zone=="deep" else (h*.89 if zone=="benthic" else surface-1)))
             self.add(name,30+(i*131)%(self.config["world_width"]-60),y,vx=species_profile(name)["speed"]*.4,vy=self.rng.uniform(-.04,.04))
-        for i in range(36):
-            x=(i*7919+311)%self.config["world_width"]
-            self.add(("kelp","seagrass","sea_lettuce","coral_polyp")[i%4],x,h*.91+(i%3)*1.5)
         self._seeding=False
     @staticmethod
     def validate_config(config):
