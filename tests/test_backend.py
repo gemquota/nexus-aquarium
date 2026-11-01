@@ -397,3 +397,15 @@ class MarineDiversityTests(unittest.TestCase):
         self.assertGreaterEqual(len(snap["seabirds"]),8)
         self.assertGreaterEqual(len({b["species"] for b in snap["seabirds"]}),6)
         self.assertGreaterEqual(len(snap["floating_islets"]),2)
+
+
+class ExpandedWorldQualityTests(unittest.TestCase):
+    def test_default_world_is_expanded_tenfold(self):
+        engine=Engine(seed=71)
+        self.assertEqual(engine.config["world_width"],24000)
+        self.assertEqual(engine.config["world_height"],7200)
+        self.assertGreaterEqual(len(engine.organisms),39)
+    def test_small_capacity_seeds_without_crashing_and_enforces_add_limit(self):
+        engine=Engine(seed=72,config={"max_organisms":39})
+        self.assertEqual(len(engine.organisms),39)
+        with self.assertRaises(RuntimeError): engine.add("reef_fish",1,1)
