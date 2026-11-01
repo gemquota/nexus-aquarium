@@ -420,3 +420,25 @@ class ExpandedWorldQualityTests(unittest.TestCase):
         engine=Engine(seed=72,config={"max_organisms":39})
         self.assertEqual(len(engine.organisms),39)
         with self.assertRaises(RuntimeError): engine.add("reef_fish",1,1)
+
+
+class PerformanceInstrumentationTests(unittest.TestCase):
+    def test_step_profiler_reports_budget_and_stage_timings(self):
+        engine=Engine(seed=880)
+        for _ in range(4): engine.step(1/30)
+        perf=engine.performance
+        self.assertEqual(perf["samples"],4)
+        self.assertGreaterEqual(perf["step_ms"],0)
+        self.assertGreater(perf["budget_ms"],0)
+        self.assertGreaterEqual(perf["budget_utilization"],0)
+        self.assertTrue(perf["stages_ms"])
+        self.assertIn(perf["slowest_stage"],perf["stages_ms"])
+        self.assertEqual(perf["organisms"],len(engine.organisms))
+        self.assertEqual(perf["fluid_particles"],len(engine.physics.particles))
+
+    def test_snapshot_exposes_performance_telemetry(self):
+        engine=Engine(seed=881); engine.step(1/30)
+        perf=engine.snapshot()["performance"]
+        self.assertIn("step_ema_ms",perf)
+        self.assertIn("stages_ms",perf)
+        self.assertIn("budget_utilization",perf)
