@@ -405,6 +405,17 @@ class ExpandedWorldQualityTests(unittest.TestCase):
         self.assertEqual(engine.config["world_width"],24000)
         self.assertEqual(engine.config["world_height"],7200)
         self.assertGreaterEqual(len(engine.organisms),39)
+    def test_seeded_reef_fish_and_benthic_life_are_not_buried(self):
+        engine=Engine(seed=73)
+        height=engine.config["world_height"]
+        surface=height*(1-engine.water_fraction)
+        reef=[o for o in engine.organisms if o.species=="reef_fish"]
+        self.assertEqual(len(reef),18)
+        self.assertTrue(all(surface<o.y<height*.91 for o in reef))
+        benthic=[o for o in engine.organisms if o.species in {"crab","lobster","crayfish","hermit_crab","octopus","eel","sea_star","sea_urchin","shrimp","clam","coral_polyp"}]
+        self.assertTrue(benthic)
+        self.assertTrue(all(o.y<height*.91 for o in benthic))
+
     def test_small_capacity_seeds_without_crashing_and_enforces_add_limit(self):
         engine=Engine(seed=72,config={"max_organisms":39})
         self.assertEqual(len(engine.organisms),39)
