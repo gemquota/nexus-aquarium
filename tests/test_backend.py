@@ -517,3 +517,16 @@ class EcologicalIntegrityReleaseTests(unittest.TestCase):
         self.assertEqual(a.snapshot()["organisms"],b.snapshot()["organisms"])
         self.assertEqual(a.snapshot()["water"],b.snapshot()["water"])
         self.assertEqual(a.ecology.state(),b.ecology.state())
+
+
+class DisturbanceValidationTests(unittest.TestCase):
+    def test_event_rejects_non_finite_intensity_and_duration(self):
+        from events import EventSystem
+        engine=Engine(seed=605)
+        events=EventSystem()
+        with self.assertRaises(ValueError):
+            events.add(engine,"storm",float("nan"),10)
+        with self.assertRaises(ValueError):
+            events.add(engine,"storm",.5,float("inf"))
+        with self.assertRaises(ValueError):
+            events.add(engine,"not_an_event",.5,10)
