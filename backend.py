@@ -452,8 +452,11 @@ class Handler(BaseHTTPRequestHandler):
                 if not self.service.state_path:return self.send_json(503,{"error":"checkpoint storage is disabled"})
                 e.save_state(self.service.state_path); result={"saved":True,"tick":e.tick}
             elif self.path=="/control/reset":
-                try: seed=int(body.get("seed",e.seed))
-                except (TypeError,ValueError): return self.send_json(400,{"error":"seed must be an integer"})
+                try:
+                    raw_seed=body.get("seed",e.seed)
+                    if isinstance(raw_seed,bool) or not isinstance(raw_seed,(int,float)) or not math.isfinite(float(raw_seed)) or int(raw_seed)!=raw_seed: raise ValueError
+                    seed=int(raw_seed)
+                except (TypeError,ValueError,OverflowError): return self.send_json(400,{"error":"seed must be an integer"})
                 self.service.engine=Engine(seed); result={"reset":True,"seed":seed,"defaults":True}
             else:return self.send_json(404,{"error":"unknown control"})
         self.send_json(200,result)
