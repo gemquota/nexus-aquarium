@@ -20,7 +20,7 @@ from migration import MigrationSystem
 from coral import CoralReefSystem
 from physics import SpatialGrid
 
-ENGINE_VERSION = 4
+ENGINE_VERSION = 5
 DEFAULT_CONFIG = {"world_width":300000,"world_height":100000,"fixed_dt":1/30,"max_frame_dt":0.2,"checkpoint_interval":30.0,"max_organisms":1500,"habitat":"coral_reef","initial_fluid_particles":80,"initial_water_fraction":0.22,"rain_rate":0.00035,"weather_enabled":True,"simulation_speed":1.0,"current_strength":1.4,"movement_scale":68.0,"predation_intensity":0.8}
 
 @dataclass
@@ -84,17 +84,42 @@ class Engine:
         self._seeding=False
     @staticmethod
     def validate_config(config):
-        for key in ("world_width","world_height","max_organisms","initial_fluid_particles"):
-            if int(config[key])<1: raise ValueError(f"{key} must be positive")
-        if config["habitat"] not in HABITATS: raise ValueError("unknown habitat profile")
-        if not 0.01<=float(config["initial_water_fraction"])<=1: raise ValueError("initial_water_fraction must be between 0.01 and 1")
-        if not 0<=float(config["rain_rate"])<=0.1: raise ValueError("rain_rate must be between 0 and 0.1")
-        if float(config["simulation_speed"])<0.1 or float(config["simulation_speed"])>10: raise ValueError("simulation_speed must be between 0.1 and 10")
-        if float(config["current_strength"])<0 or float(config["current_strength"])>5: raise ValueError("current_strength must be between 0 and 5")
-        if not 1<=float(config["movement_scale"])<=100: raise ValueError("movement_scale must be between 1 and 100")
-        if not 0.001<=float(config["fixed_dt"])<=1: raise ValueError("fixed_dt must be between 0.001 and 1")
-        if not 0.1<=float(config["max_frame_dt"])<=2: raise ValueError("max_frame_dt must be between 0.1 and 2")
-        if float(config["checkpoint_interval"])<1: raise ValueError("checkpoint_interval must be at least 1 second")
+        """Validate API and checkpoint configuration without coercing bad values."""
+        integer_limits = {
+            "world_width": (1000, 2000000),
+            "world_height": (1000, 500000),
+            "max_organisms": (1, 20000),
+            "initial_fluid_particles": (1, 20000),
+        }
+        for key, (minimum, maximum) in integer_limits.items():
+            value = config.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or int(value) != value:
+                raise ValueError(f"{key} must be an integer")
+            if not minimum <= int(value) <= maximum:
+                raise ValueError(f"{key} must be between {minimum} and {maximum}")
+        if config.get("habitat") not in HABITATS:
+            raise ValueError("unknown habitat profile")
+        if not isinstance(config.get("weather_enabled"), bool):
+            raise ValueError("weather_enabled must be a boolean")
+        numeric_limits = {
+            "initial_water_fraction": (0.01, 1.0),
+            "rain_rate": (0.0, 0.1),
+            "simulation_speed": (0.1, 10.0),
+            "current_strength": (0.0, 5.0),
+            "movement_scale": (1.0, 100.0),
+            "fixed_dt": (0.001, 1.0),
+            "max_frame_dt": (0.1, 2.0),
+            "checkpoint_interval": (1.0, 86400.0),
+            "predation_intensity": (0.0, 3.0),
+        }
+        for key, (minimum, maximum) in numeric_limits.items():
+            value = config.get(key)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"{key} must be a finite number")
+            if not minimum <= float(value) <= maximum:
+                raise ValueError(f"{key} must be between {minimum} and {maximum}")
+        if float(config["max_frame_dt"]) < float(config["fixed_dt"]):
+            raise ValueError("max_frame_dt must be at least fixed_dt")
 
     def add(self,species,x,y,vx=0,vy=0,genome=None):
         if len(self.organisms)>=self.config["max_organisms"]:
@@ -106,8 +131,9 @@ class Engine:
         profile=species_profile(species)
         if genome is None: genome=Genome({"speed":profile["speed"],"size":profile["size"],"camouflage":self.rng.random(),"metabolism":.5,"fecundity":profile["fecundity"],"sensory":self.rng.random(),"resistance":.5,"agility":self.rng.random(),"turn_rate":self.rng.random(),"tracking":self.rng.random(),"transparency":self.rng.uniform(.05,.55),"hue":self.rng.random(),"pattern":self.rng.random(),"fin_size":self.rng.random()})
         o=Organism(self.next_id,species,x,y,vx,vy,genome=genome); self.next_id+=1; self.organisms.append(o); return o
-    def step(self,dt=1/30):
+    def step(self,dt=None):
         if self.paused:return
+        if dt is None: dt=float(self.config["fixed_dt"])
         step_started=time.perf_counter(); stages={}; stage_started=step_started
         self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
         self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.movement_scale=float(self.config["movement_scale"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
@@ -126,7 +152,9 @@ class Engine:
         alive=[o for o in self.organisms if o.alive]
         for o in alive:
             o.age+=dt; o.cooldown=max(0,o.cooldown-dt)
-            o.energy=max(0,o.energy-dt*(.0008+o.genome.traits["metabolism"]*.0007))
+            metabolic_loss=min(o.energy,dt*(.0008+o.genome.traits["metabolism"]*.0007))
+            o.energy=max(0.0,o.energy-metabolic_loss)
+            self.ecology.record_metabolic_loss(metabolic_loss)
             if o.energy<=.02 or o.health<=.01:
                 o.alive=False; self.deaths+=1
         alive=[o for o in self.organisms if o.alive]
@@ -176,7 +204,7 @@ class Engine:
             "stages_ms":stages,"slowest_stage":max(stages,key=stages.get) if stages else "none",
             "samples":int(self.performance.get("samples",0))+1,"organisms":len(self.organisms),
             "alive":sum(1 for item in self.organisms if item.alive),"fluid_particles":len(self.physics.particles),
-            "budget_ms":1000.0/30.0,"budget_utilization":elapsed/(1000.0/30.0)}
+            "budget_ms":float(self.config["fixed_dt"])*1000.0,"budget_utilization":elapsed/max(1e-9,float(self.config["fixed_dt"])*1000.0)}
     def _step_seabirds(self,dt):
         """Surface predator agents: soar, spot schools, dive and catch fish."""
         import math
@@ -266,20 +294,57 @@ class Engine:
             "generation":o.genome.generation,"life_stage":life_stage(o.species,o.age),"trophic_role":species_profile(o.species)["trophic"],"genome":o.genome.traits,"senses":o.brain.senses,
             "memory":o.brain.memory[-8:]} for o in self.organisms]}
 
+class FixedStepClock:
+    """Wall-clock accumulator for fixed simulation ticks, with bounded catch-up."""
+    def __init__(self):
+        self.accumulator = 0.0
+        self.dropped_time = 0.0
+
+    def advance(self, elapsed, fixed_dt, max_frame_dt):
+        elapsed = max(0.0, float(elapsed)) if math.isfinite(float(elapsed)) else 0.0
+        fixed_dt = float(fixed_dt)
+        max_frame_dt = float(max_frame_dt)
+        accepted = min(elapsed, max_frame_dt)
+        self.dropped_time += max(0.0, elapsed - accepted)
+        self.accumulator = min(max_frame_dt, self.accumulator + accepted)
+        max_steps = max(1, int((max_frame_dt + 1e-12) / fixed_dt))
+        steps = min(int((self.accumulator + 1e-12) / fixed_dt), max_steps)
+        self.accumulator = max(0.0, self.accumulator - steps * fixed_dt)
+        if self.accumulator >= fixed_dt:
+            retained = self.accumulator % fixed_dt
+            self.dropped_time += self.accumulator - retained
+            self.accumulator = retained
+        return steps
+
+
 class Service:
     def __init__(self,token,engine=None,state_path=""):
         self.token=token; self.state_path=state_path; self.engine=engine or Engine.load_state(state_path)
         self.lock=threading.RLock(); self.running=True; self.last_save=time.monotonic()
+        self.clock=FixedStepClock(); self.last_checkpoint_error=None; self.last_loop_error=None
         self.thread=threading.Thread(target=self.loop,daemon=True); self.thread.start()
     def loop(self):
         last=time.monotonic()
         while self.running:
-            now=time.monotonic(); dt=min(.2,now-last); last=now
+            now=time.monotonic()
             with self.lock:
-                self.engine.step(dt)
-                if self.state_path and now-self.last_save>=self.engine.config["checkpoint_interval"]:
-                    self.engine.save_state(self.state_path); self.last_save=now
-            time.sleep(1/30)
+                try:
+                    config=self.engine.config
+                    steps=self.clock.advance(now-last,config["fixed_dt"],config["max_frame_dt"])
+                    for _ in range(steps):
+                        self.engine.step()
+                    if self.state_path and now-self.last_save>=self.engine.config["checkpoint_interval"]:
+                        try:
+                            self.engine.save_state(self.state_path)
+                            self.last_save=now
+                            self.last_checkpoint_error=None
+                        except Exception as exc:
+                            self.last_checkpoint_error=type(exc).__name__
+                except Exception as exc:
+                    self.last_loop_error=type(exc).__name__
+                    self.engine.paused=True
+            last=now
+            time.sleep(min(0.01,max(0.001,float(self.engine.config["fixed_dt"])*0.25)))
 class Handler(BaseHTTPRequestHandler):
     service=None
     def log_message(self,*args):pass
@@ -301,7 +366,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path=="/":
             return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health","snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
-        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION})
+        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION,"simulation_error":self.service.last_loop_error is not None,"checkpoint_error":self.service.last_checkpoint_error is not None})
         if self.path=="/catalogue":return self.send_json(200,{"species":{k:{"group":v["group"],"trophic":v["trophic"],"habitats":v["habitats"],"temperature":v["temperature"],"oxygen_min":v["oxygen_min"]} for k,v in __import__("biodiversity").SPECIES.items()},"habitats":HABITATS})
         if self.path=="/events":
             if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
@@ -311,7 +376,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
         with self.service.lock:
             data=self.service.engine.snapshot()
-            if self.path=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics","genetics","nutrients","disease","social","migration","environment","habitat_map")}
+            if self.path=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics","genetics","nutrients","disease","social","migration","environment","habitat_map","performance")}
         self.send_json(200,data)
     def do_POST(self):
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
@@ -325,9 +390,14 @@ class Handler(BaseHTTPRequestHandler):
         with self.service.lock:
             e=self.service.engine
             if self.path=="/control/pause":
-                e.paused=bool(body.get("paused",True)); result={"paused":e.paused}
+                paused=body.get("paused",True)
+                if not isinstance(paused,bool): return self.send_json(400,{"error":"paused must be a boolean"})
+                e.paused=paused; result={"paused":e.paused}
             elif self.path=="/control/step":
-                try: steps=max(0,min(10000,int(body.get("steps",1))))
+                try:
+                    raw_steps=body.get("steps",1)
+                    if isinstance(raw_steps,bool) or not isinstance(raw_steps,(int,float)) or not math.isfinite(raw_steps) or int(raw_steps)!=raw_steps: raise ValueError
+                    steps=max(0,min(10000,int(raw_steps)))
                 except (TypeError,ValueError): return self.send_json(400,{"error":"steps must be an integer"})
                 for _ in range(steps):e.step()
                 result={"tick":e.tick,"steps":steps}
