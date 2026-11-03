@@ -306,7 +306,11 @@ class FixedStepClock:
         max_frame_dt = float(max_frame_dt)
         accepted = min(elapsed, max_frame_dt)
         self.dropped_time += max(0.0, elapsed - accepted)
-        self.accumulator = min(max_frame_dt, self.accumulator + accepted)
+        accumulated = self.accumulator + accepted
+        if accumulated > max_frame_dt:
+            self.dropped_time += accumulated - max_frame_dt
+            accumulated = max_frame_dt
+        self.accumulator = accumulated
         max_steps = max(1, int((max_frame_dt + 1e-12) / fixed_dt))
         steps = min(int((self.accumulator + 1e-12) / fixed_dt), max_steps)
         self.accumulator = max(0.0, self.accumulator - steps * fixed_dt)
