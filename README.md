@@ -21,7 +21,9 @@ export NEXUS_STATE_FILE="./data/nexus-state.json"
 python3 backend.py
 ```
 
-Endpoints: `GET /health`, authenticated `GET /snapshot`, authenticated `POST /control/pause`, `/control/step`, and `/control/disturbance`. Send `Authorization: Bearer <token>`.
+Endpoints: `GET /health`, authenticated `GET /snapshot`, authenticated `GET /metrics`, authenticated `GET /organisms`, authenticated `GET /organism/{id}`, and authenticated control routes. Send `Authorization: Bearer <token>`.
+
+The organism collection supports bounded pagination (`limit` 1–2000, `offset`), alive filtering (`alive=0|1`), species filtering, and world-coordinate viewport bounds (`x_min`, `x_max`, `y_min`, `y_max`). It returns `total`, `has_more`, and the requested page. Use the individual organism endpoint for full detail without downloading the entire population. The legacy `/snapshot` still includes all organisms for compatibility; clients seeking predictable payload sizes should use `/metrics` plus the scoped organism endpoints.
 
 ## Deploy on Koyeb
 1. Sign in to Koyeb and connect GitHub.
