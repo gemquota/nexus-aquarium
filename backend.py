@@ -152,7 +152,6 @@ class Engine:
             cloud_signal=__import__("math").sin(self.sim_time*.0017+1.2); self.weather="storm" if self.precipitation>.00045 and cloud_signal>.25 else ("rain" if self.precipitation>.00001 else ("overcast" if cloud_signal>.55 else "clear"))
             self.rainfall+=self.precipitation*dt
         else:self.precipitation=0.0; self.weather="clear"
-        import math
         self.moon_phase=(self.sim_time%24000.0)/24000.0
         self.tide_height=math.sin(self.sim_time*2*math.pi/360.0)*.025
         self.water_fraction=max(.08,min(.96,float(self.config["initial_water_fraction"])+self.rainfall*.02+self.tide_height))
