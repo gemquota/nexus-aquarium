@@ -2,7 +2,7 @@ import json
 import os
 import tempfile
 import unittest
-from backend import Engine, Genome
+from backend import Engine, Genome, FixedStepClock
 
 class PersistenceTests(unittest.TestCase):
     def test_json_checkpoint_round_trip(self):
@@ -442,3 +442,77 @@ class PerformanceInstrumentationTests(unittest.TestCase):
         self.assertIn("step_ema_ms",perf)
         self.assertIn("stages_ms",perf)
         self.assertIn("budget_utilization",perf)
+
+
+class EcologicalIntegrityReleaseTests(unittest.TestCase):
+    def test_fixed_step_clock_accumulates_fractional_frames(self):
+        clock=FixedStepClock()
+        self.assertEqual(clock.advance(.01,.02,.1),0)
+        self.assertEqual(clock.advance(.01,.02,.1),1)
+        self.assertAlmostEqual(clock.accumulator,0.0)
+
+    def test_fixed_step_clock_bounds_hitch_catchup(self):
+        clock=FixedStepClock()
+        self.assertEqual(clock.advance(.25,.02,.1),5)
+        self.assertAlmostEqual(clock.dropped_time,.15)
+        self.assertAlmostEqual(clock.accumulator,0.0)
+
+    def test_fixed_dt_is_used_by_engine_default_step(self):
+        engine=Engine(seed=600,config={"fixed_dt":.02,"simulation_speed":2.0})
+        engine.step()
+        self.assertAlmostEqual(engine.sim_time,.04)
+        self.assertEqual(engine.tick,1)
+
+    def test_config_rejects_non_finite_and_fractional_integer_values(self):
+        with self.assertRaises(ValueError):
+            Engine(config={"rain_rate":float("nan")})
+        with self.assertRaises(ValueError):
+            Engine(config={"max_organisms":39.5})
+        with self.assertRaises(ValueError):
+            Engine(config={"fixed_dt":.2,"max_frame_dt":.1})
+
+    def test_genetic_inheritance_preserves_render_phenotype_loci(self):
+        parent=Genome()
+        child=parent.inherit(parent,random.Random(601))
+        for trait in ("agility","turn_rate","tracking","transparency","hue","pattern","fin_size"):
+            self.assertIn(trait,child.traits)
+            self.assertGreaterEqual(child.traits[trait],0.0)
+            self.assertLessEqual(child.traits[trait],1.0)
+
+    def test_feeding_energy_is_split_between_assimilation_and_waste(self):
+        import random
+        engine=Engine(seed=602)
+        engine.organisms=[]
+        predator=engine.add("shark",10,10)
+        prey=engine.add("reef_fish",10.2,10)
+        predator.energy=.2
+        prey.energy=.5
+        engine.ecology.step(engine.organisms,{"shark":["reef_fish"]},engine.water,1.0,random.Random(1),3.0)
+        self.assertAlmostEqual(engine.ecology.energy_consumed,.18)
+        self.assertAlmostEqual(engine.ecology.energy_assimilated,.12)
+        self.assertAlmostEqual(engine.ecology.energy_waste,.06)
+        self.assertAlmostEqual(engine.ecology.energy_consumed,engine.ecology.energy_assimilated+engine.ecology.energy_waste)
+
+    def test_deceased_biomass_is_transferred_to_detritus_once(self):
+        import random
+        engine=Engine(seed=603)
+        organism=engine.organisms[0]
+        organism.alive=False
+        organism.energy=.4
+        before=engine.ecology.detritus
+        engine.ecology.step(engine.organisms,{},engine.water,.1,random.Random(2))
+        self.assertAlmostEqual(engine.ecology.detritus-before,.4)
+        self.assertEqual(organism.energy,0.0)
+        engine.ecology.step(engine.organisms,{},engine.water,.1,random.Random(2))
+        self.assertAlmostEqual(engine.ecology.detritus-before,.4)
+
+    def test_identical_seed_and_fixed_tick_inputs_reproduce_world_state(self):
+        a=Engine(seed=604)
+        b=Engine(seed=604)
+        for _ in range(120):
+            a.step(a.config["fixed_dt"])
+            b.step(b.config["fixed_dt"])
+        self.assertEqual(a.tick,b.tick)
+        self.assertEqual(a.snapshot()["organisms"],b.snapshot()["organisms"])
+        self.assertEqual(a.snapshot()["water"],b.snapshot()["water"])
+        self.assertEqual(a.ecology.state(),b.ecology.state())
