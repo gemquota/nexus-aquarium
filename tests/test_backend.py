@@ -530,3 +530,74 @@ class DisturbanceValidationTests(unittest.TestCase):
             events.add(engine,"storm",.5,float("inf"))
         with self.assertRaises(ValueError):
             events.add(engine,"not_an_event",.5,10)
+
+
+class OrganismResourceApiTests(unittest.TestCase):
+    def _request(self, server, path):
+        import urllib.request
+        request=urllib.request.Request(
+            f"http://127.0.0.1:{server.server_port}{path}",
+            headers={"Authorization":"Bearer test-token"})
+        with urllib.request.urlopen(request,timeout=3) as response:
+            return response.status,json.loads(response.read().decode("utf-8"))
+
+    def test_organism_collection_is_bounded_and_viewport_scoped(self):
+        import threading
+        from http.server import ThreadingHTTPServer
+        from types import SimpleNamespace
+        from backend import Handler
+        engine=Engine(seed=701)
+        service=SimpleNamespace(token="test-token",engine=engine,lock=threading.RLock(),
+            last_loop_error=None,last_checkpoint_error=None,
+            clock=SimpleNamespace(dropped_time=0.0))
+        previous=Handler.service
+        Handler.service=service
+        server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+        thread=threading.Thread(target=server.serve_forever,daemon=True)
+        thread.start()
+        try:
+            status,page=self._request(server,"/organisms?limit=3&offset=0")
+            self.assertEqual(status,200)
+            self.assertEqual(len(page["organisms"]),3)
+            self.assertGreater(page["total"],3)
+            self.assertTrue(page["has_more"])
+            item=page["organisms"][0]
+            status,detail=self._request(server,f"/organism/{item['id']}")
+            self.assertEqual(status,200)
+            self.assertEqual(detail["organism"]["id"],item["id"])
+            status,scoped=self._request(server,"/organisms?x_min=0&x_max=1&y_min=0&y_max=1")
+            self.assertEqual(status,200)
+            self.assertTrue(all(0<=o["x"]<=1 and 0<=o["y"]<=1 for o in scoped["organisms"]))
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+            Handler.service=previous
+
+    def test_organism_collection_rejects_invalid_pagination(self):
+        import threading
+        from http.server import ThreadingHTTPServer
+        from types import SimpleNamespace
+        from urllib.error import HTTPError
+        from backend import Handler
+        service=SimpleNamespace(token="test-token",engine=Engine(seed=702),lock=threading.RLock(),
+            last_loop_error=None,last_checkpoint_error=None,
+            clock=SimpleNamespace(dropped_time=0.0))
+        previous=Handler.service
+        Handler.service=service
+        server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+        thread=threading.Thread(target=server.serve_forever,daemon=True)
+        thread.start()
+        try:
+            import urllib.request
+            request=urllib.request.Request(
+                f"http://127.0.0.1:{server.server_port}/organisms?limit=1.5",
+                headers={"Authorization":"Bearer test-token"})
+            with self.assertRaises(HTTPError) as caught:
+                urllib.request.urlopen(request,timeout=3)
+            self.assertEqual(caught.exception.code,400)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+            Handler.service=previous
