@@ -404,9 +404,13 @@ class Handler(BaseHTTPRequestHandler):
                     if not math.isfinite(value): raise ValueError(f"{name} must be finite")
                     return value
                 try:
-                    limit=int(number("limit",500)); offset=int(number("offset",0))
+                    raw_limit=number("limit",500); raw_offset=number("offset",0)
+                    if int(raw_limit)!=raw_limit or int(raw_offset)!=raw_offset: raise ValueError("limit and offset must be integers")
+                    limit=int(raw_limit); offset=int(raw_offset)
                     if limit<1 or limit>2000 or offset<0: raise ValueError("limit must be 1..2000 and offset must be non-negative")
-                    selected=[o for o in engine.organisms if (params.get("alive",["1"])[0]!="1" or o.alive)]
+                    alive_param=params.get("alive",["1"])[0]
+                    if alive_param not in ("0","1"): raise ValueError("alive must be 0 or 1")
+                    selected=[o for o in engine.organisms if (alive_param=="0" or o.alive)]
                     bounds={k:number(k,default) for k,default in (("x_min",0),("x_max",engine.config["world_width"]),("y_min",0),("y_max",engine.config["world_height"]))}
                     if bounds["x_min"]>bounds["x_max"] or bounds["y_min"]>bounds["y_max"]: raise ValueError("viewport minimum must not exceed maximum")
                     selected=[o for o in selected if bounds["x_min"]<=o.x<=bounds["x_max"] and bounds["y_min"]<=o.y<=bounds["y_max"]]
