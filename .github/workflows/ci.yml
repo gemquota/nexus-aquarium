@@ -1,0 +1,33 @@
+name: NEXUS quality checks
+
+on:
+  push:
+    branches: [main, "codex/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Compile Python
+        run: python -m compileall -q .
+      - name: Run backend and subsystem tests
+        run: python -m unittest discover -s tests -v
+      - name: Check dashboard JavaScript
+        run: node --check app.js
+      - name: Check sprite runtime JavaScript
+        run: node --check assets/sprites/sprite-runtime.js
