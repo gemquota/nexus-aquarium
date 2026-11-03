@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse, json, math, os, random, secrets, threading, time
 from dataclasses import dataclass, field, asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse, parse_qs
 from physics import MarinePhysics
 from biodiversity import species_profile, HABITATS
 from ecology import Ecology
@@ -298,10 +299,14 @@ class Engine:
           "ecology":{"food_web_links":sum(len(v) for v in self.food_web.values()),
             "active_disturbances":len(self.disturbances),"trophic_groups":len(self.food_web)},
           "food_web":self.food_web,"disturbances":self.disturbances,
-          "organisms":[{"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
-            "energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,"age":o.age,
-            "generation":o.genome.generation,"life_stage":life_stage(o.species,o.age),"trophic_role":species_profile(o.species)["trophic"],"genome":o.genome.traits,"senses":o.brain.senses,
-            "memory":o.brain.memory[-8:]} for o in self.organisms]}
+          "organisms":[organism_payload(o) for o in self.organisms]}
+
+def organism_payload(o):
+    return {"id":o.id,"species":o.species,"x":o.x,"y":o.y,"vx":o.vx,"vy":o.vy,
+        "energy":o.energy,"health":o.health,"alive":o.alive,"state":o.state,"age":o.age,
+        "generation":o.genome.generation,"life_stage":life_stage(o.species,o.age),
+        "trophic_role":species_profile(o.species)["trophic"],"genome":o.genome.traits,
+        "senses":o.brain.senses,"memory":o.brain.memory[-8:]}
 
 class FixedStepClock:
     """Wall-clock accumulator for fixed simulation ticks, with bounded catch-up."""
@@ -377,19 +382,50 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(403,{"error":"origin not allowed"})
         self.send_json(204,{})
     def do_GET(self):
-        if self.path=="/":
+        request=urlparse(self.path)
+        route=request.path
+        params=parse_qs(request.query)
+        if route=="/":
             return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health","snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
-        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION,"simulation_error":self.service.last_loop_error is not None,"checkpoint_error":self.service.last_checkpoint_error is not None,"dropped_wall_time_seconds":round(self.service.clock.dropped_time,3)})
-        if self.path=="/catalogue":return self.send_json(200,{"species":{k:{"group":v["group"],"trophic":v["trophic"],"habitats":v["habitats"],"temperature":v["temperature"],"oxygen_min":v["oxygen_min"]} for k,v in __import__("biodiversity").SPECIES.items()},"habitats":HABITATS})
-        if self.path=="/events":
+        if route=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION,"simulation_error":self.service.last_loop_error is not None,"checkpoint_error":self.service.last_checkpoint_error is not None,"dropped_wall_time_seconds":round(self.service.clock.dropped_time,3)})
+        if route=="/catalogue":return self.send_json(200,{"species":{k:{"group":v["group"],"trophic":v["trophic"],"habitats":v["habitats"],"temperature":v["temperature"],"oxygen_min":v["oxygen_min"]} for k,v in __import__("biodiversity").SPECIES.items()},"habitats":HABITATS})
+        if route=="/events":
             if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
             with self.service.lock: history=self.service.engine.events.history[-100:]
             return self.send_json(200,{"events":history})
-        if self.path not in ("/snapshot","/metrics"):return self.send_json(404,{"error":"not found"})
+        if route not in ("/snapshot","/metrics","/organisms") and not route.startswith("/organism/"):return self.send_json(404,{"error":"not found"})
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
         with self.service.lock:
-            data=self.service.engine.snapshot()
-            if self.path=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics","genetics","nutrients","disease","social","migration","environment","habitat_map","performance")}
+            engine=self.service.engine
+            if route=="/organisms":
+                def number(name, default):
+                    raw=params.get(name,[str(default)])[0]
+                    value=float(raw)
+                    if not math.isfinite(value): raise ValueError(f"{name} must be finite")
+                    return value
+                try:
+                    limit=int(number("limit",500)); offset=int(number("offset",0))
+                    if limit<1 or limit>2000 or offset<0: raise ValueError("limit must be 1..2000 and offset must be non-negative")
+                    selected=[o for o in engine.organisms if (params.get("alive",["1"])[0]!="1" or o.alive)]
+                    bounds={k:number(k,default) for k,default in (("x_min",0),("x_max",engine.config["world_width"]),("y_min",0),("y_max",engine.config["world_height"]))}
+                    if bounds["x_min"]>bounds["x_max"] or bounds["y_min"]>bounds["y_max"]: raise ValueError("viewport minimum must not exceed maximum")
+                    selected=[o for o in selected if bounds["x_min"]<=o.x<=bounds["x_max"] and bounds["y_min"]<=o.y<=bounds["y_max"]]
+                    species=params.get("species",[None])[0]
+                    if species: selected=[o for o in selected if o.species==species]
+                except (ValueError,OverflowError) as exc:
+                    return self.send_json(400,{"error":str(exc)})
+                total=len(selected)
+                data={"total":total,"offset":offset,"limit":limit,"has_more":offset+limit<total,
+                      "organisms":[organism_payload(o) for o in selected[offset:offset+limit]]}
+            elif route.startswith("/organism/"):
+                try: organism_id=int(route.rsplit("/",1)[1])
+                except ValueError: return self.send_json(400,{"error":"organism id must be an integer"})
+                organism=next((o for o in engine.organisms if o.id==organism_id),None)
+                if organism is None: return self.send_json(404,{"error":"organism not found"})
+                data={"organism":organism_payload(organism)}
+            else:
+                data=engine.snapshot()
+                if route=="/metrics": data={k:data[k] for k in ("tick","simulation_time","paused","population","water","physics","ecology_metrics","behaviour","event_metrics","genetics","nutrients","disease","social","migration","environment","habitat_map","performance")}
         self.send_json(200,data)
     def do_POST(self):
         if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
