@@ -50,3 +50,23 @@ Koyeb's Free Instance has no persistent volumes and scales to zero after one hou
 ## Side-view sprite library
 
 See [`assets/sprites/README.md`](assets/sprites/README.md) for the side-view asset plan, vetted sprite packs, licence notes and safe local import instructions. The source catalogue is [`assets/sprites/sources.json`](assets/sprites/sources.json). Third-party binaries are not included until their licence permits public redistribution or they are provided through an appropriately licensed private asset host.
+
+
+## Engineering integrity and validation
+
+The service advances the world with a fixed-step accumulator using `fixed_dt`, clamps wall-clock catch-up to `max_frame_dt`, and records dropped wall time rather than allowing an unbounded catch-up spiral. Rendering and API polling remain independent of the simulation tick. The engine's direct `step()` default uses its configured fixed timestep; explicit `step(dt)` remains available for tests and controlled experiments.
+
+Configuration values are checked for finite numeric values, integer-only capacities/dimensions, bounded resource limits, and valid timing relationships. Checkpoint failures are surfaced by `/health` without silently terminating the simulation thread. The `/metrics` endpoint includes performance telemetry.
+
+Feeding now reports a transparent simplified energy split between prey energy consumed, predator assimilation and detrital waste. Metabolic loss and dead biomass are recorded in the detrital/respiration accounting. These are internal model-energy units, not calibrated joules or a claim of closed marine biogeochemical conservation. Genetic inheritance now retains all rendered phenotype loci rather than silently dropping non-core traits.
+
+Run the automated checks locally:
+
+```sh
+python -m compileall -q .
+python -m unittest discover -s tests -v
+node --check app.js
+node --check assets/sprites/sprite-runtime.js
+```
+
+GitHub Actions runs the same Python and JavaScript syntax/regression checks on pushes and pull requests. Longer-term scientific validation (species-calibrated parameters, carbon/nitrogen/phosphorus conservation, multi-generation selection experiments and population-scale benchmarks) remains a separate research workstream; passing software tests does not establish ecological accuracy.

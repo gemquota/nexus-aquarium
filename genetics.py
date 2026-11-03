@@ -9,7 +9,14 @@ LOCI={
  "metabolism":{"dominance":0.5,"mutation_sd":0.05},
  "fecundity":{"dominance":0.5,"mutation_sd":0.06},
  "sensory":{"dominance":0.5,"mutation_sd":0.08},
- "resistance":{"dominance":0.5,"mutation_sd":0.07}
+ "resistance":{"dominance":0.5,"mutation_sd":0.07},
+ "agility":{"dominance":0.5,"mutation_sd":0.08},
+ "turn_rate":{"dominance":0.5,"mutation_sd":0.06},
+ "tracking":{"dominance":0.5,"mutation_sd":0.08},
+ "transparency":{"dominance":0.5,"mutation_sd":0.05},
+ "hue":{"dominance":0.5,"mutation_sd":0.10},
+ "pattern":{"dominance":0.5,"mutation_sd":0.08},
+ "fin_size":{"dominance":0.5,"mutation_sd":0.07}
 }
 def bounded(value): return max(0.0,min(1.0,float(value)))
 def recombine(parent_a,parent_b,rng):

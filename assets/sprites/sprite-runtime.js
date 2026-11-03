@@ -51,7 +51,8 @@ function drawOrganism(ctx,o,x,y,opts={}){
     const sway=Math.sin(time*1.25+(Number(o.id)||0)*.71)*.045;
     return drawImage(ctx,entry,x,baseY,w,h,time,Number(entry.anchor_x??.5),1,false,sway);
   }
-  const large=['whale','shark','dolphin','ray'].includes(species),tiny=['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','lanternfish'].includes(species);\n  const w=(Number(entry.render_width)||(large?6.2:tiny?1.8:3.2))*size,h=(Number(entry.render_height)||(large?3.4:tiny?1.2:2.0))*size;
+  const large=['whale','shark','dolphin','ray'].includes(species),tiny=['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','lanternfish'].includes(species);
+  const w=(Number(entry.render_width)||(large?6.2:tiny?1.8:3.2))*size,h=(Number(entry.render_height)||(large?3.4:tiny?1.2:2.0))*size;
   const angle=Math.atan2(Number(o.vy)||0,Number(o.vx)||.01);
   return drawImage(ctx,entry,x,y,w,h,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),Number(o.vx)<0,angle);
 }
