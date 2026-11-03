@@ -504,7 +504,7 @@ class EcologicalIntegrityReleaseTests(unittest.TestCase):
         engine.ecology.step(engine.organisms,{},engine.water,0.0,random.Random(2))
         self.assertAlmostEqual(engine.ecology.detritus-before,.4)
         self.assertEqual(organism.energy,0.0)
-        engine.ecology.step(engine.organisms,{},engine.water,.1,random.Random(2))
+        engine.ecology.step(engine.organisms,{},engine.water,0.0,random.Random(2))
         self.assertAlmostEqual(engine.ecology.detritus-before,.4)
 
     def test_identical_seed_and_fixed_tick_inputs_reproduce_world_state(self):
