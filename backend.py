@@ -93,7 +93,11 @@ class Engine:
         }
         for key, (minimum, maximum) in integer_limits.items():
             value = config.get(key)
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or int(value) != value:
+            try:
+                finite = math.isfinite(float(value)) if not isinstance(value, bool) and isinstance(value, (int, float)) else False
+            except (OverflowError, ValueError):
+                finite = False
+            if not finite or int(value) != value:
                 raise ValueError(f"{key} must be an integer")
             if not minimum <= int(value) <= maximum:
                 raise ValueError(f"{key} must be between {minimum} and {maximum}")
@@ -114,7 +118,11 @@ class Engine:
         }
         for key, (minimum, maximum) in numeric_limits.items():
             value = config.get(key)
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            try:
+                finite = math.isfinite(float(value)) if not isinstance(value, bool) and isinstance(value, (int, float)) else False
+            except (OverflowError, ValueError):
+                finite = False
+            if not finite:
                 raise ValueError(f"{key} must be a finite number")
             if not minimum <= float(value) <= maximum:
                 raise ValueError(f"{key} must be between {minimum} and {maximum}")
@@ -134,6 +142,8 @@ class Engine:
     def step(self,dt=None):
         if self.paused:return
         if dt is None: dt=float(self.config["fixed_dt"])
+        dt=float(dt)
+        if not math.isfinite(dt) or dt<0: raise ValueError("dt must be a finite non-negative number")
         step_started=time.perf_counter(); stages={}; stage_started=step_started
         self.tick+=1; dt*=float(self.config["simulation_speed"]); self.sim_time+=dt
         self.physics.currents.base_x=.035*float(self.config["current_strength"]); self.physics.currents.base_y=.008*float(self.config["current_strength"]); self.physics.movement_scale=float(self.config["movement_scale"]); self.physics.height=self.config["world_height"]; self.physics.width=self.config["world_width"]; self.physics.waterline=self.config["world_height"]*(1-self.water_fraction)
@@ -370,7 +380,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path=="/":
             return self.send_json(200,{"service":"NEXUS AQUARIUM","status":"online","health":"/health","snapshot":"/snapshot","dashboard":"https://gemquota.github.io/nexus-aquarium/"})
-        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION,"simulation_error":self.service.last_loop_error is not None,"checkpoint_error":self.service.last_checkpoint_error is not None})
+        if self.path=="/health":return self.send_json(200,{"ok":True,"engine":"single-authoritative-python-engine","version":ENGINE_VERSION,"simulation_error":self.service.last_loop_error is not None,"checkpoint_error":self.service.last_checkpoint_error is not None,"dropped_wall_time_seconds":round(self.service.clock.dropped_time,3)})
         if self.path=="/catalogue":return self.send_json(200,{"species":{k:{"group":v["group"],"trophic":v["trophic"],"habitats":v["habitats"],"temperature":v["temperature"],"oxygen_min":v["oxygen_min"]} for k,v in __import__("biodiversity").SPECIES.items()},"habitats":HABITATS})
         if self.path=="/events":
             if not self.authorized():return self.send_json(401,{"error":"Bearer token required"})
