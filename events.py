@@ -3,14 +3,7 @@ class EventSystem:
  def __init__(self): self.total_events=0; self.history=[]
  def add(self,engine,kind,intensity=.4,duration=20):
   if kind not in EVENTS: raise ValueError("unsupported event")
-  try:
-   intensity=float(intensity); duration=float(duration)
-  except (TypeError,ValueError,OverflowError):
-   raise ValueError("event intensity and duration must be finite numbers")
-  import math
-  if not math.isfinite(intensity) or not math.isfinite(duration):
-   raise ValueError("event intensity and duration must be finite numbers")
-  item={"kind":kind,"intensity":max(0,min(1,intensity)),"remaining":max(.1,min(3600,duration))}
+  item={"kind":kind,"intensity":max(0,min(1,float(intensity))),"remaining":max(.1,min(3600,float(duration)))}
   engine.disturbances.append(item); self.total_events+=1
   self.history.append({"tick":engine.tick,"time":engine.sim_time,"kind":kind,"intensity":item["intensity"],"duration":item["remaining"]})
   self.history=self.history[-500:]
