@@ -24,6 +24,67 @@
 .module-widget-body #trend-chart{max-width:100%}
 .module-accordion-toolbar{padding-bottom:2px}
 @media(max-width:600px){.config-group>summary,.module-group>summary{align-items:flex-start;flex-wrap:wrap}.config-group>summary small,.module-group>summary small{width:100%;margin-left:25px;text-align:left}.module-group-grid{grid-template-columns:1fr}.accordion-toolbar button,.module-accordion-toolbar button{flex:1;font-size:9px;padding:9px 7px}}
+
+/* Observatory visual system v2: deep-water ink, sea-glass, coral signal */
+:root{color-scheme:dark;--ink:#071521;--panel:#0c2030;--panel-raised:#10283a;--line:#254354;--muted:#9bb2bf;--text:#e9f1f4;--sea:#63d8d0;--coral:#ff9b78;--gold:#e9c17b}
+body{background:#071521!important;color:var(--text)!important;font-family:Inter,ui-sans-serif,system-ui,sans-serif!important}
+header,.workspace-toolbar{background:#0a1c2b!important;border-color:#20394a!important}
+.brand{letter-spacing:.16em!important;color:#f1f5f6!important}
+.brand span,.eyebrow,.workspace-label{color:var(--sea)!important}
+.status{padding:5px 9px;border:1px solid #315164;border-radius:99px;background:#10293a;color:#b7d9d8!important;font-size:9px!important}
+button{border:1px solid #ffad8c!important;border-radius:9px!important;background:linear-gradient(135deg,#ffb18e,#f28c70)!important;color:#251a1b!important;padding:9px 13px!important;font-size:10px!important;font-weight:800!important;letter-spacing:.045em!important;box-shadow:0 2px 0 #a75d50!important;transition:transform .15s,filter .15s,box-shadow .15s}
+button:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 3px 0 #a75d50,0 7px 18px #0005!important}
+button:active{transform:translateY(1px);box-shadow:0 1px 0 #a75d50!important}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--gold)!important;outline-offset:2px}
+button.secondary,button.tool,.workspace-controls button,.module-accordion-toolbar button,.accordion-toolbar button{background:#142c3c!important;border:1px solid #34566a!important;color:#d6e8eb!important;box-shadow:none!important}
+button.secondary:hover,button.tool:hover{background:#1c3b4e!important;border-color:#5b8998!important}
+.viewer-shell{background:#071521!important}
+.viewer-toolbar,.viewer-footer{background:#0a1c2b!important;color:#aac0ca!important}
+.viewer-toolbar strong{color:#e8f2f4!important}
+.tank{background:#020c15!important}
+.bottom-pane{background:#071521!important}
+.module-heading{padding:14px 16px 9px!important}
+.module-heading h2{font-size:21px!important;letter-spacing:-.02em}
+.module-heading .eyebrow{font-size:9px!important}
+.live-dot{color:#a6c7c7!important;font-size:9px!important}
+.modules{gap:10px!important}
+.module-group{background:transparent!important;border:1px solid #1c394a!important;border-radius:12px!important;overflow:hidden;margin-bottom:9px}
+.module-group>summary{background:#0d2333!important;color:#dcebed!important;padding:12px 15px!important;font-size:10px!important;letter-spacing:.08em!important}
+.module-group>summary:before{color:var(--coral)!important}
+.module-group>summary small{color:#8eaab7!important}
+.module-group-grid{padding:10px!important;gap:10px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.module-widget{background:linear-gradient(155deg,#10283a,#0b1d2b)!important;border:1px solid #29485a!important;border-radius:10px!important;min-height:148px!important;overflow:hidden}
+.module-widget:nth-child(2n),.module-widget:nth-child(3n){background:linear-gradient(155deg,#112b3d,#0b1d2b)!important;border-color:#29485a!important}
+.module-widget-title{padding:11px 12px!important;border-bottom:1px solid #1d3b4d!important}
+.module-widget-title .module-title{font-size:9px!important;color:#9de4df!important;letter-spacing:.08em!important}
+.module-widget-title .module-title i{color:#91a9b5!important;font-size:8px!important}
+.module-widget-title .module-title:after{color:var(--coral)!important}
+.module-widget-body{padding:3px 12px 13px!important;color:#e1ebee!important}
+.module-widget .big-number{font-size:34px!important;color:#f5f7f7!important}
+.module-widget .subline{font-size:10px!important;color:#a0b7c2!important;line-height:1.55}
+.module-widget .chem-grid b,.module-widget .stat-pair b{color:#f0f5f5!important;font-size:18px!important}
+.module-widget .chem-grid small,.module-widget .stat-pair small{color:#91aeb9!important;font-size:8px!important}
+.module-widget .meter label{font-size:10px!important;color:#b8cbd1!important}
+.module-widget .meter label b{color:var(--gold)!important}
+.module-widget .meter>div{background:#1b3a4b!important}
+.module-widget .meter span{background:linear-gradient(90deg,#58c7c3,#e8c17b)!important}
+.species-chip{border-color:#34566a!important;background:#132c3d!important;color:#d5e8e9!important}
+.food-web span{border-color:#355568!important;background:#112a3a!important;color:#d8e8e8!important}
+.module-accordion-toolbar,.accordion-toolbar{padding:9px 2px!important}
+.connect{background:#0c2030!important;border:1px solid #29485a!important;border-radius:12px!important;padding:16px!important}
+.connect h2{color:#eef4f5!important}
+.connect p{color:#a8bdc7!important}
+.connect input,.config-grid input:not([type=range]):not([type=checkbox]),#habitat-select{background:#071521!important;border:1px solid #345366!important;border-radius:8px!important;color:#eef5f6!important}
+.config-group{background:#0c2030!important;border:1px solid #29485a!important;border-radius:10px!important;margin-bottom:8px}
+.config-group>summary{color:#dcebed!important}
+.config-group>summary:before{color:var(--coral)!important}
+.config-group>summary small{color:#92acb8!important}
+.config-subgrid{padding:12px 14px 16px!important}
+.config-grid label{color:#aac0c9!important;font-size:9px!important}
+.config-grid output{color:var(--gold)!important}
+#message,#cfg-status{padding:9px 11px;border-radius:8px;background:#102a3a;color:#b8d5d7!important;border:1px solid #29485a}
+@media(max-width:760px){.module-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.module-widget{grid-column:span 1!important;min-height:140px!important}.module-widget:nth-child(3n){grid-column:span 2!important}}
+@media(max-width:440px){.module-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;padding:7px!important}.module-widget{min-height:132px!important}.module-widget-title{padding:9px!important}.module-widget-body{padding:2px 9px 10px!important}.module-widget .big-number{font-size:29px!important}.module-widget .stat-pair{gap:10px!important}.module-widget .chem-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.workspace-controls button{padding:6px 8px!important}}
 </style></head>
 <body><header><div class="brand">NEXUS <span>//</span> AQUARIUM</div><div class="header-right"><button class="tool header-compact" id="bottom-toggle" aria-expanded="true" title="Minimise or expand dashboard panels">▾ PANELS</button><span class="status" id="status">LOCAL PREVIEW</span><a href="https://github.com/gemquota/nexus-aquarium" target="_blank" rel="noreferrer">SOURCE ↗</a></div></header>
 <main><section class="hero"><div><p class="eyebrow">AUTONOMOUS MARINE BIOSPHERE · CONTROL ROOM</p><h1>A living ocean.<br><em>Emergent by design.</em></h1><p>Explore the same authoritative Python simulation through a responsive, touch-first observatory.</p><div class="actions"><button id="pause">PAUSE ENGINE</button><button class="secondary" id="step">STEP 30 TICKS</button></div></div><div class="headline-metrics"><div><b id="count">—</b><small>LIVE ORGANISMS</small></div><div><b id="tick">—</b><small>SIMULATION TICK</small></div><div><b id="oxygen">—</b><small>DISSOLVED O₂</small></div></div></section>
