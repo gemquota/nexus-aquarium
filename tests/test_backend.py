@@ -501,7 +501,7 @@ class EcologicalIntegrityReleaseTests(unittest.TestCase):
         organism.alive=False
         organism.energy=.4
         before=engine.ecology.detritus
-        engine.ecology.step(engine.organisms,{},engine.water,.1,random.Random(2))
+        engine.ecology.step(engine.organisms,{},engine.water,0.0,random.Random(2))
         self.assertAlmostEqual(engine.ecology.detritus-before,.4)
         self.assertEqual(organism.energy,0.0)
         engine.ecology.step(engine.organisms,{},engine.water,.1,random.Random(2))
