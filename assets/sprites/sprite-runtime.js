@@ -11,7 +11,7 @@ const birdSpecies=new Set(['seagull','gull','pelican','albatross','tern','cormor
 const normalise=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 function loadEntry(entry){
   if(!entry||!entry.src)return null;
-  const key=new URL(String(entry.src).replace(/^\/+/,''),new URL('.',MANIFEST_URL)).href;
+  const key=new URL(String(entry.src).replace(/^\/+/,''),new URL('../../',MANIFEST_URL)).href;
   if(images.has(key))return images.get(key);
   const image=new Image();image.decoding='async';
   const state={image,loaded:false,failed:false};
