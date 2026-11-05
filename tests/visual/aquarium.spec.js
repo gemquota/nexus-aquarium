@@ -20,6 +20,16 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
   expect(new Set(initial.organisms.map(o => o.species)).size).toBeGreaterThanOrEqual(10);
   expect(initial.sprites.loaded).toBeGreaterThan(0);
   expect(initial.sprites.failed).toBe(0);
+  const creatureSizes = await page.evaluate(() => {
+    const world = window.NexusDebug.world;
+    const scale = window.NexusDebug.canvas.height / world.h;
+    return [0.25, 6, 24].map(zoom =>
+      window.NexusSprites.measureOrganism('reef_fish', world.h, scale, zoom, .5)
+    );
+  });
+  expect(creatureSizes.every(size => size && size.width >= 1.7)).toBeTruthy();
+  expect(creatureSizes[1].width).toBeGreaterThan(creatureSizes[0].width * 3);
+  expect(creatureSizes[2].width).toBeGreaterThan(creatureSizes[1].width * 3);
 
   const waterDepth = initial.world.h - initial.waterline;
   const depths = initial.organisms.map(o => (o.y - initial.waterline) / waterDepth);
