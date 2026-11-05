@@ -69,23 +69,20 @@ class Engine:
         self.seabird_catches=0
         self._seeding=True
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
-        for i in range(18): self.add("reef_fish",self.config["world_width"]*(.20+i*.60/17),surface+self.water_fraction*h*(.34+self.rng.random()*.20),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.025,.025))
-        # Seed realistic shoals instead of a handful of isolated showcase animals.
-        # Each shoal occupies a distinct region and has small individual variation.
-        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",30,0.40,0.45),("mackerel",22,0.30,0.48),("surface_fish",24,0.12,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92))
+        # Seed coherent, species-specific shoals across the water column.
+        # x_band is the left edge of a 6%-world shoal; y_band is depth below the surface.
+        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",48,0.40,0.45),("mackerel",22,0.30,0.48),("surface_fish",24,0.72,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92),("deepwater_fish",14,0.82,0.96),("anglerfish",8,0.84,0.94))
         for species,count,x_band,y_band in shoal_specs:
             for j in range(count):
-                x=self.config["world_width"]*(x_band+self.rng.random()*.12)
+                x=self.config["world_width"]*(x_band+self.rng.random()*.06)
                 y=surface+self.water_fraction*h*(y_band+self.rng.uniform(-.025,.025))
                 direction=1 if (j%2)==0 else -1
                 speed=species_profile(species)["speed"]*self.rng.uniform(.35,.75)
                 self.add(species,x,y,vx=direction*speed,vy=self.rng.uniform(-.035,.035))
+        # A small surface-skimming cohort occupies the immediate air-water boundary.
+        for i in range(6):
+            self.add("surface_fish",self.config["world_width"]*(.72+i*.003),surface+12+i*3,vx=(.32 if i%2 else -.32))
         self.add("shark",self.config["world_width"]*.42,surface+self.water_fraction*h*.58,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,surface+self.water_fraction*h*.42,vy=.06)
-        h=self.config["world_height"]; surface=h*(1-self.water_fraction)
-        for i in range(10): self.add(("surface_fish","sardine")[i%2],(i*71+45)%self.config["world_width"],surface+12+(i%3)*5,vx=.45 if i%2 else -.45)
-        for i in range(8): self.add(("pelagic_fish","mackerel")[i%2],(i*113+90)%self.config["world_width"],surface+self.water_fraction*h*.42+(i%3)*7,vx=.35 if i%2 else -.35)
-        for i in range(6): self.add(("deepwater_fish","lanternfish","anglerfish")[i%3],(i*149+110)%self.config["world_width"],h*.84+(i%2)*3,vx=.12)
-        self.add("shark",self.config["world_width"]*.42,h*.62,vx=.35)
         extras=("ray","dolphin","whale","orca","humpback_whale","sea_lion","manatee","crab","lobster","crayfish","hermit_crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","sargassum","sea_lettuce","mangrove","phytoplankton","zooplankton","bacteria")
         for i,name in enumerate(extras):
             zone=species_profile(name).get("zone","benthic")
@@ -193,7 +190,7 @@ class Engine:
                 if mate: mate.energy*=.9; mate.cooldown=30
                 parent.cooldown=30; self.births+=1
         stages["reproduction_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
-        self.behaviour.step(self.organisms,dt,self.rng)
+        self.behaviour.step(self.organisms,dt,self.rng,world_height=self.config['world_height'])
         for o in alive:
             self.physics.move(o,dt,self.sim_time)
         stages["behaviour_physics_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()

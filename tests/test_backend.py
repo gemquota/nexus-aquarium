@@ -417,11 +417,60 @@ class ExpandedWorldQualityTests(unittest.TestCase):
         self.assertTrue(benthic)
         self.assertTrue(all(o.y<height*.91 for o in benthic))
 
+    def test_seeded_shoals_occupy_distinct_depth_bands(self):
+        engine=Engine(seed=74)
+        height=engine.config["world_height"]
+        width=engine.config["world_width"]
+        surface=height*(1-engine.water_fraction)
+        depth=height-surface
+        bands={
+            "sardine":(34,.195,.325,.22),
+            "reef_fish":(48,.375,.475,.40),
+            "mackerel":(22,.275,.505,.30),
+            "surface_fish":(30,0.0,.265,.72),
+            "pelagic_fish":(28,.455,.745,.48),
+            "lanternfish":(18,.755,.945,.78),
+            "deepwater_fish":(14,.795,.985,.82),
+            "anglerfish":(8,.815,.965,.84),
+        }
+        for species,(count,low,high,x_start) in bands.items():
+            group=[o for o in engine.organisms if o.species==species]
+            self.assertEqual(len(group),count,species)
+            for organism in group:
+                relative_depth=(organism.y-surface)/depth
+                self.assertGreaterEqual(relative_depth,low,species)
+                self.assertLessEqual(relative_depth,high,species)
+                self.assertGreaterEqual(organism.x,width*x_start,species)
+                self.assertLess(organism.x,width*(x_start+.06),species)
+
     def test_small_capacity_seeds_without_crashing_and_enforces_add_limit(self):
         engine=Engine(seed=72,config={"max_organisms":39})
         self.assertEqual(len(engine.organisms),39)
         with self.assertRaises(RuntimeError): engine.add("reef_fish",1,1)
 
+
+class WorldScaleMotionTests(unittest.TestCase):
+    def test_schooling_neighbourhood_scales_with_world_height(self):
+        from behaviour import BehaviourSystem
+        engine=Engine(seed=91)
+        a=engine.add("reef_fish",10000,85000)
+        b=engine.add("reef_fish",10500,85020)
+        behaviour=BehaviourSystem()
+        behaviour.step([a,b],0.1,random.Random(91),world_height=engine.config["world_height"])
+        self.assertEqual(a.state,"schooling")
+        self.assertEqual(b.state,"schooling")
+        self.assertGreaterEqual(behaviour.school_links,2)
+
+    def test_motion_scale_produces_visible_world_relative_displacement(self):
+        from physics import MarinePhysics
+        from backend import Genome, Organism
+        physics=MarinePhysics(seed=92,width=300000,height=100000,particle_count=1)
+        physics.movement_scale=68
+        physics.sample_current=lambda x,y,t:(0.0,0.0)
+        organism=Organism(1,"reef_fish",10000,85000,vx=.25,vy=0.0,genome=Genome({"speed":.5,"size":.5,"agility":.5,"turn_rate":.5}))
+        start=organism.x
+        physics.move(organism,1.0,0.0)
+        self.assertGreater(organism.x-start,100.0)
 
 class PerformanceInstrumentationTests(unittest.TestCase):
     def test_step_profiler_reports_budget_and_stage_timings(self):

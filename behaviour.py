@@ -15,9 +15,12 @@ class BehaviourSystem:
  def __init__(self):
   self.decisions=0; self.school_links=0; self.flee_responses=0; self.hunts=0; self.foraging=0; self.resting=0
   self.goal_changes=0; self.memory_events=0; self.patrols=0; self.migrations=0
- def step(self,organisms,dt,rng):
+ def step(self,organisms,dt,rng,world_height=24.0):
   living=[o for o in organisms if o.alive]
-  grid=SpatialGrid(18); grid.rebuild(living)
+  spatial_scale=max(1.0,float(world_height)/1000.0)
+  self._spatial_scale=spatial_scale
+  interaction_radius=18.0*spatial_scale
+  grid=SpatialGrid(interaction_radius); grid.rebuild(living)
   # The seabed is the highest occupied y-coordinate in this simplified world.
   # Compute it once per tick; scanning the entire population per benthic animal
   # made this branch quadratic at larger populations.
@@ -33,7 +36,7 @@ class BehaviourSystem:
    turn=max(.1,min(1,float(traits.get("turn_rate",.5))))
    tracking=max(.1,min(1,float(traits.get("tracking",.5))))
    speed=max(.025,float(profile["speed"])*(.6+.8*float(traits.get("speed",.5))))
-   nearby=[p for p in grid.nearby(o.x,o.y,18) if p.id!=o.id and p.alive]
+   nearby=[p for p in grid.nearby(o.x,o.y,interaction_radius) if p.id!=o.id and p.alive]
    threats=[p for p in nearby if p.species in PREDATORS and p.species!=o.species]
    prey=[p for p in nearby if p.species in PREY and p.species!=o.species]
    goal=self._goal(o)
@@ -73,7 +76,7 @@ class BehaviourSystem:
     else:
      state="exploring"; ax+=math.sin(o.age*.55+o.id)*speed*.45; ay+=math.cos(o.age*.41+o.id)*speed*.25
    elif o.species in BENTHIC:
-    target_y=max(o.y,min(o.y+2.0,seabed_y))
+    target_y=max(o.y,min(o.y+2.0*spatial_scale,seabed_y))
     ay+=(target_y-o.y)*.22; ax+=math.sin(o.age*.2+o.id)*speed*.2
     state="benthic_foraging" if o.energy<.75 else "resting"
     if state=="resting": self.resting+=1
@@ -122,7 +125,7 @@ class BehaviourSystem:
    self.goal_changes+=1
  def _set_waypoint(self,o,rng):
   l=o.brain.learning
-  l.update({"goal_x":o.x+rng.uniform(-24,24),"goal_y":o.y+rng.uniform(-7,7),"goal_id":-1,"goal_kind":"patrol","goal_timer":rng.uniform(3,8)})
+  l.update({"goal_x":o.x+rng.uniform(-24,24)*max(1.0,float(getattr(self,"_spatial_scale",1.0))),"goal_y":o.y+rng.uniform(-7,7)*max(1.0,float(getattr(self,"_spatial_scale",1.0))),"goal_id":-1,"goal_kind":"patrol","goal_timer":rng.uniform(3,8)})
  def _select_target(self,o,candidates,goal,rng,kind):
   if goal and goal[2]==kind:
    current=next((p for p in candidates if p.id==o.brain.learning.get("goal_id")),None)

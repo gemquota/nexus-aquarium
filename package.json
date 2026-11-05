@@ -1,0 +1,11 @@
+{
+  "name": "nexus-aquarium-visual-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:visual": "playwright test --config=tests/visual/playwright.config.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0"
+  }
+}
