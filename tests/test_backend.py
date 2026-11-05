@@ -417,6 +417,31 @@ class ExpandedWorldQualityTests(unittest.TestCase):
         self.assertTrue(benthic)
         self.assertTrue(all(o.y<height*.91 for o in benthic))
 
+    def test_seeded_shoals_occupy_distinct_depth_bands(self):
+        engine=Engine(seed=74)
+        height=engine.config["world_height"]
+        width=engine.config["world_width"]
+        surface=height*(1-engine.water_fraction)
+        depth=height-surface
+        bands={
+            "sardine":(34,.195,.325,.22),
+            "reef_fish":(48,.375,.475,.40),
+            "mackerel":(22,.275,.505,.30),
+            "surface_fish":(24,.095,.265,.12),
+            "pelagic_fish":(28,.455,.745,.48),
+            "lanternfish":(18,.755,.945,.78),
+            "deepwater_fish":(14,.795,.985,.82),
+        }
+        for species,(count,low,high,x_start) in bands.items():
+            group=[o for o in engine.organisms if o.species==species]
+            self.assertEqual(len(group),count,species)
+            for organism in group:
+                relative_depth=(organism.y-surface)/depth
+                self.assertGreaterEqual(relative_depth,low,species)
+                self.assertLessEqual(relative_depth,high,species)
+                self.assertGreaterEqual(organism.x,width*x_start,species)
+                self.assertLess(organism.x,width*(x_start+.12),species)
+
     def test_small_capacity_seeds_without_crashing_and_enforces_add_limit(self):
         engine=Engine(seed=72,config={"max_organisms":39})
         self.assertEqual(len(engine.organisms),39)
