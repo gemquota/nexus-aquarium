@@ -55,6 +55,7 @@ function draw(ctx,o){
    }
    ctx.restore();
   }
+  if(h==='coral_reef'||h==='hydrothermal_vent'){for(let bubble=0;bubble<2;bubble++)window.NexusSprites?.drawProp?.(ctx,'bubble',px+(bubble?18:-16)*scale,py-(34+bubble*21+Math.sin(time+seed+bubble)*4)*scale,5*scale,5*scale,time,seed+bubble)}
   if(h==='sandy_seabed'||h==='seagrass'||h==='estuary'){ctx.save();ctx.strokeStyle='rgba(239,220,164,.16)';ctx.lineWidth=1*scale;for(let q=0;q<3;q++){const yy=py-(q+1)*4*scale;ctx.beginPath();ctx.moveTo(px-35*scale,yy);ctx.quadraticCurveTo(px,yy-3*scale,px+35*scale,yy);ctx.stroke()}ctx.restore()}
  }
 }
