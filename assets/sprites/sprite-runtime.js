@@ -121,6 +121,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,measureOrganism,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,measureOrganism,get status(){const states=[...images.values()];return {assets:entries.length,loaded:states.filter(v=>v.loaded).length,failed:states.filter(v=>v.failed).length,pending:states.filter(v=>!v.loaded&&!v.failed).length}}};
 loadManifest();
 })();
