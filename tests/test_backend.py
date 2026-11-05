@@ -411,7 +411,7 @@ class ExpandedWorldQualityTests(unittest.TestCase):
         height=engine.config["world_height"]
         surface=height*(1-engine.water_fraction)
         reef=[o for o in engine.organisms if o.species=="reef_fish"]
-        self.assertEqual(len(reef),18)
+        self.assertEqual(len(reef),48)
         self.assertTrue(all(surface<o.y<height*.91 for o in reef))
         benthic=[o for o in engine.organisms if o.species in {"crab","lobster","crayfish","hermit_crab","octopus","eel","sea_star","sea_urchin","shrimp","clam","coral_polyp"}]
         self.assertTrue(benthic)
