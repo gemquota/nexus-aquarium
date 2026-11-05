@@ -427,7 +427,7 @@ class ExpandedWorldQualityTests(unittest.TestCase):
             "sardine":(34,.195,.325,.22),
             "reef_fish":(48,.375,.475,.40),
             "mackerel":(22,.275,.505,.30),
-            "surface_fish":(24,.095,.265,.12),
+            "surface_fish":(30,0.0,.265,.72),
             "pelagic_fish":(28,.455,.745,.48),
             "lanternfish":(18,.755,.945,.78),
             "deepwater_fish":(14,.795,.985,.82),
