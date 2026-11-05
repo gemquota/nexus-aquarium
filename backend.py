@@ -71,7 +71,7 @@ class Engine:
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
         # Seed coherent, species-specific shoals across the water column.
         # x_band is the left edge of a 12%-world shoal; y_band is depth below the surface.
-        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",48,0.40,0.45),("mackerel",22,0.30,0.48),("surface_fish",24,0.12,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92),("deepwater_fish",14,0.82,0.96),("anglerfish",8,0.84,0.94))
+        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",48,0.40,0.45),("mackerel",22,0.30,0.48),("surface_fish",24,0.72,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92),("deepwater_fish",14,0.82,0.96),("anglerfish",8,0.84,0.94))
         for species,count,x_band,y_band in shoal_specs:
             for j in range(count):
                 x=self.config["world_width"]*(x_band+self.rng.random()*.12)
