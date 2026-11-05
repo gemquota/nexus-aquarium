@@ -448,6 +448,29 @@ class ExpandedWorldQualityTests(unittest.TestCase):
         with self.assertRaises(RuntimeError): engine.add("reef_fish",1,1)
 
 
+class WorldScaleMotionTests(unittest.TestCase):
+    def test_schooling_neighbourhood_scales_with_world_height(self):
+        from behaviour import BehaviourSystem
+        engine=Engine(seed=91)
+        a=engine.add("reef_fish",10000,85000)
+        b=engine.add("reef_fish",10500,85020)
+        behaviour=BehaviourSystem()
+        behaviour.step([a,b],0.1,random.Random(91),world_height=engine.config["world_height"])
+        self.assertEqual(a.state,"schooling")
+        self.assertEqual(b.state,"schooling")
+        self.assertGreaterEqual(behaviour.school_links,2)
+
+    def test_motion_scale_produces_visible_world_relative_displacement(self):
+        from physics import MarinePhysics
+        from backend import Genome, Organism
+        physics=MarinePhysics(seed=92,width=300000,height=100000,particle_count=1)
+        physics.movement_scale=68
+        physics.sample_current=lambda x,y,t:(0.0,0.0)
+        organism=Organism(1,"reef_fish",10000,85000,vx=.25,vy=0.0,genome=Genome({"speed":.5,"size":.5,"agility":.5,"turn_rate":.5}))
+        start=organism.x
+        physics.move(organism,1.0,0.0)
+        self.assertGreater(organism.x-start,100.0)
+
 class PerformanceInstrumentationTests(unittest.TestCase):
     def test_step_profiler_reports_budget_and_stage_timings(self):
         engine=Engine(seed=880)
