@@ -30,8 +30,23 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
   expect(initial.organisms.filter(o => o.species === 'lanternfish').length).toBeGreaterThanOrEqual(15);
 
   await page.waitForTimeout(900);
-  const laterFrame = await page.evaluate(() => window.NexusDebug.capture());
-  expect(laterFrame).not.toBe(initial.frame);
+  const later = await page.evaluate(() => ({
+    frame: window.NexusDebug.capture(),
+    organisms: window.NexusDebug.data.organisms.map(o => ({ id: o.id, x: o.x, y: o.y })),
+    waveNow: window.NexusDebug.waveOffset(150000, window.NexusDebug.data.simulation_time, 0.8, 6),
+    waveLater: window.NexusDebug.waveOffset(150000, window.NexusDebug.data.simulation_time + 1, 0.8, 6),
+    calmAmplitude: window.NexusDebug.waveAmplitude(0, 6),
+    swellAmplitude: window.NexusDebug.waveAmplitude(1, 6)
+  }));
+  expect(later.frame).not.toBe(initial.frame);
+  const startById = new Map(initial.organisms.map(o => [o.id, o]));
+  const maxSwimDisplacement = Math.max(...later.organisms.map(o => {
+    const start = startById.get(o.id);
+    return Math.hypot(o.x - start.x, o.y - start.y);
+  }));
+  expect(maxSwimDisplacement).toBeGreaterThan(20);
+  expect(Math.abs(later.waveLater - later.waveNow)).toBeGreaterThan(0.01);
+  expect(later.swellAmplitude).toBeGreaterThan(later.calmAmplitude);
 
   for (const [zoom, name] of [[0.25, 'overview'], [6, 'default'], [24, 'close']]) {
     await page.evaluate(value => window.NexusDebug.setZoom(value), zoom);
