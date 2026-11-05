@@ -42,8 +42,22 @@ class MarinePhysics:
         rng=random.Random(seed ^ 0xA51); self.particles=[FluidParticle(rng.random()*width,rng.random()*height,
             rng.uniform(-.02,.02),rng.uniform(-.01,.01)) for _ in range(particle_count)]
         self.grid=SpatialGrid(4); self.smoothing_radius=3.0; self.rest_density=1.0
+        self._spatial_scale=1.0
+        self.configure_scale()
+    def configure_scale(self):
+        # The original engine used an 80x24 coordinate field. Scale local
+        # neighbourhoods with the world while keeping their size relative to
+        # creature dimensions, not relative to the entire world.
+        scale=max(1.0,self.height/1000.0)
+        if abs(scale-self._spatial_scale)>1e-9:
+            self._spatial_scale=scale
+            self.grid=SpatialGrid(4.0*scale)
+            self.smoothing_radius=3.0*scale
+    def sample_current(self,x,y,t):
+        return self.currents.sample(x*80.0/max(1.0,self.width),y*24.0/max(1.0,self.height),t)
     def move(self,organism,dt,t):
-        cx,cy=self.currents.sample(organism.x,organism.y,t)
+        self.configure_scale()
+        cx,cy=self.sample_current(organism.x,organism.y,t)
         traits=organism.genome.traits
         mass=max(.2,float(traits.get("size",.5))+0.5)
         agility=max(0.0,min(1.0,float(traits.get("agility",.5))))
@@ -58,7 +72,10 @@ class MarinePhysics:
         organism.vy=(organism.vy+(cy+buoyancy)*dt+math.sin(heading)*thrust)*drag
         organism.vx*=.985+.014*turn_rate
         organism.vy*=.985+.014*turn_rate
-        motion_scale=float(getattr(self,"movement_scale",40.0))
+        # movement_scale is a dimensionless tuning control. Convert it to
+        # world units so the same setting produces the same screen-relative
+        # swim speed in small preview worlds and large configured worlds.
+        motion_scale=float(getattr(self,"movement_scale",40.0))*max(1.0,self.height/10000.0)
         organism.x+=organism.vx*dt*motion_scale/mass
         organism.y+=organism.vy*dt*motion_scale/mass
         # The dynamic waterline is a hard upper boundary: marine life stays submerged.
@@ -70,10 +87,12 @@ class MarinePhysics:
         if organism.y>self.height-1:
             organism.y=self.height-1; organism.vy*=-.35
     def step_particles(self,dt,t):
+        self.configure_scale()
+        particle_motion_scale=max(1.0,self.height/24.0)
         for p in self.particles:
-            cx,cy=self.currents.sample(p.x,p.y,t)
+            cx,cy=self.sample_current(p.x,p.y,t)
             p.vx=(p.vx+cx*dt)*.995; p.vy=(p.vy+cy*dt)*.995
-            p.x=(p.x+p.vx*dt)%self.width; p.y=(p.y+p.vy*dt)%self.height
+            p.x=(p.x+p.vx*dt*particle_motion_scale)%self.width; p.y=(p.y+p.vy*dt*particle_motion_scale)%self.height
         self.grid.rebuild(self.particles)
         for p in self.particles:
             neighbours=self.grid.nearby(p.x,p.y,self.smoothing_radius)
