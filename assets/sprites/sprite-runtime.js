@@ -84,6 +84,18 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const turn=Math.max(-.16,Math.min(.16,heading*.22));
  return drawImage(ctx,entry,state,x,y,width,height,time,vx<0,turn+swim*.025,height*.055,height*.075,1.7,zoom);
 }
+function measureOrganism(species,worldHeight,unitScale,zoom,genomeSize=.5){
+ const entry=find('creature',species,1);if(!entry)return null;
+ const state=loadEntry(entry);if(!state?.loaded||state.failed)return null;
+ const f=frame(entry,state,0),crop=state.bounds&&Number(entry.frames||1)===1?state.bounds:{x:0,y:0,w:f.sw,h:f.sh};
+ const sw=Math.min(crop.w,f.sw-crop.x),sh=Math.min(crop.h,f.sh-crop.y);if(sw<1||sh<1)return null;
+ const lengths={reef_fish:.019,surface_fish:.018,pelagic_fish:.021,deepwater_fish:.017,sardine:.015,mackerel:.023,lanternfish:.014,anglerfish:.019};
+ const size=.84+Math.max(0,Math.min(1,Number(genomeSize)||.5))*.32,worldH=Math.max(1,Number(worldHeight)||100000),scale=Math.max(.000001,Number(unitScale)||1),z=Math.max(.25,Number(zoom)||1);
+ let w=worldH*(lengths[normalise(species)]||.018)*size*scale,h=worldH*.0105*size*scale;
+ const aspect=sw/sh;if(w/h>aspect)w=h*aspect;else h=w/aspect;
+ const minCanvas=1.7/z;if(w<minCanvas){h*=minCanvas/w;w=minCanvas}
+ return {width:w*z,height:h*z};
+}
 function drawBird(ctx,bird,x,y,opts={}){
  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
  const state=loadEntry(entry);if(!state?.loaded||state.failed)return false;
@@ -108,6 +120,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,measureOrganism,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
