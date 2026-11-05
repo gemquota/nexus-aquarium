@@ -56,7 +56,7 @@ function drawImage(ctx,entry,state,x,y,boundW,boundH,time,flip,angle,bob,tailWav
  const bobOffset=bobAmount?Math.sin(time*2.8+hash(entry.filename||entry.src)%31)*bobAmount:0;
  ctx.save();ctx.translate(x,y+bobOffset);ctx.rotate(angle);ctx.scale(flip?-1:1,1);ctx.imageSmoothingEnabled=false;
  if(tailAmount>0&&w*zoom>10){
-  const slices=8,destSlice=w/slices;
+  const slices=6,destSlice=w/slices;
   for(let i=0;i<slices;i++){
    const u=(i+.5)/slices,sourceX=sx+i*sw/slices,sourceW=sw/slices+1;
    const wave=Math.sin(time*8.2-u*2.7+hash(entry.filename||entry.src)%19)*tailAmount*Math.pow(1-u,2);
