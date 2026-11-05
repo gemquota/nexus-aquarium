@@ -181,6 +181,31 @@ class TiltAndPhenotypeTests(unittest.TestCase):
         self.assertGreater(len({round(item["hue"],4) for item in traits}),1)
         self.assertGreater(len({round(item["agility"],4) for item in traits}),1)
 
+
+class BiomeExpansionTests(unittest.TestCase):
+    def test_added_biomes_have_valid_environment_profiles(self):
+        from biodiversity import HABITATS, species_profile
+        for name in ("mangrove_forest","estuary","polar_shelf","seamount","abyssal_plain"):
+            self.assertIn(name,HABITATS)
+            self.assertGreaterEqual(HABITATS[name]["oxygen"],0)
+        self.assertIn("coral_reef",species_profile("seahorse")["habitats"])
+        self.assertIn("polar_shelf",species_profile("icefish")["habitats"])
+
+    def test_habitat_mosaic_is_deterministic_and_clustered(self):
+        from habitats import HabitatMap
+        a=HabitatMap(300000,100000,seed=2026,cell_size=2200)
+        b=HabitatMap(300000,100000,seed=2026,cell_size=2200)
+        self.assertEqual(a.snapshot(),b.snapshot())
+        tiles=a.tiles
+        same=0; total=0
+        for (x,y),name in tiles.items():
+            for q in ((x+1,y),(x,y+1)):
+                if q in tiles:
+                    total+=1; same+=tiles[q]==name
+        self.assertGreater(same/total,.45)
+        self.assertGreaterEqual(len(set(tiles.values())),2)
+        self.assertEqual(a.snapshot()["base_habitat"],"coral_reef")
+
 if __name__=="__main__":
     unittest.main()
 
