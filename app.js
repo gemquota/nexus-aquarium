@@ -134,17 +134,18 @@ function buildAccordionInterface(){
 buildAccordionInterface();
 
 function installDashboardWorkspace(){
- const main=document.querySelector('main'),viewer=document.querySelector('.viewer-shell');
+ const main=document.querySelector('main'),viewer=document.querySelector('.viewer-shell'),hero=main?.querySelector('.hero');
  if(!main||!viewer||main.querySelector('.dashboard-workspace'))return;
  const workspace=document.createElement('section');workspace.className='dashboard-workspace';
  const viewport=document.createElement('div');viewport.className='viewport-pane';
  const bottom=document.createElement('div');bottom.className='bottom-pane';bottom.id='dashboard-bottom';
+ if(hero)bottom.append(hero);
  const bar=document.createElement('div');bar.className='workspace-toolbar';
  bar.innerHTML='<div class="workspace-label">OBSERVATORY LAYOUT</div><div class="workspace-controls"><button type="button" class="tool" id="viewport-lock" aria-pressed="true">🔒 VIEW LOCKED</button><label class="viewport-size-control">VIEW <input id="viewport-size" type="range" min="25" max="75" step="1" value="50"><output id="viewport-size-value">50%</output></label><button type="button" class="tool" id="bottom-toggle-inline" aria-expanded="true">▾ PANELS</button></div>';
  viewport.append(viewer);workspace.append(bar,viewport,bottom);
  const rest=[...main.children];let reached=false;
- for(const node of rest){if(node===viewer){reached=true;continue}if(!reached||node.tagName==='FOOTER')continue;bottom.append(node)}
- main.insertBefore(workspace,main.querySelector('footer'));
+ for(const node of rest){if(node===hero)continue;if(node===viewer){reached=true;continue}if(!reached||node.tagName==='FOOTER')continue;bottom.append(node)}
+ main.insertBefore(workspace,main.firstChild);
  const state={locked:true,collapsed:false,ratio:50};
  const apply=()=>{workspace.style.setProperty('--viewport-ratio',state.ratio+'%');workspace.classList.toggle('viewport-locked',state.locked);workspace.classList.toggle('bottom-collapsed',state.collapsed);$('viewport-lock').textContent=state.locked?'🔒 VIEW LOCKED':'🔓 VIEW UNLOCKED';$('viewport-lock').setAttribute('aria-pressed',String(state.locked));$('viewport-size').value=state.ratio;$('viewport-size-value').textContent=state.ratio+'%';['bottom-toggle','bottom-toggle-inline'].forEach(id=>{const b=$(id);if(b){b.textContent=state.collapsed?'▴ PANELS':'▾ PANELS';b.setAttribute('aria-expanded',String(!state.collapsed))}});};
  $('viewport-lock').onclick=()=>{state.locked=!state.locked;apply()};
