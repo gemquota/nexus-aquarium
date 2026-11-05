@@ -41,7 +41,7 @@ let previewId=1;
 const preview=previewShoals.flatMap(([species,count,xCenter,depthMin,depthMax],group)=>Array.from({length:count},(_,j)=>{
  const seed=previewId++,angle=(j%9)*.53+group*.37,depth=depthMin+((j*37+group*13)%97)/97*(depthMax-depthMin);
  const waterline=previewConfig.world_height*(1-previewConfig.initial_water_fraction),waterDepth=previewConfig.world_height-waterline;
- return{id:seed,species,x:previewConfig.world_width*(xCenter+(j-(count-1)/2)*.0038),y:waterline+waterDepth*depth,
+ return{id:seed,species,x:previewConfig.world_width*(xCenter+(j-(count-1)/2)*.0015),y:waterline+waterDepth*depth,
   energy:.5+(j%5)*.1,health:.9,state:'cruising',vx:Math.cos(angle)*(.18+(j%4)*.07),vy:Math.sin(angle)*.045,
   alive:true,generation:1,age:12+j%30,genome:{speed:.35+(j%7)*.08,size:.25+(j%6)*.12,camouflage:.5,metabolism:.5,hue:(j+group)/Math.max(1,count),pattern:(j%5)/5,agility:.35+(j%6)*.1,fin_size:.3+(j%5)*.12},senses:['vision','chemical','pressure']};
 }));
