@@ -85,8 +85,8 @@ function draw(ctx,o){
   const count=Math.round((baseCounts[h]||2)*density);
   const centre=(rand(seed+101)-.5)*.42;
   for(let n=0;n<count;n++){
-   const id=seed*131+n*29,offset=(rand(id)-.5)*stride*p.spread,hotspotPull=hotspot?1-Math.abs(rand(id+4)-.5)*.7:1;
-   const plantX=px+offset*hotspotPull,plantY=py-(rand(id+8)*9+rand(id+9)*5)*scale;
+   const id=seed*131+n*29,offset=(rand(id)-.5)*stride*p.spread;
+   const plantX=px+centre*stride+offset*(hotspot?.46:1),plantY=py-(rand(id+8)*9+rand(id+9)*5)*scale;
    const tall=(h==='kelp_forest'?70+rand(id+10)*115:h==='mangrove_forest'?48+rand(id+10)*78:h==='seagrass'?17+rand(id+10)*34:h==='coral_reef'?20+rand(id+10)*58:h==='estuary'?35+rand(id+10)*65:12+rand(id+10)*38)*scale;
    const colour=pick(p.plants,id);
    if(h==='coral_reef')drawCoral(ctx,plantX,plantY,tall,scale,colour,id);
