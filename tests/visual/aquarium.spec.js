@@ -54,10 +54,15 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
     await page.screenshot({ path: `test-results/visual/${name}.png`, fullPage: false });
     const state = await page.evaluate(() => ({
       zoom: window.NexusDebug.camera.zoom,
+      camera: window.NexusDebug.camera,
       width: window.NexusDebug.canvas.width,
       height: window.NexusDebug.canvas.height
     }));
     expect(state.zoom).toBe(zoom);
+    if (zoom === 0.25) {
+      expect(state.camera.x).toBeCloseTo(initial.world.w / 2, 2);
+      expect(state.camera.y).toBeCloseTo(initial.world.h / 2, 2);
+    }
     expect(state.width).toBeGreaterThan(0);
     expect(state.height).toBeGreaterThan(0);
   }
