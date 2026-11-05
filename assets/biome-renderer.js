@@ -1,19 +1,19 @@
 /* NEXUS biome scenery: deterministic, clustered side-view habitat dressing. */
 (()=>{'use strict';
 const palettes={
- coral_reef:{rock:'#344d50',light:'#73958a',plants:['#e879a7','#ffad72','#9c8bd7','#54c5a0'],density:1.65,hotspot:2.2,spread:1.0},
- kelp_forest:{rock:'#354a43',light:'#718b68',plants:['#4caa70','#76bd62','#a3c879'],density:1.8,hotspot:2.5,spread:.86},
- seagrass:{rock:'#9a8c69',light:'#c5b58a',plants:['#6dbb83','#9cce81','#4c9e76'],density:2.15,hotspot:2.7,spread:1.15},
- sandy_seabed:{rock:'#9a8c69',light:'#c5b58a',plants:['#80a878','#b2c987'],density:.28,hotspot:1.5,spread:.5},
- rocky_seabed:{rock:'#3b4a49',light:'#7d8980',plants:['#7ca77b','#a4b57b','#8b8da9'],density:.72,hotspot:1.8,spread:.8},
- deep_sea:{rock:'#172a35',light:'#344c55',plants:['#6a78a8','#8275a8','#58a5a0'],density:.16,hotspot:1.2,spread:.35},
- hydrothermal_vent:{rock:'#202d35',light:'#46565a',plants:['#d58a52','#a7a06d','#7c9b82'],density:.32,hotspot:1.4,spread:.45},
- open_ocean:{rock:'#455b57',light:'#84958a',plants:['#8caf85','#a9b987'],density:.08,hotspot:1.0,spread:.25},
- mangrove_forest:{rock:'#665c46',light:'#a49a70',plants:['#4f9361','#79ad68','#b5bd72'],density:1.75,hotspot:2.3,spread:1.2},
- estuary:{rock:'#77745a',light:'#b5a77b',plants:['#75aa75','#9bbf7c','#c0b66d'],density:1.35,hotspot:2.0,spread:1.0},
- polar_shelf:{rock:'#667d82',light:'#b5d0cf',plants:['#79a7a1','#b1c7ad'],density:.24,hotspot:1.3,spread:.45},
- seamount:{rock:'#3a4a52',light:'#71868a',plants:['#a78b77','#8d9c8d','#7b88a9'],density:.58,hotspot:1.6,spread:.7},
- abyssal_plain:{rock:'#17242d',light:'#35434a',plants:['#657b8a','#766f98'],density:.05,hotspot:1.0,spread:.2}
+ coral_reef:{rock:'#344d50',light:'#73958a',plants:['#e879a7','#ffad72','#9c8bd7','#54c5a0'],density:1.0,hotspot:1.9,spread:1.0},
+ kelp_forest:{rock:'#354a43',light:'#718b68',plants:['#4caa70','#76bd62','#a3c879'],density:1.05,hotspot:2.0,spread:.86},
+ seagrass:{rock:'#9a8c69',light:'#c5b58a',plants:['#6dbb83','#9cce81','#4c9e76'],density:1.15,hotspot:2.0,spread:1.15},
+ sandy_seabed:{rock:'#9a8c69',light:'#c5b58a',plants:['#80a878','#b2c987'],density:.22,hotspot:1.35,spread:.5},
+ rocky_seabed:{rock:'#3b4a49',light:'#7d8980',plants:['#7ca77b','#a4b57b','#8b8da9'],density:.55,hotspot:1.55,spread:.8},
+ deep_sea:{rock:'#172a35',light:'#344c55',plants:['#6a78a8','#8275a8','#58a5a0'],density:.12,hotspot:1.1,spread:.35},
+ hydrothermal_vent:{rock:'#202d35',light:'#46565a',plants:['#d58a52','#a7a06d','#7c9b82'],density:.25,hotspot:1.25,spread:.45},
+ open_ocean:{rock:'#455b57',light:'#84958a',plants:['#8caf85','#a9b987'],density:.06,hotspot:1.0,spread:.25},
+ mangrove_forest:{rock:'#665c46',light:'#a49a70',plants:['#4f9361','#79ad68','#b5bd72'],density:1.0,hotspot:1.9,spread:1.2},
+ estuary:{rock:'#77745a',light:'#b5a77b',plants:['#75aa75','#9bbf7c','#c0b66d'],density:.85,hotspot:1.75,spread:1.0},
+ polar_shelf:{rock:'#667d82',light:'#b5d0cf',plants:['#79a7a1','#b1c7ad'],density:.18,hotspot:1.2,spread:.45},
+ seamount:{rock:'#3a4a52',light:'#71868a',plants:['#a78b77','#8d9c8d','#7b88a9'],density:.45,hotspot:1.4,spread:.7},
+ abyssal_plain:{rock:'#17242d',light:'#35434a',plants:['#657b8a','#766f98'],density:.04,hotspot:1.0,spread:.2}
 };
 const hash=n=>{let x=(n|0)^0x9e3779b9;x=Math.imul(x^(x>>>16),0x21f0aaad);x=Math.imul(x^(x>>>15),0x735a2d97);return (x^(x>>>15))>>>0};
 const rand=(n)=>hash(n)/4294967296;
@@ -81,7 +81,7 @@ function draw(ctx,o){
   }
   drawRock(ctx,px,py,scale,p,cluster,seed,time);
   // Each biome has its own growth form and a dense centre with ragged edges.
-  const baseCounts={coral_reef:17,kelp_forest:19,seagrass:24,sandy_seabed:3,rocky_seabed:8,open_ocean:1,mangrove_forest:16,estuary:13,polar_shelf:3,seamount:7};
+  const baseCounts={coral_reef:13,kelp_forest:14,seagrass:17,sandy_seabed:3,rocky_seabed:7,open_ocean:1,mangrove_forest:12,estuary:10,polar_shelf:3,seamount:6};
   const count=Math.round((baseCounts[h]||2)*density);
   const centre=(rand(seed+101)-.5)*.42;
   for(let n=0;n<count;n++){
