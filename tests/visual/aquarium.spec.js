@@ -11,6 +11,7 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
 
   const initial = await page.evaluate(() => ({
     world: window.NexusDebug.world,
+    waterline: window.NexusDebug.data.world.waterline,
     organisms: window.NexusDebug.data.organisms,
     sprites: window.NexusDebug.sprites,
     frame: window.NexusDebug.capture()
@@ -20,9 +21,13 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
   expect(initial.sprites.loaded).toBeGreaterThan(0);
   expect(initial.sprites.failed).toBe(0);
 
-  const waterline = initial.world.h * 0.78;
-  const underwater = initial.organisms.filter(o => o.y >= waterline && o.y <= initial.world.h);
-  expect(underwater.length / initial.organisms.length).toBeGreaterThan(0.98);
+  const waterDepth = initial.world.h - initial.waterline;
+  const depths = initial.organisms.map(o => (o.y - initial.waterline) / waterDepth);
+  expect(depths.every(d => d >= 0 && d <= 1)).toBeTruthy();
+  const occupiedDepthBands = new Set(depths.map(d => Math.min(4, Math.floor(d * 5))));
+  expect(occupiedDepthBands.size).toBeGreaterThanOrEqual(4);
+  expect(initial.organisms.filter(o => o.species === 'reef_fish').length).toBeGreaterThanOrEqual(40);
+  expect(initial.organisms.filter(o => o.species === 'lanternfish').length).toBeGreaterThanOrEqual(15);
 
   await page.waitForTimeout(900);
   const laterFrame = await page.evaluate(() => window.NexusDebug.capture());
