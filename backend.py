@@ -79,6 +79,9 @@ class Engine:
                 direction=1 if (j%2)==0 else -1
                 speed=species_profile(species)["speed"]*self.rng.uniform(.35,.75)
                 self.add(species,x,y,vx=direction*speed,vy=self.rng.uniform(-.035,.035))
+        # A small surface-skimming cohort occupies the immediate air-water boundary.
+        for i in range(6):
+            self.add("surface_fish",self.config["world_width"]*(.72+i*.003),surface+12+i*3,vx=(.32 if i%2 else -.32))
         self.add("shark",self.config["world_width"]*.42,surface+self.water_fraction*h*.58,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,surface+self.water_fraction*h*.42,vy=.06)
         extras=("ray","dolphin","whale","orca","humpback_whale","sea_lion","manatee","crab","lobster","crayfish","hermit_crab","octopus","eel","sea_turtle","seal","sea_snake","sea_star","sea_urchin","shrimp","clam","coral_polyp","kelp","seagrass","sargassum","sea_lettuce","mangrove","phytoplankton","zooplankton","bacteria")
         for i,name in enumerate(extras):
