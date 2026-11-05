@@ -17,13 +17,13 @@ function loadEntry(entry){
   const state={image,loaded:false,failed:false};
   image.onload=()=>{state.loaded=true};
   image.onerror=()=>{state.failed=true};
-  image.src=entry.src;images.set(key,state);return state;
+  image.src=key;images.set(key,state);return state;
 }
 function find(kind,species,seed=0){
   const name=speciesAliases[normalise(species)]||normalise(species);
   const exact=entries.find(e=>e.kind===kind&&e.species===name);
   if(exact)return exact;
-  const generic=entries.filter(e=>e.kind===kind&&(e.species==='generic'||e.species===''));
+  const generic=entries.filter(e=>e.kind===kind&&(e.species==='generic'||e.species==='')&&!/(?:_outline|_skeleton)/i.test(e.filename||e.src||''));
   return generic.length?generic[Math.abs(Number(seed)||0)%generic.length]:null;
 }
 function frame(entry,state,time){
