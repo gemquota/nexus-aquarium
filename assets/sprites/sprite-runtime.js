@@ -52,13 +52,14 @@ function drawImage(ctx,entry,state,x,y,boundW,boundH,time,flip,angle,bob,tailWav
  if(w/h>aspect)w=h*aspect;else h=w/aspect;
  const minCanvas=(minimumPixels||1.5)/Math.max(.25,zoom||1);
  if(w<minCanvas){h*=minCanvas/w;w=minCanvas}
- const bobOffset=bob?Math.sin(time*2.8+hash(entry.filename||entry.src)%31)*bob:0;
+ const bobAmount=Math.min(bob||0,2.5/Math.max(.25,zoom||1)),tailAmount=Math.min(tailWave||0,4/Math.max(.25,zoom||1));
+ const bobOffset=bobAmount?Math.sin(time*2.8+hash(entry.filename||entry.src)%31)*bobAmount:0;
  ctx.save();ctx.translate(x,y+bobOffset);ctx.rotate(angle);ctx.scale(flip?-1:1,1);ctx.imageSmoothingEnabled=false;
- if(tailWave>0){
+ if(tailAmount>0&&w*zoom>10){
   const slices=8,destSlice=w/slices;
   for(let i=0;i<slices;i++){
    const u=(i+.5)/slices,sourceX=sx+i*sw/slices,sourceW=sw/slices+1;
-   const wave=Math.sin(time*8.2-u*2.7+hash(entry.filename||entry.src)%19)*tailWave*Math.pow(1-u,2);
+   const wave=Math.sin(time*8.2-u*2.7+hash(entry.filename||entry.src)%19)*tailAmount*Math.pow(1-u,2);
    ctx.drawImage(state.image,sourceX,sy,Math.min(sourceW,sx+sw-sourceX),sh,-w/2+i*destSlice-.35,-h/2+wave,destSlice+.7,h);
   }
  }else ctx.drawImage(state.image,sx,sy,sw,sh,-w/2,-h/2,w,h);
