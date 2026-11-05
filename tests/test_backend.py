@@ -441,7 +441,7 @@ class ExpandedWorldQualityTests(unittest.TestCase):
                 self.assertGreaterEqual(relative_depth,low,species)
                 self.assertLessEqual(relative_depth,high,species)
                 self.assertGreaterEqual(organism.x,width*x_start,species)
-                self.assertLess(organism.x,width*(x_start+.12),species)
+                self.assertLess(organism.x,width*(x_start+.06),species)
 
     def test_small_capacity_seeds_without_crashing_and_enforces_add_limit(self):
         engine=Engine(seed=72,config={"max_organisms":39})
