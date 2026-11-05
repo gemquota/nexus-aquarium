@@ -31,3 +31,7 @@ jobs:
         run: node --check app.js
       - name: Check sprite runtime JavaScript
         run: node --check assets/sprites/sprite-runtime.js
+      - name: Check biome renderer JavaScript
+        run: node --check assets/biome-renderer.js
+      - name: Test biome renderer regressions
+        run: node tests/biome-renderer.test.js
