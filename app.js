@@ -28,6 +28,8 @@ function loadConnection(){try{const saved=JSON.parse(localStorage.getItem(CONNEC
 function saveConnection(){try{localStorage.setItem(CONNECTION_KEY,JSON.stringify({url:api,token}))}catch(e){$('message').textContent='Connected, but this browser could not save connection details.'}}
 function clearConnection(){try{localStorage.removeItem(CONNECTION_KEY)}catch(e){}api='';token='';if(refreshTimer)clearInterval(refreshTimer);refreshTimer=null;$('token').value='';$('message').textContent='Saved connection cleared.';$('status').textContent='LOCAL SIMULATION';snapshot=null;updateModules();draw()}
 const camera={x:150000,y:84000,zoom:6},pointers=new Map(),gesture={},trails=new Map();let cameraVelocity={x:0,y:0},lastPointerMove=0;
+let previewPaused=false,previewTick=0,previewHabitat='coral_reef',previewDisturbances=[],previewBirths=0,previewDeaths=0,previewConfig={world_width:300000,world_height:100000,simulation_speed:1,movement_scale:68,current_strength:1.4,rain_rate:.00035,max_organisms:1500,initial_water_fraction:.22,checkpoint_interval:30,fixed_dt:1/30,max_frame_dt:.2,initial_fluid_particles:80,predation_intensity:.8,weather_enabled:true};
+try{const saved=JSON.parse(localStorage.getItem('nexus-aquarium.preview-config.v1')||'null');if(saved&&typeof saved==='object')previewConfig={...previewConfig,...saved}}catch(e){}
 const previewShoals=[
  ['reef_fish',42,.18,.16,.34],['sardine',36,.34,.10,.28],['mackerel',28,.49,.25,.45],
  ['surface_fish',30,.73,.06,.18],['pelagic_fish',32,.58,.45,.68],['lanternfish',18,.84,.72,.91],
@@ -44,8 +46,6 @@ const preview=previewShoals.flatMap(([species,count,xCenter,depthMin,depthMax],g
   alive:true,generation:1,age:12+j%30,genome:{speed:.35+(j%7)*.08,size:.25+(j%6)*.12,camouflage:.5,metabolism:.5,hue:(j+group)/Math.max(1,count),pattern:(j%5)/5,agility:.35+(j%6)*.1,fin_size:.3+(j%5)*.12},senses:['vision','chemical','pressure']};
 }));
 function resize(){const r=canvas.getBoundingClientRect();width=r.width;height=r.height;dpr=Math.min(devicePixelRatio||1,1.0);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);try{draw()}catch(error){reportViewerError(error)}}
-let previewPaused=false,previewTick=0,previewHabitat='coral_reef',previewDisturbances=[],previewBirths=0,previewDeaths=0,previewConfig={world_width:300000,world_height:100000,simulation_speed:1,movement_scale:68,current_strength:1.4,rain_rate:.00035,max_organisms:1500,initial_water_fraction:.22,checkpoint_interval:30,fixed_dt:1/30,max_frame_dt:.2,initial_fluid_particles:80,predation_intensity:.8,weather_enabled:true};
-try{const saved=JSON.parse(localStorage.getItem('nexus-aquarium.preview-config.v1')||'null');if(saved&&typeof saved==='object')previewConfig={...previewConfig,...saved}}catch(e){}
 function data(){
  if(snapshot)return snapshot;
  const phase=previewTick/90,alive=preview.length,stress=Math.max(0,Math.min(1,.18+Math.sin(phase*.7)*.09+Number(previewConfig.predation_intensity||0)*.035+(previewDisturbances.length?.22:0)));
