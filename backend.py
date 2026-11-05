@@ -72,7 +72,7 @@ class Engine:
         for i in range(18): self.add("reef_fish",self.config["world_width"]*(.20+i*.60/17),surface+self.water_fraction*h*(.34+self.rng.random()*.20),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.025,.025))
         # Seed realistic shoals instead of a handful of isolated showcase animals.
         # Each shoal occupies a distinct region and has small individual variation.
-        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",30,0.40,0.58),("mackerel",22,0.30,0.48),("surface_fish",24,0.12,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92))
+        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",30,0.40,0.45),("mackerel",22,0.30,0.48),("surface_fish",24,0.12,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92))
         for species,count,x_band,y_band in shoal_specs:
             for j in range(count):
                 x=self.config["world_width"]*(x_band+self.rng.random()*.12)
