@@ -4,7 +4,8 @@
 const MANIFEST_URL=new URL('./runtime-manifest.json',document.currentScript.src).href;
 const images=new Map(),entries=[];
 const plantSpecies=new Set(['kelp','seagrass','sea_lettuce','mangrove','sargassum','seaweed','macroalgae','eelgrass','coral','coral_polyp','marsh_grass','saltmarsh']);
-const speciesAliases={sea_turtle:'turtle',coral_polyp:'coral',kelp:'seaweed',seagrass:'seaweed',sea_lettuce:'seaweed',mangrove:'seaweed',sargassum:'seaweed',eelgrass:'seaweed',reef_fish:'generic',surface_fish:'generic',pelagic_fish:'generic',deepwater_fish:'generic',sardine:'generic',mackerel:'generic',lanternfish:'generic',anglerfish:'generic',gull:'seagull'};
+const speciesAliases={sea_turtle:'turtle',coral_polyp:'coral',kelp:'seaweed',seagrass:'seaweed',sea_lettuce:'seaweed',mangrove:'seaweed',sargassum:'seaweed',eelgrass:'seaweed',gull:'seagull'};
+const genericFishSpecies=new Set(['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','icefish','coelacanth','lanternfish','anglerfish','piranha','clownfish','tang','angelfish','butterflyfish','wrasse','goby','damselfish','parrotfish','triggerfish','surgeonfish','anchovy','herring','sprat','smelt','fry']);
 const normalise=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 const clean=e=>!/(?:_outline|_skeleton)(?:\.[^.]+)?$/i.test(e.filename||e.src||'');
 function loadEntry(entry){
@@ -17,12 +18,12 @@ function loadEntry(entry){
  image.src=key;images.set(key,state);return state;
 }
 function variants(kind,name){
- return entries.filter(e=>e.kind===kind&&clean(e)&&(e.species===name||e.species==='generic'||e.species===''));
+ return entries.filter(e=>e.kind===kind&&clean(e)&&e.species===name);
 }
 function hash(value){let h=2166136261;for(const c of String(value)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 function find(kind,species,seed=0){
  const name=speciesAliases[normalise(species)]||normalise(species);
- const exact=variants(kind,name);const generic=variants(kind,'generic');const pool=exact.length?exact:(generic.length?generic:entries.filter(e=>e.kind===kind&&clean(e)));
+ const exact=variants(kind,name);const generic=kind==='creature'&&genericFishSpecies.has(normalise(species))?entries.filter(e=>e.kind===kind&&clean(e)&&e.species==='generic'):[];const pool=exact.length?exact:generic;
  return pool.length?pool[hash(seed)%pool.length]:null;
 }
 function frame(entry,state,time){
@@ -76,6 +77,11 @@ function drawProp(ctx,species,x,y,width,height,time=0,seed=0){
  const entry=find('prop',species,seed);if(!entry)return false;
  return drawImage(ctx,entry,x,y,width,height,time,.5,1,false,0,0);
 }
+function drawPlant(ctx,x,baseY,width,height,time=0,seed=0){
+ const entry=find('plant','seaweed',seed);if(!entry)return false;
+ const sway=Math.sin(time*1.25+seed*.71)*.045;
+ return drawImage(ctx,entry,x,baseY,width,height,time,.5,1,false,sway,0);
+}
 function drawIsland(ctx,island,x,y,radius){
  const entry=find('island',island.kind||island.species||'generic',island.id||island.x||0);if(!entry)return false;
  const w=Number(entry.render_width)||Math.max(12,radius*3.6),h=Number(entry.render_height)||Math.max(5,radius*.9);
@@ -92,6 +98,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
