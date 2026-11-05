@@ -7,7 +7,8 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
   await page.goto('/');
   await page.waitForFunction(() => window.NexusDebug && window.NexusSprites?.status.assets > 0);
   await page.waitForFunction(() => window.NexusSprites.status.loaded > 0);
-  await page.waitForTimeout(700);
+  await page.waitForFunction(() => window.NexusSprites.status.pending === 0, null, { timeout: 15000 });
+  await page.waitForTimeout(300);
 
   const initial = await page.evaluate(() => ({
     world: window.NexusDebug.world,
