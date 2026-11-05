@@ -41,6 +41,8 @@ function draw(ctx,o){
   for(let n=0;n<count;n++){
    const id=seed*13+n*29,dx=(hash(id)%86-43)*scale,plantX=px+dx,plantY=py-(hash(id+4)%12)*scale;
    const tall=(18+(hash(id+8)%50))*scale,colour=pick(p.plants,id);
+   const spritePlant=['coral_reef','kelp_forest','seagrass','mangrove_forest','estuary'].includes(h);
+   if(spritePlant)window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(12,tall*.72),Math.max(18,tall*1.35),time,id);
    ctx.save();ctx.translate(plantX,plantY);ctx.strokeStyle=colour;ctx.fillStyle=colour;ctx.lineWidth=(1.2+(hash(id+5)%3)*.45)*scale;ctx.lineCap='round';
    if(h==='coral_reef'){
     const arms=3+hash(id+9)%4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-tall*.45);

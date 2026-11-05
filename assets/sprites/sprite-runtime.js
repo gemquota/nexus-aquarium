@@ -72,6 +72,10 @@ function drawBird(ctx,bird,x,y,opts={}){
  const flap=bird.state==='gliding'?0:Math.sin((Number(opts.time)||0)*9+(Number(opts.index)||0))*.035;
  return drawImage(ctx,entry,x,y,w,h,Number(opts.time)||0,.5,.5,Number(bird.vx)<0,flap,0);
 }
+function drawPlant(ctx,x,baseY,width,height,time=0,seed=0){
+ const entry=find('plant','seaweed',seed);if(!entry)return false;
+ return drawImage(ctx,entry,x,baseY,width,height,time,.5,1,false,Math.sin(time+seed)*.035,0);
+}
 function drawProp(ctx,species,x,y,width,height,time=0,seed=0){
  const entry=find('prop',species,seed);if(!entry)return false;
  return drawImage(ctx,entry,x,y,width,height,time,.5,1,false,0,0);
@@ -92,6 +96,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
