@@ -431,6 +431,7 @@ class ExpandedWorldQualityTests(unittest.TestCase):
             "pelagic_fish":(28,.455,.745,.48),
             "lanternfish":(18,.755,.945,.78),
             "deepwater_fish":(14,.795,.985,.82),
+            "anglerfish":(8,.815,.965,.84),
         }
         for species,(count,low,high,x_start) in bands.items():
             group=[o for o in engine.organisms if o.species==species]
