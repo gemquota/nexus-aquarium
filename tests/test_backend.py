@@ -188,7 +188,7 @@ class BiomeExpansionTests(unittest.TestCase):
         for name in ("mangrove_forest","estuary","polar_shelf","seamount","abyssal_plain"):
             self.assertIn(name,HABITATS)
             self.assertGreaterEqual(HABITATS[name]["oxygen"],0)
-        self.assertIn("seahorse",species_profile("seahorse")["habitats"])
+        self.assertIn("coral_reef",species_profile("seahorse")["habitats"])
         self.assertIn("polar_shelf",species_profile("icefish")["habitats"])
 
     def test_habitat_mosaic_is_deterministic_and_clustered(self):
