@@ -42,6 +42,12 @@ button.secondary:hover,button.tool:hover{background:#1c3b4e!important;border-col
 .viewer-toolbar,.viewer-footer{background:#0a1c2b!important;color:#aac0ca!important}
 .viewer-toolbar strong{color:#e8f2f4!important}
 .tank{background:#020c15!important}
+.tank::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(to bottom,#142b40 0%,#1c3448 10%,#b7b49f 13.8%,#d6d0b2 14.6%,#087b91 15.2%,#07536d 42%,#02334e 72%,#010b16 100%)}
+.tank::after{content:"";position:absolute;left:0;right:0;bottom:0;height:27%;z-index:0;pointer-events:none;clip-path:polygon(0 34%,8% 20%,18% 32%,29% 8%,39% 26%,49% 44%,60% 19%,70% 30%,81% 10%,91% 27%,100% 15%,100% 100%,0 100%);background:linear-gradient(180deg,#526d5d 0%,#2a4944 25%,#142b32 70%,#09151e 100%)}
+#ocean{position:relative;z-index:1}
+.canvas-hint,.overlay,.minimap-wrap{z-index:2}
+#render-status{position:absolute;z-index:5;top:38px;left:12px;max-width:calc(100% - 24px);padding:7px 10px;border:1px solid #ff806e;border-radius:5px;background:#351b20ed;color:#ffe1d9;font:10px/1.4 ui-monospace,monospace;overflow-wrap:anywhere;pointer-events:none}
+#render-status[hidden]{display:none}
 .bottom-pane{background:#071521!important}
 .module-heading{padding:14px 16px 9px!important}
 .module-heading h2{font-size:21px!important;letter-spacing:-.02em}
@@ -121,4 +127,4 @@ button.secondary:hover,button.tool:hover{background:#1c3b4e!important;border-col
 <label class="toggle-label">WEATHER <input id="cfg-weather" type="checkbox" checked> <span>Enable rain and weather</span></label>
 <button class="secondary" id="cfg-save">SAVE CHECKPOINT</button><button class="secondary" id="cfg-reset">RESET TO DEFAULTS</button></div><p id="cfg-status">Connect to the backend to adjust the live engine.</p></section>
 <section class="phases"><article><b>PHASE 3</b><h2>Genetics & reproduction</h2><p>Heritable traits, mutation, inheritance and generation tracking.</p></article><article><b>PHASE 4</b><h2>Behaviour & intelligence</h2><p>Sensory channels, bounded memory, schooling and predator avoidance.</p></article><article><b>PHASE 5</b><h2>Ecosystem dynamics</h2><p>Water chemistry, trophic links, metabolism, mortality and disturbances.</p></article></section></main>
-<footer>NEXUS AQUARIUM · PYTHON CORE · TOUCH-FIRST OBSERVATORY</footer><script src="assets/sprites/sprite-runtime.js"></script><script src="app.js"></script></body></html>
+<footer>NEXUS AQUARIUM · PYTHON CORE · TOUCH-FIRST OBSERVATORY</footer><script src="assets/sprites/sprite-runtime.js"></script><script src="app.js?v=20261105-render-recovery"></script></body></html>
