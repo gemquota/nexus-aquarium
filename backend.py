@@ -187,7 +187,7 @@ class Engine:
                 if mate: mate.energy*=.9; mate.cooldown=30
                 parent.cooldown=30; self.births+=1
         stages["reproduction_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
-        self.behaviour.step(self.organisms,dt,self.rng)
+        self.behaviour.step(self.organisms,dt,self.rng,world_height=self.config['world_height'])
         for o in alive:
             self.physics.move(o,dt,self.sim_time)
         stages["behaviour_physics_ms"]=(time.perf_counter()-stage_started)*1000; stage_started=time.perf_counter()
