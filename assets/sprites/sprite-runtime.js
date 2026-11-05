@@ -61,7 +61,7 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const bw=(Number(entry.render_width)||(large?6.2:tiny?2.8:3.8))*size;
  const bh=(Number(entry.render_height)||(large?3.4:tiny?2.0:2.8))*size;
  const vx=Number(o.vx)||0,vy=Number(o.vy)||0;
- const heading=Math.atan2(vy,vx||.0001);
+ const heading=Math.atan2(vy,Math.abs(vx)||.0001);
  const swim=Math.sin(time*5.2+(Number(o.id)||0)*.73);
  const turn=Math.max(-.16,Math.min(.16,heading*.22));
  return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),vx<0,turn+swim*.025,Math.max(.15,bh*.055));
