@@ -76,7 +76,8 @@ function drawOrganism(ctx,o,x,y,opts={}){
  if(kind==='plant'){
   const h=worldHeight*.052*size*unitScale,w=worldHeight*.025*size*unitScale;
   const sway=Math.sin(time*1.25+(Number(o.id)||0)*.71)*.045;
-  return drawImage(ctx,entry,state,x,Number.isFinite(opts.plantBaseY)?opts.plantBaseY:y,w,h,time,false,sway,0,0,1.5,zoom);
+  const baseY=Number.isFinite(opts.plantBaseY)?opts.plantBaseY:y;
+  return drawImage(ctx,entry,state,x,baseY-h/2,w,h,time,false,sway,0,0,1.5,zoom);
  }
  const lengths={reef_fish:.019,surface_fish:.018,pelagic_fish:.021,deepwater_fish:.017,sardine:.015,mackerel:.023,lanternfish:.014,anglerfish:.019};
  const width=worldHeight*(lengths[species]||.018)*size*unitScale,height=worldHeight*.0105*size*unitScale;
