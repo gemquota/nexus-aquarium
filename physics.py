@@ -48,7 +48,7 @@ class MarinePhysics:
         # The original engine used an 80x24 coordinate field. Scale local
         # neighbourhoods with the world while keeping their size relative to
         # creature dimensions, not relative to the entire world.
-        scale=max(1.0,self.height/1000.0)
+        scale=max(1.0,self.width/80.0,self.height/24.0)
         if abs(scale-self._spatial_scale)>1e-9:
             self._spatial_scale=scale
             self.grid=SpatialGrid(4.0*scale)
