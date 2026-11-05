@@ -70,6 +70,16 @@ class Engine:
         self._seeding=True
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
         for i in range(18): self.add("reef_fish",self.config["world_width"]*(.20+i*.60/17),surface+self.water_fraction*h*(.34+self.rng.random()*.20),vx=(.25 if i%2 else -.25),vy=self.rng.uniform(-.025,.025))
+        # Seed realistic shoals instead of a handful of isolated showcase animals.
+        # Each shoal occupies a distinct region and has small individual variation.
+        shoal_specs=(("sardine",34,0.22,0.30),("reef_fish",30,0.40,0.58),("mackerel",22,0.30,0.48),("surface_fish",24,0.12,0.24),("pelagic_fish",28,0.48,0.72),("lanternfish",18,0.78,0.92))
+        for species,count,x_band,y_band in shoal_specs:
+            for j in range(count):
+                x=self.config["world_width"]*(x_band+self.rng.random()*.12)
+                y=surface+self.water_fraction*h*(y_band+self.rng.uniform(-.025,.025))
+                direction=1 if (j%2)==0 else -1
+                speed=species_profile(species)["speed"]*self.rng.uniform(.35,.75)
+                self.add(species,x,y,vx=direction*speed,vy=self.rng.uniform(-.035,.035))
         self.add("shark",self.config["world_width"]*.42,surface+self.water_fraction*h*.58,vx=.35); self.add("jellyfish",self.config["world_width"]*.30,surface+self.water_fraction*h*.42,vy=.06)
         h=self.config["world_height"]; surface=h*(1-self.water_fraction)
         for i in range(10): self.add(("surface_fish","sardine")[i%2],(i*71+45)%self.config["world_width"],surface+12+(i%3)*5,vx=.45 if i%2 else -.45)
