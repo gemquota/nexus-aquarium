@@ -49,7 +49,8 @@ test('aquarium visual scene renders, moves, and remains legible across zoom leve
   expect(later.swellAmplitude).toBeGreaterThan(later.calmAmplitude);
 
   for (const [zoom, name] of [[0.25, 'overview'], [6, 'default'], [24, 'close']]) {
-    await page.evaluate(value => window.NexusDebug.setZoom(value), zoom);
+    if (zoom === 6) await page.evaluate(() => window.NexusDebug.resetView());
+    else await page.evaluate(value => window.NexusDebug.setZoom(value), zoom);
     await page.waitForTimeout(120);
     await page.screenshot({ path: `test-results/visual/${name}.png`, fullPage: false });
     const state = await page.evaluate(() => ({
