@@ -3,8 +3,8 @@ import math
 from biodiversity import species_profile
 from physics import SpatialGrid
 
-PREDATORS={"shark","dolphin","seal","octopus","eel","sea_snake"}
-PREY={"reef_fish","shrimp","zooplankton","clam","jellyfish"}
+PREDATORS={"shark","dolphin","seal","octopus","eel","sea_snake","mackerel","anglerfish","orca"}
+PREY={"reef_fish","surface_fish","pelagic_fish","deepwater_fish","sardine","mackerel","lanternfish","shrimp","zooplankton","clam","jellyfish"}
 PLANTS={"kelp","seagrass","phytoplankton"}
 BENTHIC={"ray","crab","sea_star","sea_urchin","clam","octopus"}
 ATTACHED={"kelp","seagrass","coral_polyp","bacteria"}
@@ -61,7 +61,7 @@ class BehaviourSystem:
      dx=target.x-o.x; dy=target.y-o.y; mag=max(.01,math.hypot(dx,dy))
      ax+=dx/mag*speed*.9; ay+=dy/mag*speed*.9; state="foraging"; self.foraging+=1
     else: state="searching"; ax+=math.sin(o.age*.22+o.id)*speed*.3; ay+=math.cos(o.age*.19+o.id)*speed*.2
-   elif o.species in ("reef_fish","dolphin","seal"):
+   elif o.species in ("reef_fish","surface_fish","pelagic_fish","deepwater_fish","sardine","mackerel","lanternfish","dolphin","seal"):
     school=[p for p in nearby if p.species==o.species]
     if school:
      cx=sum(p.x for p in school)/len(school)-o.x; cy=sum(p.y for p in school)/len(school)-o.y
