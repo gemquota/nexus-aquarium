@@ -44,14 +44,14 @@ function frame(entry,state,time){
  const index=count>1?Math.floor(time*Math.max(.1,Number(entry.fps)||6))%count:0;
  return {sx:(index%cols)*fw,sy:Math.floor(index/cols)*fh,sw:Math.min(fw,state.image.naturalWidth),sh:Math.min(fh,state.image.naturalHeight)};
 }
-function drawImage(ctx,entry,state,x,y,boundW,boundH,time,flip,angle,bob,tailWave,minimumPixels,pixelsPerUnit){
+function drawImage(ctx,entry,state,x,y,boundW,boundH,time,flip,angle,bob,tailWave,minimumPixels,zoom=1){
  const f=frame(entry,state,time),crop=state.bounds&&Number(entry.frames||1)===1?state.bounds:{x:0,y:0,w:f.sw,h:f.sh};
  const sx=f.sx+crop.x,sy=f.sy+crop.y,sw=Math.min(crop.w,f.sw-crop.x),sh=Math.min(crop.h,f.sh-crop.y);
  if(sw<1||sh<1)return false;
  const aspect=sw/sh;let w=boundW,h=boundH;
  if(w/h>aspect)w=h*aspect;else h=w/aspect;
- const minWorld=(minimumPixels||1.5)/Math.max(.000001,pixelsPerUnit||1);
- if(w<minWorld){h*=minWorld/w;w=minWorld}
+ const minCanvas=(minimumPixels||1.5)/Math.max(.25,zoom||1);
+ if(w<minCanvas){h*=minCanvas/w;w=minCanvas}
  const bobOffset=bob?Math.sin(time*2.8+hash(entry.filename||entry.src)%31)*bob:0;
  ctx.save();ctx.translate(x,y+bobOffset);ctx.rotate(angle);ctx.scale(flip?-1:1,1);ctx.imageSmoothingEnabled=false;
  if(tailWave>0){
@@ -70,32 +70,32 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const kind=plantSpecies.has(species)?'plant':'creature',entry=find(kind,species,o.id);
  if(!entry)return false;
  const state=loadEntry(entry);if(!state?.loaded||state.failed)return false;
- const time=Number(opts.time)||0,worldHeight=Math.max(1,Number(opts.worldHeight)||100000);
+ const time=Number(opts.time)||0,worldHeight=Math.max(1,Number(opts.worldHeight)||100000),unitScale=Math.max(.000001,Number(opts.worldToCanvasScale)||1),zoom=Math.max(.25,Number(opts.zoom)||1);
  const size=.84+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.32;
  if(kind==='plant'){
-  const h=worldHeight*.052*size,w=worldHeight*.025*size;
+  const h=worldHeight*.052*size*unitScale,w=worldHeight*.025*size*unitScale;
   const sway=Math.sin(time*1.25+(Number(o.id)||0)*.71)*.045;
-  return drawImage(ctx,entry,state,x,Number.isFinite(opts.plantBaseY)?opts.plantBaseY:y,w,h,time,false,sway,0,0,1.5,opts.pixelsPerUnit);
+  return drawImage(ctx,entry,state,x,Number.isFinite(opts.plantBaseY)?opts.plantBaseY:y,w,h,time,false,sway,0,0,1.5,zoom);
  }
  const lengths={reef_fish:.019,surface_fish:.018,pelagic_fish:.021,deepwater_fish:.017,sardine:.015,mackerel:.023,lanternfish:.014,anglerfish:.019};
- const width=worldHeight*(lengths[species]||.018)*size,height=worldHeight*.0105*size;
+ const width=worldHeight*(lengths[species]||.018)*size*unitScale,height=worldHeight*.0105*size*unitScale;
  const vx=Number(o.vx)||0,vy=Number(o.vy)||0,heading=Math.atan2(vy,Math.abs(vx)||.0001);
  const swim=Math.sin(time*5.2+(Number(o.id)||0)*.73);
  const turn=Math.max(-.16,Math.min(.16,heading*.22));
- return drawImage(ctx,entry,state,x,y,width,height,time,vx<0,turn+swim*.025,height*.055,height*.075,1.7,opts.pixelsPerUnit);
+ return drawImage(ctx,entry,state,x,y,width,height,time,vx<0,turn+swim*.025,height*.055,height*.075,1.7,zoom);
 }
 function drawBird(ctx,bird,x,y,opts={}){
  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
  const state=loadEntry(entry);if(!state?.loaded||state.failed)return false;
- const worldHeight=Number(opts.worldHeight)||100000,w=worldHeight*.018,h=worldHeight*.012;
+ const worldHeight=Number(opts.worldHeight)||100000,pixelsPerUnit=Number(opts.pixelsPerUnit)||.006,w=worldHeight*.018*pixelsPerUnit,h=worldHeight*.012*pixelsPerUnit;
  const flap=bird.state==='gliding'?0:Math.sin((Number(opts.time)||0)*9+(Number(opts.index)||0))*.035;
- return drawImage(ctx,entry,state,x,y,w,h,Number(opts.time)||0,Number(bird.vx)<0,flap,0,0,2,opts.pixelsPerUnit);
+ return drawImage(ctx,entry,state,x,y,w,h,Number(opts.time)||0,Number(bird.vx)<0,flap,0,0,2,1);
 }
 function drawIsland(ctx,island,x,y,radius,opts={}){
  const entry=find('island',island.kind||island.species||'generic',island.id||island.x||0);if(!entry)return false;
  const state=loadEntry(entry);if(!state?.loaded||state.failed)return false;
- const worldHeight=Number(opts.worldHeight)||100000,w=worldHeight*.05,h=worldHeight*.018;
- return drawImage(ctx,entry,state,x,y,w,h,0,false,0,0,0,2,opts.pixelsPerUnit);
+ const w=Math.max(12,radius*3.6),h=Math.max(5,radius*.9);
+ return drawImage(ctx,entry,state,x,y,w,h,0,false,0,0,0,2,1);
 }
 async function loadManifest(){
  try{
