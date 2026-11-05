@@ -18,6 +18,7 @@ class BehaviourSystem:
  def step(self,organisms,dt,rng,world_height=24.0):
   living=[o for o in organisms if o.alive]
   spatial_scale=max(1.0,float(world_height)/1000.0)
+  self._spatial_scale=spatial_scale
   interaction_radius=18.0*spatial_scale
   grid=SpatialGrid(interaction_radius); grid.rebuild(living)
   # The seabed is the highest occupied y-coordinate in this simplified world.
