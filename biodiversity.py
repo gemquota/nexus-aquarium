@@ -55,3 +55,23 @@ SPECIES.update({
 })
 def species_profile(name):
     return SPECIES.get(name,{"group":"unknown","trophic":"omnivore","habitats":["open_ocean"],"temperature":[0,35],"oxygen_min":1.0,"speed":.4,"size":.4,"fecundity":.4})
+
+# Additional coastal, pelagic and deep-ocean ecoregions.
+HABITATS.update({
+ "mangrove_forest":{"temperature":26.0,"salinity":28.0,"oxygen":6.0,"ph":7.9,"turbidity":0.35,"primary_producers":["mangrove","seagrass","phytoplankton"]},
+ "estuary":{"temperature":20.0,"salinity":18.0,"oxygen":6.5,"ph":7.8,"turbidity":0.3,"primary_producers":["seagrass","phytoplankton"]},
+ "polar_shelf":{"temperature":-1.5,"salinity":34.0,"oxygen":8.5,"ph":8.0,"turbidity":0.08,"primary_producers":["phytoplankton"]},
+ "seamount":{"temperature":5.0,"salinity":34.8,"oxygen":4.8,"ph":7.9,"turbidity":0.16,"primary_producers":["bacteria","phytoplankton"]},
+ "abyssal_plain":{"temperature":2.0,"salinity":34.7,"oxygen":4.0,"ph":7.7,"turbidity":0.22,"primary_producers":["bacteria"]}
+})
+SPECIES.update({
+ "mangrove":{"group":"coastal_plant","trophic":"producer","habitats":["mangrove_forest","estuary"],"temperature":[18,32],"oxygen_min":0,"speed":0,"size":.9,"fecundity":.3,"zone":"shore"},
+ "eelgrass":{"group":"seagrass","trophic":"producer","habitats":["seagrass","estuary"],"temperature":[8,30],"oxygen_min":0,"speed":0,"size":.65,"fecundity":.55,"zone":"benthic"},
+ "sea_cucumber":{"group":"echinoderm","trophic":"detritivore","habitats":["abyssal_plain","deep_sea","sandy_seabed"],"temperature":[-1,12],"oxygen_min":.5,"speed":.04,"size":.3,"fecundity":.6,"zone":"benthic"},
+ "giant_isopod":{"group":"crustacean","trophic":"scavenger","habitats":["abyssal_plain","deep_sea"],"temperature":[-1,8],"oxygen_min":.5,"speed":.12,"size":.28,"fecundity":.45,"zone":"benthic"},
+ "icefish":{"group":"fish","trophic":"planktivore","habitats":["polar_shelf","open_ocean"],"temperature":[-2,5],"oxygen_min":5,"speed":.45,"size":.42,"fecundity":.4,"zone":"open_water"},
+ "coelacanth":{"group":"fish","trophic":"predator","habitats":["seamount","deep_sea"],"temperature":[8,20],"oxygen_min":2,"speed":.28,"size":.62,"fecundity":.12,"zone":"deep"},
+ "manta_ray":{"group":"elasmobranch","trophic":"filter_feeder","habitats":["coral_reef","open_ocean","seamount"],"temperature":[18,30],"oxygen_min":3,"speed":.65,"size":.95,"fecundity":.12,"zone":"open_water"},
+ "seahorse":{"group":"fish","trophic":"planktivore","habitats":["seagrass","mangrove_forest","coral_reef"],"temperature":[18,29],"oxygen_min":3,"speed":.12,"size":.18,"fecundity":.5,"zone":"vegetation"},
+ "nudibranch":{"group":"mollusc","trophic":"herbivore","habitats":["coral_reef","rocky_seabed"],"temperature":[8,28],"oxygen_min":2,"speed":.03,"size":.08,"fecundity":.7,"zone":"benthic"}
+})
