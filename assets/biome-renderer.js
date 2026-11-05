@@ -20,8 +20,8 @@ const pick=(a,n)=>a[hash(n)%a.length];
 function draw(ctx,o){
  const {ox,oy,sx,sy,width,height,worldWidth,worldHeight,bathymetry,time,zoom,habitatMap,defaultHabitat}=o;
  if(!sx||!sy||!bathymetry)return;
- const tiles=habitatMap?.tiles||[],cell=Number(habitatMap?.cell_size)||0;
- const habitatAt=x=>{if(cell&&tiles.length){const tx=Math.max(0,Math.floor(x/cell)),ty=Math.max(0,Math.floor((worldHeight*.91)/cell));const tile=tiles.find(q=>q.x===tx&&q.y===ty);if(tile)return tile.habitat}return defaultHabitat||'coral_reef'};
+ const tiles=habitatMap?.tiles||[],cell=Number(habitatMap?.cell_size)||0,tileIndex=new Map(tiles.map(q=>[q.x+','+q.y,q.habitat]));
+ const habitatAt=x=>{if(cell&&tileIndex.size){const tx=Math.max(0,Math.floor(x/cell)),ty=Math.max(0,Math.floor((worldHeight*.91)/cell));return tileIndex.get(tx+','+ty)||defaultHabitat||'coral_reef'}return defaultHabitat||'coral_reef'};
  const left=Math.max(0,(0-ox)/sx),right=Math.min(worldWidth,(width-ox)/sx);
  const stride=Math.max(worldWidth/100,900);
  for(let x=Math.floor(left/stride)*stride;x<right;x+=stride){
@@ -35,7 +35,7 @@ function draw(ctx,o){
    ctx.restore();continue;
   }
   const mound=10+cluster*32;
-  ctx.save();ctx.fillStyle=p.rock;ctx.globalAlpha=.75;ctx.beginPath();ctx.moveTo(px-48*scale,py);ctx.quadraticCurveTo(px-35*scale,py-mound*scale,px-10*scale,py-mound*.72*scale);ctx.quadraticCurveTo(px+16*scale,py-mound*1.35*scale,px+48*scale,py);ctx.closePath();ctx.fill();
+  ctx.save();const hasRock=window.NexusSprites?.drawProp?.(ctx,'rock',px,py,78*scale,42*scale,time,seed);ctx.fillStyle=p.rock;ctx.globalAlpha=hasRock?0.18:.75;ctx.beginPath();ctx.moveTo(px-48*scale,py);ctx.quadraticCurveTo(px-35*scale,py-mound*scale,px-10*scale,py-mound*.72*scale);ctx.quadraticCurveTo(px+16*scale,py-mound*1.35*scale,px+48*scale,py);ctx.closePath();ctx.fill();
   ctx.globalAlpha=.22;ctx.strokeStyle=p.light;ctx.lineWidth=2*scale;ctx.beginPath();ctx.moveTo(px-22*scale,py-8*scale);ctx.quadraticCurveTo(px,py-mound*scale,px+24*scale,py-7*scale);ctx.stroke();ctx.restore();
   const count=Math.round(p.density*(h==='coral_reef'?5:4));
   for(let n=0;n<count;n++){
