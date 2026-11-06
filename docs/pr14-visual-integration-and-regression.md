@@ -1,93 +1,61 @@
-# PR #14 visual integration and validation gate
+# PR #14 visual integration and regression gate
 
-This document extends the articulated-animation work into a complete visual-quality and runtime-validation pass. It is an implementation checklist, not a claim that the items are already complete.
+This document records the implementation and the evidence required to accept the five visual-quality workstreams. It distinguishes code that is implemented from checks that still need a passing browser run.
 
-## Current baseline and constraints
+## A. Production artwork and layered rendering
 
-- The published GitHub Pages build was inspected at 220 organisms. It rendered without visible missing resources or runtime errors, but the organism presentation was abstract and the observed frame rate was approximately 13 FPS.
-- That inspection was against the published build, not this PR branch. It does not validate the new animation code.
-- The 80 five-view PNGs are supplied by the stacked PR #13 asset branch. The layered SVG atlas in this PR is editable rig reference artwork; it is not a substitute for production near/far cut-out PNGs.
-- Keep the simulation authoritative. Rendering may consume habitat and behaviour state, but must not invent ecological outcomes.
+- [x] Integrate 80 transparent generated turnaround PNGs: 16 species × five views.
+- [x] Runtime manifest maps every species/view pair to its own production pose.
+- [x] Sprite CI checks every generated file exists, has a valid PNG signature, has non-zero dimensions and includes an alpha channel; it also checks the complete, duplicate-free 16 × 5 matrix.
+- [x] Render far appendages behind the production body pose and near appendages in front, using the editable pivot atlas and species rig profiles.
+- [x] Keep a fallback renderer for species without an authored production pose.
+- [ ] Replace procedural vector appendage shapes with individually painted, transparent cut-out assets. The current body poses are production PNGs, while near/far appendages are articulated vector geometry. This limitation is explicit and must not be described as fully painted cut-out artwork.
 
-## Workstream A: production creature artwork and layered sprites
+## B. Animation and live-state behaviour
 
-- [x] Integrate the 16 species' five directional poses into the runtime manifest (80 generated directional PNG entries across 16 species and five views). CI manifest checks validate coverage; browser URL loading is covered by the new screenshot workflow.
-- [ ] Replace procedural placeholder organism silhouettes wherever a production pose exists; retain a deliberate fallback only for species without authored artwork.
-- [ ] Split each creature into body, far appendages, near appendages, and optional detail/overlay layers with explicit pivots and depth order.
-- [x] Directional pose selection uses explicit simulation orientation; turning clips now take precedence over stale orientation fields, with a regression assertion.
-- [ ] Validate clipping, anchor placement, source aspect ratio, transparency fringes, and near/far overlap at small and large render sizes.
-- [ ] Add asset-manifest validation that fails CI for missing files, invalid dimensions, duplicate view keys, or incomplete species/view coverage.
+- [x] Species-specific locomotion profiles and deterministic phase for all 16 turnaround species.
+- [x] Proximal/distal articulation for fins and flippers, plus jellyfish bell/tentacle motion.
+- [x] Authored turning, feeding, hunting, dying, idle and swim states consume organism behaviour and elapsed-time fields.
+- [x] Turning state takes precedence over stale explicit orientation; unit regression covers the transition.
+- [x] Browser fixtures exercise all six behaviour states with the complete 16-species set.
+- [ ] Inspect and tune all silhouettes, joints, mirrored poses and body-strip seams in a live browser session. The automated browser suite is evidence collection, not a substitute for human visual review of its artifacts.
 
-**Acceptance:** all 16 species render from production artwork in front, front-three-quarter, side, rear-three-quarter, and rear views; no procedural body placeholder is used when the corresponding production asset is available.
+## C. Rendering and simulation performance
 
-## Workstream B: animation validation against live simulation
+- [x] Keep simulation-step telemetry separate from browser draw measurements.
+- [x] Measure total draw, frame interval, biome draw, organism-list preparation and organism draw separately.
+- [x] Sample far-appendage, production-body and near-appendage rendering independently for one in eight organisms, avoiding a high-resolution timer call for every organism.
+- [x] Expose median/P95 samples for the three sprite layers in the performance panel.
+- [x] Browser fixture matrix covers 50, 220 and 400 organisms and writes population-specific render measurements to report.json.
+- [ ] Run and inspect the benchmark artifact before making a performance claim. The matrix measures the local browser preview; backend simulation step cost remains a separate engine metric. No claim is made that the previous 13 FPS observation has been resolved.
 
-- [ ] Validate all five directional poses and transitions in the actual browser renderer, including mirrored travel and turning in both directions.
-- [ ] Tune far/near appendage pivots and occlusion against the painted body artwork; remove visible joint markers from production presentation unless intentionally part of the art style.
-- [ ] Inspect body-strip deformation for gaps, seams, texture tearing, and silhouette collapse across the full flex range; clamp or replace the approximation where it fails.
-- [ ] Exercise authored turning, feeding, hunting/attack, dying/dead, idle, and swim clips using real simulation state transitions and elapsed-time fields.
-- [ ] Confirm animation phase remains deterministic under pause, speed changes, low frame rate, and entity removal/reinsertion.
-- [ ] Add browser-level fixtures for each behaviour and representative species families.
+## D. Habitat differentiation
 
-**Acceptance:** screenshots and browser assertions demonstrate stable silhouettes, correct layer order, and visible state-specific motion for representative species and all supported behaviour clips.
+- [x] Retain data-driven biome profiles for coral reef, open ocean, deep sea, seagrass, kelp forest, rocky seabed, sandy seabed and hydrothermal vent.
+- [x] Apply habitat-specific water palettes and distinct substrate, flora density, growth forms and hotspot clustering.
+- [x] Preserve day-phase and weather input to surface and water presentation.
+- [x] Browser matrix captures every supported habitat at overview, home and close zoom, across all three population fixtures.
+- [ ] Review the resulting screenshot matrix for contrast, ecological plausibility and visual distinction. Species composition remains driven by simulation state rather than being fabricated by the renderer.
 
-## Workstream C: rendering performance separated from simulation cost
+## E. Visual regression and browser evidence
 
-- [ ] Instrument simulation stepping and rendering as separate measurements. Report mean, p95, and maximum frame costs over a fixed sampling window.
-- [ ] Break rendering cost down into background/terrain, flora, creature body, appendage layers, overlays, and UI/canvas composition where the current architecture permits.
-- [ ] Record organism count, visible organism count, sprite cache hit/miss/load/failure counts, draw calls, and active deformation count alongside timings.
-- [ ] Benchmark repeatable populations at 50, 100, 220, and 400 organisms, with a fixed seed and camera.
-- [ ] Compare deformation enabled/disabled and layered appendages enabled/disabled to isolate their marginal cost.
-- [ ] Avoid per-organism timers, allocations, and unconditional high-resolution timing calls in the hot path. Instrumentation must be sampled or opt-in.
-- [ ] Set explicit frame-time budgets and document the bottleneck before applying batching, culling, level-of-detail, or caching changes.
+- [x] Deterministic local preview fixtures use a fixed seed, frozen simulation clock and explicit 50/220/400 population controls.
+- [x] Capture 8 habitats × 3 zoom states × 3 populations (72 screenshots).
+- [x] Capture six behaviour states with all 16 species (6 additional screenshots).
+- [x] Repeat each habitat/population/zoom capture and compare decoded pixels, failing if more than 0.1% differ.
+- [x] Record console errors, failed network requests, sprite-load failures and population-specific renderer/layer timings.
+- [x] Upload screenshots and report.json as a CI artifact from the primary pull-request workflow.
+- [ ] Inspect the first successful PR artifact and establish long-lived visual baselines. Current pixel comparison verifies deterministic repeat captures within one run; it is not yet a cross-commit golden-image baseline.
 
-**Acceptance:** a reproducible report identifies simulation versus rendering cost at 220 organisms and establishes whether the 30 FPS target is limited by the renderer, simulation, browser/compositor, or a combination. Do not infer this from simulation-step time alone.
+## CI status and known boundaries
 
-## Workstream D: biome differentiation
+The pull-request workflow runs backend tests, JavaScript syntax checks, sprite/manifest validation and the browser screenshot matrix. A run is only accepted when those checks finish green and the report artifact contains all 78 expected captures.
 
-- [ ] Define a data-driven visual profile for each supported habitat: coral reef, open ocean, deep sea, seagrass bed, kelp forest, rocky seabed, sandy seabed, and hydrothermal vent.
-- [ ] Give each profile distinct terrain silhouettes, substrate materials, water colour/lighting/attenuation, particulate density, and depth cues.
-- [ ] Drive flora placement and density from habitat suitability and local environmental conditions. Use dense, spatially coherent hotspots rather than uniform decorative scatter.
-- [ ] Make species composition and visible population density respond to the existing habitat/ecology state; avoid hard-coded decorative species that contradict the simulation.
-- [ ] Add habitat-specific lighting and background layers while preserving readable creature contrast and the established side-view art direction.
-- [ ] Validate transitions between habitats and ensure each profile remains legible at overview and close-up zoom.
+The renderer is layered, but the appendage artwork is still vector-generated rather than separately painted cut-out PNGs. The browser matrix is deterministic and broad, but cross-commit golden-image baselines and a human review of the resulting screenshots remain separate acceptance steps. Performance numbers must be read from the CI report rather than inferred from the test configuration.
 
-**Acceptance:** all eight habitats are visually distinguishable in matched screenshots, with terrain, flora, lighting, water conditions, and species composition consistent with the active habitat data.
+## Implementation notes
 
-## Workstream E: visual regression and browser evidence
-
-- [ ] Add a deterministic browser screenshot suite using a fixed seed, fixed simulation time or controlled stepping, and stable viewport dimensions.
-- [ ] Capture all eight habitats at overview and close-up zoom.
-- [ ] Capture low, nominal, and stress populations (50, 220, and 400 organisms where supported).
-- [ ] Include directional-pose and behaviour fixtures for the animation workstream.
-- [ ] Store baseline screenshots as CI artifacts; compare with a perceptual/pixel-diff threshold that tolerates known browser antialiasing noise but catches missing layers, blank canvases, and major layout drift.
-- [ ] Record browser console errors, failed network requests, sprite load failures, FPS, and render timing with each run.
-- [ ] Keep screenshot evidence from the PR preview distinct from screenshots of the published main branch.
-
-**Acceptance:** CI produces a browsable screenshot matrix and machine-readable diagnostics for each scenario. A screenshot of the current published build is not accepted as evidence for PR #14.
-
-## Integration order
-
-1. Land and verify PR #13's binary sprite assets.
-2. Integrate production body and directional assets; establish layered appendage cut-outs and pivots.
-3. Tune animation clips against those actual assets in a PR preview.
-4. Add separate renderer/simulation profiling and resolve measured bottlenecks.
-5. Implement biome visual profiles and ecology-driven hotspot composition.
-6. Add deterministic screenshot regression coverage and use it as the final visual acceptance gate.
-
-## Status
-
-The existing PR #14 contains the initial procedural articulation, six-strip body-flex approximation, directional view resolver, and authored behaviour cues. The published-site inspection is baseline-only. The five workstreams above remain validation/integration scope; none should be marked complete until its acceptance criteria are demonstrated against a PR #14 browser build with the production PNG assets present.
-
-
-## Implementation update
-
-The production turnaround pack is present on this branch: 80 transparent directional PNGs, 16 species × five views. The runtime manifest contains all 80 entries and the existing CI manifest assertions validate species/view coverage. The sprite runtime resolves these authored poses directly.
-
-A turning-state precedence bug was fixed: an organism carrying a stale explicit `view: "side"` no longer remains stuck in the side pose throughout its turning clip. The turning clip now owns view selection until its transition completes, and `tests/sprite-view.test.js` covers this regression.
-
-The dashboard now reports separate median biome-render time and organism-list preparation time alongside total client draw median/P95 and frame-interval P95. The organism metric is intentionally labelled preparation, not sprite draw time; it must not be misrepresented as a complete per-organism render measurement.
-
-A Playwright workflow now captures 24 screenshots across eight supported habitats and three zoom settings, and uploads console/network diagnostics as an artifact. It currently exercises the deterministic 220-organism local preview. Variable population fixtures, controlled simulation-time freezing, pixel-diff thresholds, and production browser screenshots with the real layered cut-out artwork remain incomplete.
-
-**Layering limitation:** directional body poses are production PNGs. The independently animated far/near appendage silhouettes still use procedural vector geometry guided by the editable SVG pivot atlas. They are not yet independently painted cut-out PNG layers. This is a deliberate, documented gap rather than a claim that the generated body poses magically contain a complete skeletal rig.
+- Visual fixtures are opt-in through `?visual-regression=1&freeze=1&population=220`; normal simulation behaviour is unchanged.
+- The preview test API is exposed only as a browser fixture helper. It does not change backend simulation state.
+- The performance display labels organism preparation separately from organism drawing and samples individual sprite layers at 1:8.
+- The browser test uses the same dashboard and runtime asset manifest as the normal app.
