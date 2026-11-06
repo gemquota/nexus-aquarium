@@ -21,7 +21,9 @@ page.on('requestfailed', request => failedRequests.push({url:request.url(),failu
 async function waitForReady() {
   await page.locator('#ocean').waitFor({ state: 'visible' });
   await page.waitForFunction(() => Boolean(window.NexusVisualTest && window.NexusSprites));
-  await page.waitForFunction(() => window.NexusSprites.status.loaded >= 80 || window.NexusSprites.status.failed > 0, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.NexusSprites.status.loaded === window.NexusSprites.status.assets || window.NexusSprites.status.failed > 0, null, { timeout: 45000 });
+  await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}'});
+  await page.evaluate(() => document.fonts?.ready);
   await page.waitForTimeout(500);
 }
 async function setZoom(zoom) {
@@ -32,7 +34,7 @@ async function setZoom(zoom) {
     await page.locator('#zoom-in').click();
     await page.locator('#zoom-in').click();
   }
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(250);
 }
 function changedPixelRatio(a,b) {
   const x=PNG.sync.read(a), y=PNG.sync.read(b);
@@ -54,7 +56,7 @@ try {
     for (const habitat of habitats) {
       await page.locator('#habitat-select').selectOption(habitat);
       await page.locator('#apply-habitat').click();
-      await page.waitForTimeout(100);
+      await page.waitForTimeout(250);
       for (const zoom of zooms) {
         await setZoom(zoom);
         const name=population+'-'+habitat+'-'+zoom+'.png';
