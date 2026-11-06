@@ -71,7 +71,7 @@ function drawOrganism(ctx,o,x,y,opts={}){
   const sway=Math.sin(time*1.25+(Number(o.id)||0)*.71)*.045;
   return drawImage(ctx,entry,x,baseY,w,h,time,Number(entry.anchor_x??.5),1,false,sway,0);
  }
- const large=['whale','shark','dolphin','ray','orca','humpback_whale'].includes(species);
+ const large=['whale','shark','dolphin','ray','orca','humpback_whale','great_white_shark','hammerhead_shark','whale_shark','bottlenose_dolphin','harbor_seal','california_sea_lion','west_indian_manatee','ocean_sunfish','green_sea_turtle'].includes(canonical);
  const tiny=['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','lanternfish','anglerfish'].includes(species);
  const bw=(Number(entry.render_width)||(large?6.2:tiny?2.8:3.8))*size;
  const bh=(Number(entry.render_height)||(large?3.4:tiny?2.0:2.8))*size;
