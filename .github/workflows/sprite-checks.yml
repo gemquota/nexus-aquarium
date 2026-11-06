@@ -50,7 +50,7 @@ jobs:
               path = Path(asset["src"].lstrip("/"))
               assert path.is_file(), f"missing generated sprite: {path}"
               data = path.read_bytes()
-              assert data[:8] == b"\\x89PNG\\r\\n\\x1a\\n", f"invalid PNG signature: {path}"
+              assert data[:8] == b"\x89PNG\r\n\x1a\n", f"invalid PNG signature: {path}"
               width, height = struct.unpack(">II", data[16:24])
               assert width > 0 and height > 0, f"invalid dimensions: {path}"
               assert data[25] in (4, 6), f"generated sprite must include alpha: {path}"
