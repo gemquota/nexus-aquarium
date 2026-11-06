@@ -2496,6 +2496,71 @@
       "render_height": 2.8,
       "anchor_x": 0.5,
       "anchor_y": 0.5
+    },
+    {
+      "kind": "plant",
+      "species": "coral",
+      "src": "/assets/sprites/flora/coral_staghorn.svg",
+      "source_pack": "nexus-original-flora",
+      "filename": "coral_staghorn.svg",
+      "frames": 1,
+      "fps": 1,
+      "render_width": 1,
+      "render_height": 1,
+      "anchor_x": 0.5,
+      "anchor_y": 1
+    },
+    {
+      "kind": "plant",
+      "species": "coral",
+      "src": "/assets/sprites/flora/coral_brain.svg",
+      "source_pack": "nexus-original-flora",
+      "filename": "coral_brain.svg",
+      "frames": 1,
+      "fps": 1,
+      "render_width": 1,
+      "render_height": 1,
+      "anchor_x": 0.5,
+      "anchor_y": 1
+    },
+    {
+      "kind": "plant",
+      "species": "coral",
+      "src": "/assets/sprites/flora/coral_fan.svg",
+      "source_pack": "nexus-original-flora",
+      "filename": "coral_fan.svg",
+      "frames": 1,
+      "fps": 1,
+      "render_width": 1,
+      "render_height": 1,
+      "anchor_x": 0.5,
+      "anchor_y": 1
+    },
+    {
+      "kind": "plant",
+      "species": "coral",
+      "src": "/assets/sprites/flora/coral_tube_sponge.svg",
+      "source_pack": "nexus-original-flora",
+      "filename": "coral_tube_sponge.svg",
+      "frames": 1,
+      "fps": 1,
+      "render_width": 1,
+      "render_height": 1,
+      "anchor_x": 0.5,
+      "anchor_y": 1
+    },
+    {
+      "kind": "plant",
+      "species": "coral",
+      "src": "/assets/sprites/flora/coral_anemone.svg",
+      "source_pack": "nexus-original-flora",
+      "filename": "coral_anemone.svg",
+      "frames": 1,
+      "fps": 1,
+      "render_width": 1,
+      "render_height": 1,
+      "anchor_x": 0.5,
+      "anchor_y": 1
     }
   ],
   "generated_turnaround_set": {
