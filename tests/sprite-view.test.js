@@ -22,4 +22,7 @@ assert.equal(choose(1,-1),'side');
 assert.equal(choose(1,1),'side');
 assert.equal(sandbox.window.NexusSprites.resolveView({vy:-1}),'side');
 assert.equal(sandbox.window.NexusSprites.resolveView({view:'front_three_quarter'}),'front_three_quarter');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',animation_elapsed:.05,turn_target_view:'rear'}),'side');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',animation_elapsed:.45,turn_target_view:'rear'}),'rear_three_quarter');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',animation_elapsed:.85,turn_target_view:'rear'}),'rear');
 console.log('Sprite view selection checks passed.');
