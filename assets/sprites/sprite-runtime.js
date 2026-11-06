@@ -151,11 +151,11 @@ function drawProp(ctx,species,x,y,width,height,time=0,seed=0){
 function drawPlant(ctx,x,baseY,width,height,time=0,seed=0,category='kelp'){
  const name=normalise(category);
  const rules={
-  kelp:e=>/^kelp_giant\\.svg$/i.test(e.filename||''),
-  seagrass:e=>/^seagrass_tuft\\.svg$/i.test(e.filename||''),
-  mangrove:e=>/^mangrove_roots\\.svg$/i.test(e.filename||''),
-  sargassum:e=>/^kelp_giant\\.svg$/i.test(e.filename||''),
-  macroalgae:e=>/^kelp_giant\\.svg$/i.test(e.filename||'')
+  kelp:e=>/^kelp_giant\.svg$/i.test(e.filename||''),
+  seagrass:e=>/^seagrass_tuft\.svg$/i.test(e.filename||''),
+  mangrove:e=>/^mangrove_roots\.svg$/i.test(e.filename||''),
+  sargassum:e=>/^kelp_giant\.svg$/i.test(e.filename||''),
+  macroalgae:e=>/^kelp_giant\.svg$/i.test(e.filename||'')
  };
  const rule=name==='coral'?e=>/^coral_.*\.svg$/i.test(e.filename||''):(rules[name]||rules.kelp);
  const targetSpecies=name==='coral'?'coral':(['kelp','seagrass','mangrove','sargassum','macroalgae'].includes(name)?name:'kelp');
