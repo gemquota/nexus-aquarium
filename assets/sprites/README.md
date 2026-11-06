@@ -68,3 +68,8 @@ python3 tools/import_sprite_packs.py asset_staging/kenney_fish-pack_2.0.zip --pa
 This writes the extracted CC0 image files to `assets/sprites/imported/kenney-fish/` and updates `runtime-manifest.json`. Review the generated import manifest, then commit the imported files and manifest. The importer deliberately skips unparsed atlas/spritesheet images to avoid stretching an entire sheet as one fish. Individual PNGs are used as static sprites until frame metadata is available.
 
 For paid packs, omit `--public`; the files remain in the ignored `local_assets/` folder and must not be pushed to the public repository. Private licensed packs are not yet wired into public GitHub Pages hosting.
+
+
+## Production flora sprites
+
+The side-view habitat renderer uses the transparent Kenney seaweed PNG variants by growth form: green seaweed for kelp forests, grass variants for seagrass beds, and background seaweed variants for mangrove/estuary dressing. Five original, transparent SVG sprites are included for coral reefs: staghorn coral, brain coral, fan coral, tube sponges and anemones. These are registered in `runtime-manifest.json` and anchored to the seabed by the sprite runtime. Procedural vegetation is retained only as a load-failure fallback, not as the normal rendered plant layer.
