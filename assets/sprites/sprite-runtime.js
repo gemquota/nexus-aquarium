@@ -21,9 +21,26 @@ function variants(kind,name){
  return entries.filter(e=>e.kind===kind&&clean(e)&&e.species===name);
 }
 function hash(value){let h=2166136261;for(const c of String(value)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+const standardCreatureFallback={
+ reef_fish:'yellow_tang',surface_fish:'yellow_tang',pelagic_fish:'yellow_tang',deepwater_fish:'ocean_sunfish',
+ sardine:'clownfish',mackerel:'yellow_tang',icefish:'yellow_tang',coelacanth:'ocean_sunfish',
+ lanternfish:'yellow_tang',anglerfish:'yellow_tang',piranha:'yellow_tang',butterflyfish:'angelfish',
+ wrasse:'yellow_tang',goby:'clownfish',damselfish:'clownfish',parrotfish:'yellow_tang',
+ triggerfish:'yellow_tang',surgeonfish:'yellow_tang',anchovy:'clownfish',herring:'clownfish',
+ sprat:'clownfish',smelt:'yellow_tang',fry:'clownfish'
+};
 function find(kind,species,seed=0){
- const name=speciesAliases[normalise(species)]||normalise(species);
- const exact=variants(kind,name);const generic=kind==='creature'&&genericFishSpecies.has(normalise(species))?entries.filter(e=>e.kind===kind&&clean(e)&&e.species==='generic'):[];const pool=exact.length?exact:generic;
+ const raw=normalise(species),name=speciesAliases[raw]||raw;
+ let pool=variants(kind,name);
+ if(!pool.length&&kind==='creature'){
+  const fallback=standardCreatureFallback[raw]||'yellow_tang';
+  pool=variants(kind,fallback);
+ }
+ if(kind==='creature'&&pool.length){
+  const side=pool.filter(e=>e.view==='side');
+  if(side.length)pool=side;
+ }
+ if(kind==='bird'&&!pool.length)pool=variants(kind,'generic');
  return pool.length?pool[hash(seed)%pool.length]:null;
 }
 function findView(kind,species,view,seed=0){
@@ -141,7 +158,7 @@ function drawPlant(ctx,x,baseY,width,height,time=0,seed=0,category='kelp'){
   macroalgae:e=>/^seaweed_(green|orange|pink)_[a-d]\.png$/i.test(e.filename||'')
  };
  const rule=name==='coral'?e=>/^coral_.*\.svg$/i.test(e.filename||''):(rules[name]||rules.kelp);
- const targetSpecies=name==='coral'?'coral':'seaweed';
+ const targetSpecies=name==='coral'?'coral':(['kelp','seagrass','mangrove','sargassum','macroalgae'].includes(name)?name:'kelp');
  const pool=entries.filter(e=>e.kind==='plant'&&e.species===targetSpecies&&clean(e)&&rule(e));
  if(!pool.length)return false;
  const entry=pool[hash(String(seed)+':'+name)%pool.length];
