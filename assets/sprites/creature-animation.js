@@ -143,7 +143,8 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
  // Subtle travelling body wave is applied to the sprite by the caller. This layer
  // only contributes articulated appendages and their motion.
  ctx.restore();
- return {phase,speed,bodyFlex:(p.bodyFlex||0)*wave,tailAngle,finPulse};
+ const pulse=p.type==='jelly'?Math.sin(phase*.5):0;
+ return {phase,speed,bodyFlex:(p.bodyFlex||0)*wave,bodyScaleX:p.type==='jelly'?1-.07*pulse:1,bodyScaleY:p.type==='jelly'?1+.09*pulse:1,tailAngle,finPulse};
 }
 function profile(species){const n=norm(species),key=ALIASES[n]||n,p=PROFILES[key];return p?{...p}:null}
 window.NexusCreatureAnimation={draw,profile,species:Object.keys(PROFILES),version:1};
