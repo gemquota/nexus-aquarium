@@ -19,8 +19,10 @@ jobs:
         run: |
           node --check app.js
           node --check assets/sprites/sprite-runtime.js
+          node --check assets/sprites/creature-animation.js
           node --check assets/biome-renderer.js
           node tests/sprite-view.test.js
+          node tests/creature-animation.test.js
       - name: Check Python importer syntax
         run: python -m py_compile tools/import_sprite_packs.py
       - name: Validate sprite manifests
