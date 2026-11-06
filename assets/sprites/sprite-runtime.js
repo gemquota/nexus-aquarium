@@ -49,13 +49,13 @@ function frame(entry,state,time){
  const index=count>1?Math.floor(time*Math.max(.1,Number(entry.fps)||6))%count:0;
  return {sx:(index%cols)*fw,sy:Math.floor(index/cols)*fh,sw:Math.min(fw,state.image.naturalWidth),sh:Math.min(fh,state.image.naturalHeight)};
 }
-function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=false,angle=0,breath=0){
+function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=false,angle=0,breath=0,deformX=1,deformY=1){
  const state=loadEntry(entry);if(!state?.loaded||state.failed)return false;
  const f=frame(entry,state,time),aspect=f.sw/f.sh;
  let w=boundW,h=boundH;
  if(w/h>aspect)w=h*aspect;else h=w/aspect;
  const bob=breath?Math.sin(time*2.8+hash(entry.filename||entry.src)%31)*breath:0;
- ctx.save();ctx.translate(x,y+bob);ctx.rotate(angle);ctx.scale(flip?-1:1,1);
+ ctx.save();ctx.translate(x,y+bob);ctx.rotate(angle);ctx.scale(flip?-1:1,1);ctx.scale(deformX,deformY);
  ctx.imageSmoothingEnabled=false;
  ctx.drawImage(state.image,f.sx,f.sy,f.sw,f.sh,-w*anchorX,-h*anchorY,w,h);
  ctx.restore();return true;
@@ -84,7 +84,7 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const flip=(view==='side'||view.includes('three_quarter'))&&vx<0;
  const rig=window.NexusCreatureAnimation?.draw(ctx,o,x,y,bw,bh,time,{view,flip});
  const bodyFlex=rig?.bodyFlex||0;
- return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.012+bodyFlex,Math.max(.04,bh*.018));
+ return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.012+bodyFlex,Math.max(.04,bh*.018),rig?.bodyScaleX||1,rig?.bodyScaleY||1);
 }
 function drawBird(ctx,bird,x,y,opts={}){
  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
