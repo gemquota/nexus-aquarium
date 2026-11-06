@@ -1,0 +1,30 @@
+name: NEXUS visual regression
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  browser-visual-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Serve dashboard
+        run: |
+          python3 -m http.server 4173 > /tmp/nexus-http.log 2>&1 &
+          echo $! > /tmp/nexus-http.pid
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+      - name: Capture habitat and zoom matrix
+        run: node tests/browser/visual-regression.mjs
+      - name: Upload screenshots and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-visual-regression
+          path: artifacts/nexus-visual-regression/
+          if-no-files-found: warn
