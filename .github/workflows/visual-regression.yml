@@ -12,6 +12,7 @@ jobs:
           node-version: 22
       - name: Install browser test dependencies
         run: |
+          npm init -y
           npm install --no-save playwright
           npx playwright install --with-deps chromium
       - name: Serve dashboard
