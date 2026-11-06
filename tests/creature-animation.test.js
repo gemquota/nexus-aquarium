@@ -26,6 +26,8 @@ for(const state of ['turning','feeding','hunting','dying']){
   const result=api.draw(ctx,{id:9,species:'great_white_shark',vx:.3,vy:0,animation_state:state,animation_elapsed:.4},0,0,40,20,5,{layer:'far'});
   assert.equal(result.clip,state,`missing authored behaviour clip: ${state}`);
   assert.ok(result.clipProgress>0&&result.clipProgress<=1);
+  if(state==='hunting')assert.ok(result.bodySurgeX>0,'hunting should lunge forward');
+  if(state==='dying')assert.ok(result.sinkY>0&&result.bodyOpacity<1,'death clip should sink and fade');
 }
 const far=api.draw(ctx,{id:9,species:'green_sea_turtle',vx:.1,vy:0},0,0,40,20,5,{layer:'far'});
 const near=api.draw(ctx,{id:9,species:'green_sea_turtle',vx:.1,vy:0},0,0,40,20,5,{layer:'near'});
