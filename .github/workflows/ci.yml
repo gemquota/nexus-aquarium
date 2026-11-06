@@ -35,6 +35,8 @@ jobs:
         run: node --check assets/biome-renderer.js
       - name: Test biome renderer regressions
         run: node tests/biome-renderer.test.js
+      - name: Test sprite and flora asset selection
+        run: node tests/sprite-view.test.js
 
   browser-visual-regression:
     runs-on: ubuntu-latest

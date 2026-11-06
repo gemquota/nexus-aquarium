@@ -55,7 +55,7 @@ The importer only stages files; it does not auto-publish them or alter the simul
 The project repository is public. Only commit asset files whose licence permits redistribution in a public repository (for example, CC0). A licence allowing use in a commercial game does not automatically allow publishing the raw asset files in a public source repository.
 ## Sprite renderer integration
 
-The browser now loads `sprite-runtime.js` before the aquarium renderer. It reads `runtime-manifest.json` and can draw imported side-view creature, plant, seabird and island sprites. If an image is absent or fails to load, the existing procedural renderer remains the fallback. The simulation and its data model are unchanged.
+The browser loads `sprite-runtime.js` before the aquarium renderer. It reads `runtime-manifest.json` and draws the unified NEXUS side-view creature, plant, seabird and environment sprite set. If an image is absent or fails to load, a procedural safety fallback remains. The simulation and its data model are unchanged.
 
 ### Importing the free Kenney fish pack
 
@@ -65,6 +65,18 @@ Open [Kenney's Fish Pack on OpenGameArt](https://opengameart.org/node/79308), do
 python3 tools/import_sprite_packs.py asset_staging/kenney_fish-pack_2.0.zip --pack kenney-fish --public
 ```
 
-This writes the extracted CC0 image files to `assets/sprites/imported/kenney-fish/` and updates `runtime-manifest.json`. Review the generated import manifest, then commit the imported files and manifest. The importer deliberately skips unparsed atlas/spritesheet images to avoid stretching an entire sheet as one fish. Individual PNGs are used as static sprites until frame metadata is available.
+This writes extracted CC0 source files to `assets/sprites/imported/kenney-fish/` and updates the import manifest. Kenney remains available as source/reference material, but the older generic fish, seaweed, rocks and terrain assets are intentionally excluded from the active runtime manifest. New runtime artwork follows the NEXUS outlined, cel-shaded standard.
 
 For paid packs, omit `--public`; the files remain in the ignored `local_assets/` folder and must not be pushed to the public repository. Private licensed packs are not yet wired into public GitHub Pages hosting.
+
+
+## Production flora sprites
+
+The side-view habitat renderer uses the transparent Kenney seaweed PNG variants by growth form: green seaweed for kelp forests, grass variants for seagrass beds, and background seaweed variants for mangrove/estuary dressing. Five original, transparent SVG sprites are included for coral reefs: staghorn coral, brain coral, fan coral, tube sponges and anemones. These are registered in `runtime-manifest.json` and anchored to the seabed by the sprite runtime. Procedural vegetation is retained only as a load-failure fallback, not as the normal rendered plant layer.
+
+
+## Unified sprite standard
+
+The active runtime manifest now uses the NEXUS outlined, cel-shaded style for coral, giant kelp, seagrass, mangrove roots, seabed rocks, sand/dirt surface tiles, bubbles and seabirds. The older Kenney generic fish, seaweed, rocks, terrain props and the earlier bird are no longer registered as runtime assets. The Kenney source files remain in the repository for provenance/reference, but are not drawn by the live renderer.
+
+Creature rendering uses the 16 species-specific five-view production sets. Species without their own production artwork resolve to a deliberate closest-family fallback among those 16 standard-style species; the old Kenney generic fish are not used as visual fallbacks. Exact species art always takes priority.

@@ -22,8 +22,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function drawRock(ctx,px,py,scale,p,cluster,seed,time){
  const mound=8+cluster*34;
  ctx.save();
- const hasRock=window.NexusSprites?.drawProp?.(ctx,'rock',px,py,82*scale,44*scale,time,seed);
- ctx.fillStyle=p.rock;ctx.globalAlpha=hasRock?.18:.76;
+ const hasRock=window.NexusSprites?.drawProp?.(ctx,'rock',px,py,82*scale,50*scale,time,seed);
+ if(hasRock){ctx.restore();return}
+ ctx.fillStyle=p.rock;ctx.globalAlpha=.76;
  ctx.beginPath();ctx.moveTo(px-49*scale,py);ctx.quadraticCurveTo(px-35*scale,py-mound*scale,px-10*scale,py-mound*.72*scale);ctx.quadraticCurveTo(px+16*scale,py-mound*1.35*scale,px+49*scale,py);ctx.closePath();ctx.fill();
  ctx.globalAlpha=.22;ctx.strokeStyle=p.light;ctx.lineWidth=2*scale;ctx.beginPath();ctx.moveTo(px-22*scale,py-8*scale);ctx.quadraticCurveTo(px,py-mound*scale,px+24*scale,py-7*scale);ctx.stroke();ctx.restore();
 }
@@ -89,13 +90,27 @@ function draw(ctx,o){
    const plantX=px+centre*stride+offset*(hotspot?.46:1),plantY=py-(rand(id+8)*9+rand(id+9)*5)*scale;
    const tall=(h==='kelp_forest'?70+rand(id+10)*115:h==='mangrove_forest'?48+rand(id+10)*78:h==='seagrass'?17+rand(id+10)*34:h==='coral_reef'?20+rand(id+10)*58:h==='estuary'?35+rand(id+10)*65:12+rand(id+10)*38)*scale;
    const colour=pick(p.plants,id);
-   if(h==='coral_reef')drawCoral(ctx,plantX,plantY,tall,scale,colour,id);
+   if(h==='coral_reef'){
+    const coral=window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(20,tall*.92),Math.max(24,tall*1.15),time,id,'coral');
+    if(!coral)drawCoral(ctx,plantX,plantY,tall,scale,colour,id);
+    if(rand(id+91)>.68)window.NexusSprites?.drawPlant?.(ctx,plantX+(rand(id+92)-.5)*14*scale,plantY,Math.max(12,tall*.38),Math.max(18,tall*.72),time,id,'sargassum');
+   }
    else if(h==='kelp_forest'){
-    drawKelp(ctx,plantX,plantY,tall,scale,colour,id,time);
-    if(rand(id+55)>.42)window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(12,tall*.23),Math.max(20,tall*.9),time,id);
-   }else if(h==='seagrass'||h==='sandy_seabed')drawGrass(ctx,plantX,plantY,tall,scale,colour,id,time,h==='seagrass'?9:4);
-   else if(h==='mangrove_forest')drawMangrove(ctx,plantX,plantY,tall,scale,colour,id,time);
-   else if(h==='estuary'){drawGrass(ctx,plantX,plantY,tall,scale,colour,id,time,6);if(rand(id+77)>.45)drawMangrove(ctx,plantX,plantY,tall*.8,scale,colour,id,time)}
+    const sprite=window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(18,tall*.62),Math.max(24,tall*1.2),time,id,'kelp');
+    if(!sprite)drawKelp(ctx,plantX,plantY,tall,scale,colour,id,time);
+   }else if(h==='seagrass'||h==='sandy_seabed'){
+    const sprite=h==='seagrass'&&window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(14,tall*.9),Math.max(16,tall*1.25),time,id,'seagrass');
+    if(!sprite)drawGrass(ctx,plantX,plantY,tall,scale,colour,id,time,h==='seagrass'?9:4);
+   }
+   else if(h==='mangrove_forest'){
+    const sprite=window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(18,tall*.7),Math.max(22,tall*1.1),time,id,'mangrove');
+    if(!sprite)drawMangrove(ctx,plantX,plantY,tall,scale,colour,id,time);
+   }
+   else if(h==='estuary'){
+    const sprite=window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(15,tall*.7),Math.max(20,tall*1.1),time,id,'seagrass');
+    if(!sprite)drawGrass(ctx,plantX,plantY,tall,scale,colour,id,time,6);
+    if(rand(id+77)>.45){const mangrove=window.NexusSprites?.drawPlant?.(ctx,plantX+8*scale,plantY,Math.max(16,tall*.65),Math.max(20,tall),time,id+1,'mangrove');if(!mangrove)drawMangrove(ctx,plantX,plantY,tall*.8,scale,colour,id,time)}
+   }
    else drawRockAlgae(ctx,plantX,plantY,tall,scale,colour,id);
   }
   if(h==='coral_reef'||h==='hydrothermal_vent'){for(let bubble=0;bubble<2; bubble++)window.NexusSprites?.drawProp?.(ctx,'bubble',px+(bubble?18:-16)*scale,py-(34+bubble*21+Math.sin(time+seed+bubble)*4)*scale,5*scale,5*scale,time,seed+bubble)}
