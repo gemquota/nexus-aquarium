@@ -168,7 +168,7 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
   bodyScaleX:p.type==='jelly'?1-.07*pulse:1-.08*death,
   bodyScaleY:p.type==='jelly'?1+.09*pulse:1-.05*death,
   tailAngle,finPulse,clip:clip.name,clipProgress:u,bodyRoll:deathRoll,bodyPitch:clip.name==='turning'?turn:0,
-  bodyOpacity:clip.name==='dying'?1-.38*death:1};
+  bodyOpacity:clip.name==='dying'?1-.38*death:1,sinkY:death*.12};
 }
 function profile(species){const n=norm(species),key=ALIASES[n]||n,p=PROFILES[key];return p?{...p}:null}
 window.NexusCreatureAnimation={draw,profile,species:Object.keys(PROFILES),version:1};
