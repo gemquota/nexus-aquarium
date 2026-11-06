@@ -17,6 +17,7 @@ for(const name of api.species){
   assert.ok(Number.isFinite(a.phase),`invalid phase for ${name}`);
   assert.equal(a.phase,b.phase,`animation must be deterministic for ${name}`);
   assert.ok(Number.isFinite(a.bodyFlex));
+  assert.ok(Number.isFinite(a.bodyScaleX)&&Number.isFinite(a.bodyScaleY));
 }
 assert.equal(api.profile('shark').type,'shark');
 assert.equal(api.profile('jellyfish').type,'jelly');
