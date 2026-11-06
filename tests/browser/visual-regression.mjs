@@ -45,6 +45,7 @@ function changedPixelRatio(a,b) {
 }
 try {
   const matrix=[];
+  const benchmarks=[];
   for (const population of populations) {
     await page.goto(baseURL+'?visual-regression=1&freeze=1&population='+population, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForReady();
@@ -64,6 +65,7 @@ try {
         matrix.push({population,habitat,zoom,file:name,pixelDiff:diff});
       }
     }
+    benchmarks.push({population,...await page.evaluate(()=>window.NexusVisualTest.getPerf())});
     const status=await page.evaluate(()=>window.NexusSprites.status);
     if(status.failed) spriteFailures.push({population,...status});
   }
@@ -76,7 +78,7 @@ try {
     await page.screenshot({path:path.join(out,file),fullPage:false});
     matrix.push({population:16,behaviour,file});
   }
-  const report={url:baseURL,viewport:{width:1440,height:1000},habitats,zooms,populations,behaviours,captures:matrix.length,matrix,consoleErrors:errors,failedRequests,spriteFailures};
+  const report={url:baseURL,viewport:{width:1440,height:1000},habitats,zooms,populations,behaviours,captures:matrix.length,matrix,benchmarks,consoleErrors:errors,failedRequests,spriteFailures};
   await fs.writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2));
   if(errors.length||failedRequests.length||spriteFailures.length) throw new Error('Browser diagnostics contain errors; see report.json');
   console.log('Captured '+matrix.length+' deterministic habitat/population/zoom and behaviour screenshots.');
