@@ -11,10 +11,10 @@ This document extends the articulated-animation work into a complete visual-qual
 
 ## Workstream A: production creature artwork and layered sprites
 
-- [ ] Integrate the 16 species' five directional poses from PR #13 into the runtime manifest and verify every referenced URL resolves in the browser.
+- [x] Integrate the 16 species' five directional poses into the runtime manifest (80 generated directional PNG entries across 16 species and five views). CI manifest checks validate coverage; browser URL loading is covered by the new screenshot workflow.
 - [ ] Replace procedural placeholder organism silhouettes wherever a production pose exists; retain a deliberate fallback only for species without authored artwork.
 - [ ] Split each creature into body, far appendages, near appendages, and optional detail/overlay layers with explicit pivots and depth order.
-- [ ] Ensure directional pose selection uses explicit simulation orientation, not vertical velocity as a proxy for yaw.
+- [x] Directional pose selection uses explicit simulation orientation; turning clips now take precedence over stale orientation fields, with a regression assertion.
 - [ ] Validate clipping, anchor placement, source aspect ratio, transparency fringes, and near/far overlap at small and large render sizes.
 - [ ] Add asset-manifest validation that fails CI for missing files, invalid dimensions, duplicate view keys, or incomplete species/view coverage.
 
@@ -78,3 +78,16 @@ This document extends the articulated-animation work into a complete visual-qual
 ## Status
 
 The existing PR #14 contains the initial procedural articulation, six-strip body-flex approximation, directional view resolver, and authored behaviour cues. The published-site inspection is baseline-only. The five workstreams above remain validation/integration scope; none should be marked complete until its acceptance criteria are demonstrated against a PR #14 browser build with the production PNG assets present.
+
+
+## Implementation update
+
+The production turnaround pack is present on this branch: 80 transparent directional PNGs, 16 species × five views. The runtime manifest contains all 80 entries and the existing CI manifest assertions validate species/view coverage. The sprite runtime resolves these authored poses directly.
+
+A turning-state precedence bug was fixed: an organism carrying a stale explicit `view: "side"` no longer remains stuck in the side pose throughout its turning clip. The turning clip now owns view selection until its transition completes, and `tests/sprite-view.test.js` covers this regression.
+
+The dashboard now reports separate median biome-render time and organism-list preparation time alongside total client draw median/P95 and frame-interval P95. The organism metric is intentionally labelled preparation, not sprite draw time; it must not be misrepresented as a complete per-organism render measurement.
+
+A Playwright workflow now captures 24 screenshots across eight supported habitats and three zoom settings, and uploads console/network diagnostics as an artifact. It currently exercises the deterministic 220-organism local preview. Variable population fixtures, controlled simulation-time freezing, pixel-diff thresholds, and production browser screenshots with the real layered cut-out artwork remain incomplete.
+
+**Layering limitation:** directional body poses are production PNGs. The independently animated far/near appendage silhouettes still use procedural vector geometry guided by the editable SVG pivot atlas. They are not yet independently painted cut-out PNG layers. This is a deliberate, documented gap rather than a claim that the generated body poses magically contain a complete skeletal rig.
