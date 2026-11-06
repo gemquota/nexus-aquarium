@@ -140,8 +140,9 @@ function drawPlant(ctx,x,baseY,width,height,time=0,seed=0,category='kelp'){
   sargassum:e=>/^seaweed_(green|orange)_[a-d]\.png$/i.test(e.filename||''),
   macroalgae:e=>/^seaweed_(green|orange|pink)_[a-d]\.png$/i.test(e.filename||'')
  };
- const rule=rules[name]||rules.kelp;
- const pool=entries.filter(e=>e.kind==='plant'&&e.species==='seaweed'&&clean(e)&&rule(e));
+ const rule=name==='coral'?e=>/^coral_.*\\.svg$/i.test(e.filename||''):(rules[name]||rules.kelp);
+ const targetSpecies=name==='coral'?'coral':'seaweed';
+ const pool=entries.filter(e=>e.kind==='plant'&&e.species===targetSpecies&&clean(e)&&rule(e));
  if(!pool.length)return false;
  const entry=pool[hash(String(seed)+':'+name)%pool.length];
  const sway=Math.sin(time*1.25+seed*.71)*.045;
