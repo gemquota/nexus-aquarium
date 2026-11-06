@@ -22,8 +22,9 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function drawRock(ctx,px,py,scale,p,cluster,seed,time){
  const mound=8+cluster*34;
  ctx.save();
- const hasRock=window.NexusSprites?.drawProp?.(ctx,'rock',px,py,82*scale,44*scale,time,seed);
- ctx.fillStyle=p.rock;ctx.globalAlpha=hasRock?.18:.76;
+ const hasRock=window.NexusSprites?.drawProp?.(ctx,'rock',px,py,82*scale,50*scale,time,seed);
+ if(hasRock){ctx.restore();return}
+ ctx.fillStyle=p.rock;ctx.globalAlpha=.76;
  ctx.beginPath();ctx.moveTo(px-49*scale,py);ctx.quadraticCurveTo(px-35*scale,py-mound*scale,px-10*scale,py-mound*.72*scale);ctx.quadraticCurveTo(px+16*scale,py-mound*1.35*scale,px+49*scale,py);ctx.closePath();ctx.fill();
  ctx.globalAlpha=.22;ctx.strokeStyle=p.light;ctx.lineWidth=2*scale;ctx.beginPath();ctx.moveTo(px-22*scale,py-8*scale);ctx.quadraticCurveTo(px,py-mound*scale,px+24*scale,py-7*scale);ctx.stroke();ctx.restore();
 }
