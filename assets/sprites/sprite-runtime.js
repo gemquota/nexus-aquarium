@@ -32,10 +32,13 @@ function findView(kind,species,view,seed=0){
  return pool.length?pool[hash(String(seed)+':'+view)%pool.length]:null;
 }
 function chooseView(vx,vy){
- const x=Math.abs(Number(vx)||0),y=Math.abs(Number(vy)||0);
- if(y<x*.32)return 'side';
- if(y>x*1.25)return vy<0?'front':'rear';
- return vy<0?'front_three_quarter':'rear_three_quarter';
+ // In a side-view world, screen-space vertical movement is not camera-facing yaw.
+ // Use the side pose unless the simulation explicitly supplies a view state.
+ return 'side';
+}
+function resolveView(o){
+ const requested=normalise(o.view||o.facing_view||o.orientation_view||'side');
+ return ['front','front_three_quarter','side','rear_three_quarter','rear'].includes(requested)?requested:'side';
 }
 function frame(entry,state,time){
  const fw=Math.max(1,Number(entry.frame_width)||state.image.naturalWidth);
@@ -59,7 +62,7 @@ function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=f
 }
 function drawOrganism(ctx,o,x,y,opts={}){
  const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature';
- const vx=Number(o.vx)||0,vy=Number(o.vy)||0,view=chooseView(vx,vy);
+ const vx=Number(o.vx)||0,vy=Number(o.vy)||0,view=resolveView(o);
  const canonical=speciesAliases[species]||species;
  const entry=kind==='creature'?(findView(kind,canonical,view,o.id)||find(kind,species,o.id)):find(kind,species,o.id);
  if(!entry)return false;
@@ -77,9 +80,11 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const bh=(Number(entry.render_height)||(large?3.4:tiny?2.0:2.8))*size;
  const heading=Math.atan2(vy,Math.abs(vx)||.0001);
  const swim=Math.sin(time*5.2+(Number(o.id)||0)*.73);
- const turn=Math.max(-.16,Math.min(.16,heading*.22));
+ const turn=Math.max(-.08,Math.min(.08,heading*.08));
  const flip=(view==='side'||view.includes('three_quarter'))&&vx<0;
- return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.025,Math.max(.15,bh*.055));
+ const rig=window.NexusCreatureAnimation?.draw(ctx,o,x,y,bw,bh,time,{view,flip});
+ const bodyFlex=rig?.bodyFlex||0;
+ return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.012+bodyFlex,Math.max(.04,bh*.018));
 }
 function drawBird(ctx,bird,x,y,opts={}){
  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
@@ -112,6 +117,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,resolveView,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
