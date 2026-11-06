@@ -49,7 +49,7 @@ function clipFor(o,time){
  const raw=norm(o.animation_state||o.behaviour||o.behavior||o.state||'swim');
  const aliases={turn:'turning',turning:'turning',feed:'feeding',feeding:'feeding',hunt:'hunting',hunting:'hunting',attack:'hunting',death:'dying',dead:'dying',dying:'dying',swim:'swim',idle:'idle'};
  const name=aliases[raw]||'swim',duration={turning:.9,feeding:1.25,hunting:1.1,dying:1.8,idle:2.8,swim:1}[name];
- const elapsed=Math.max(0,Number(o.animation_elapsed??o.state_elapsed??o.behaviour_elapsed??(time-(Number(o.animation_started_at)||time)))||0);
+ const elapsed=Math.max(0,Number(o.animation_elapsed??o.state_elapsed??o.behaviour_elapsed??(Number.isFinite(Number(o.animation_started_at))?time-Number(o.animation_started_at):time%duration))||0);
  const progress=name==='swim'||name==='idle'?(time%duration)/duration:clamp(elapsed/duration,0,1);
  return {name,progress,active:name!=='swim'&&name!=='idle'};
 }
@@ -99,7 +99,7 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
    }
  }
  // Rear/caudal appendage: two articulated links, with the distal section lagging.
- if(p.type!=='jelly'&&p.type!=='seahorse'){
+ if(far&&p.type!=='jelly'&&p.type!=='seahorse'){
    ctx.save();ctx.translate(-.46,0);ctx.rotate(tailAngle);
    const tailFill=top;
    if(p.type==='whale'||p.type==='dolphin'){
@@ -115,6 +115,7 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
    const pulse=Math.sin(phase*.5),contract=1-.12*pulse;
    ctx.save();ctx.translate(0,-.1);ctx.scale(contract,1+.08*pulse);
    for(let i=0;i<8;i++){
+     if(layer!=='all'&&((i<4&&!far)||(i>=4&&!near)))continue;
      const q=(i-3.5)/3.5,sway=Math.sin(phase*.32+i*.8)*(.04+Math.abs(q)*.025);
      ctx.beginPath();ctx.moveTo(q*.2,.2);ctx.bezierCurveTo(q*.23+sway,.38,q*.36-sway,.61,q*.25+Math.sin(phase*.6+i)*.035,.88);
      ctx.strokeStyle=stroke;ctx.lineWidth=.035;ctx.stroke();
@@ -123,7 +124,7 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
    }
    ctx.restore();
  }
- if(p.type==='seahorse'){
+ if(far&&p.type==='seahorse'){
    ctx.save();ctx.translate(-.3,.2);ctx.rotate(Math.sin(phase*.22)*.08);
    ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(-.2,.14,-.34,.38,-.18,.42);ctx.bezierCurveTo(-.04,.46,.02,.31,-.12,.29);
    ctx.strokeStyle=stroke;ctx.lineWidth=.105;ctx.stroke();ctx.strokeStyle=top;ctx.lineWidth=.07;ctx.stroke();ctx.restore();
