@@ -90,9 +90,8 @@ function draw(ctx,o){
    const tall=(h==='kelp_forest'?70+rand(id+10)*115:h==='mangrove_forest'?48+rand(id+10)*78:h==='seagrass'?17+rand(id+10)*34:h==='coral_reef'?20+rand(id+10)*58:h==='estuary'?35+rand(id+10)*65:12+rand(id+10)*38)*scale;
    const colour=pick(p.plants,id);
    if(h==='coral_reef'){
-    // Reef-forming coral is still procedural until a licensed coral PNG is added;
-    // the imported Kenney library currently contains seaweed, not coral assets.
-    drawCoral(ctx,plantX,plantY,tall,scale,colour,id);
+    const coral=window.NexusSprites?.drawPlant?.(ctx,plantX,plantY,Math.max(20,tall*.92),Math.max(24,tall*1.15),time,id,'coral');
+    if(!coral)drawCoral(ctx,plantX,plantY,tall,scale,colour,id);
     if(rand(id+91)>.68)window.NexusSprites?.drawPlant?.(ctx,plantX+(rand(id+92)-.5)*14*scale,plantY,Math.max(12,tall*.38),Math.max(18,tall*.72),time,id,'sargassum');
    }
    else if(h==='kelp_forest'){
