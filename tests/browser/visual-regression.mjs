@@ -23,7 +23,7 @@ async function waitForReady() {
   await page.waitForFunction(() => Boolean(window.NexusVisualTest && window.NexusSprites));
   await page.waitForFunction(() => window.NexusSprites.status.loaded === window.NexusSprites.status.assets || window.NexusSprites.status.failed > 0, null, { timeout: 45000 });
   await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}'});
-  await page.evaluate(() => document.fonts?.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   await page.waitForTimeout(500);
 }
 async function setZoom(zoom) {
