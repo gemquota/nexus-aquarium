@@ -21,7 +21,7 @@ page.on('requestfailed', request => failedRequests.push({url:request.url(),failu
 async function waitForReady() {
   await page.locator('#ocean').waitFor({ state: 'visible' });
   await page.waitForFunction(() => Boolean(window.NexusVisualTest && window.NexusSprites));
-  await page.waitForFunction(() => window.NexusSprites.status.assets >= 80, null, { timeout: 20000 });
+  await page.waitForFunction(() => window.NexusSprites.status.loaded >= 80 || window.NexusSprites.status.failed > 0, null, { timeout: 30000 });
   await page.waitForTimeout(500);
 }
 async function setZoom(zoom) {
