@@ -73,3 +73,10 @@ For paid packs, omit `--public`; the files remain in the ignored `local_assets/`
 ## Production flora sprites
 
 The side-view habitat renderer uses the transparent Kenney seaweed PNG variants by growth form: green seaweed for kelp forests, grass variants for seagrass beds, and background seaweed variants for mangrove/estuary dressing. Five original, transparent SVG sprites are included for coral reefs: staghorn coral, brain coral, fan coral, tube sponges and anemones. These are registered in `runtime-manifest.json` and anchored to the seabed by the sprite runtime. Procedural vegetation is retained only as a load-failure fallback, not as the normal rendered plant layer.
+
+
+## Unified sprite standard
+
+The active runtime manifest now uses the NEXUS outlined, cel-shaded style for coral, giant kelp, seagrass, mangrove roots, seabed rocks, sand/dirt surface tiles, bubbles and seabirds. The older Kenney generic fish, seaweed, rocks, terrain props and the earlier bird are no longer registered as runtime assets. The Kenney source files remain in the repository for provenance/reference, but are not drawn by the live renderer.
+
+Creature rendering uses the 16 species-specific five-view production sets. Species without their own production artwork resolve to a deliberate closest-family fallback among those 16 standard-style species; the old Kenney generic fish are not used as visual fallbacks. Exact species art always takes priority.
