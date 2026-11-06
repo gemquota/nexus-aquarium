@@ -68,7 +68,7 @@ jobs:
                   assert root.tag.endswith("svg"), f"invalid SVG root: {path}"
               elif path.suffix.lower() == ".png":
                   data = path.read_bytes()
-                  assert data[:8] == b"\\x89PNG\\r\\n\\x1a\\n", f"invalid PNG signature: {path}"
+                  assert data[:8] == b"\x89PNG\r\n\x1a\n", f"invalid PNG signature: {path}"
               else:
                   raise AssertionError(f"unsupported runtime sprite format: {path}")
           assert all(p.get("projection") == "side_view" for p in sources["packs"])
