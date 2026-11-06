@@ -5,6 +5,7 @@ on:
 jobs:
   browser-visual-regression:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -13,14 +14,14 @@ jobs:
       - name: Install browser test dependencies
         run: |
           npm init -y
-          npm install --no-save playwright
+          npm install --no-save playwright pngjs
           npx playwright install --with-deps chromium
       - name: Serve dashboard
         run: |
           python3 -m http.server 4173 > /tmp/nexus-http.log 2>&1 &
           echo $! > /tmp/nexus-http.pid
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
-      - name: Capture habitat and zoom matrix
+      - name: Capture habitat, population, zoom and behaviour matrix
         run: node tests/browser/visual-regression.mjs
       - name: Upload screenshots and diagnostics
         if: always()
