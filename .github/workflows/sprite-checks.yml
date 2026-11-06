@@ -1,7 +1,7 @@
 name: Sprite asset checks
 on:
   push:
-    branches: [main, feat/sideview-sprite-renderer]
+    branches: [main, feat/sideview-sprite-renderer, feat/species-articulated-animation]
   pull_request:
   workflow_dispatch:
 jobs:
