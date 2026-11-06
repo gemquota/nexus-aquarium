@@ -131,10 +131,23 @@ function drawProp(ctx,species,x,y,width,height,time=0,seed=0){
  const entry=find('prop',species,seed);if(!entry)return false;
  return drawImage(ctx,entry,x,y,width,height,time,.5,1,false,0,0);
 }
-function drawPlant(ctx,x,baseY,width,height,time=0,seed=0){
- const entry=find('plant','seaweed',seed);if(!entry)return false;
+function drawPlant(ctx,x,baseY,width,height,time=0,seed=0,category='kelp'){
+ const name=normalise(category);
+ const rules={
+  kelp:e=>/^seaweed_green_[a-d]\.png$/i.test(e.filename||''),
+  seagrass:e=>/^seaweed_grass_[ab]\.png$/i.test(e.filename||''),
+  mangrove:e=>/^background_seaweed_[a-h]\.png$/i.test(e.filename||''),
+  sargassum:e=>/^seaweed_(green|orange)_[a-d]\.png$/i.test(e.filename||''),
+  macroalgae:e=>/^seaweed_(green|orange|pink)_[a-d]\.png$/i.test(e.filename||'')
+ };
+ const rule=rules[name]||rules.kelp;
+ const pool=entries.filter(e=>e.kind==='plant'&&e.species==='seaweed'&&clean(e)&&rule(e));
+ if(!pool.length)return false;
+ const entry=pool[hash(String(seed)+':'+name)%pool.length];
  const sway=Math.sin(time*1.25+seed*.71)*.045;
- return drawImage(ctx,entry,x,baseY,width,height,time,.5,1,false,sway,0);
+ // Kenney's flora frames are square canvases with transparent margins. Keep
+ // their native aspect ratio and anchor the bottom edge to the substrate.
+ return drawImage(ctx,entry,x,baseY,Math.max(width,height*.92),height,time,.5,1,false,sway,0);
 }
 function drawIsland(ctx,island,x,y,radius){
  const entry=find('island',island.kind||island.species||'generic',island.id||island.x||0);if(!entry)return false;
