@@ -78,7 +78,8 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
  const jaw=clip.name==='feeding'?Math.sin(u*Math.PI)*.18:clip.name==='hunting'?Math.sin(u*Math.PI)*.1:0;
  const deathRoll=clip.name==='dying'?u*.9:0;
  const stroke=outline,line=.022;
- const tailAngle=wave*(p.tail||0)*(.42+speed*.14)+(clip.name==='hunting'?envelope*.32:0)+(clip.name==='dying'?-.12*envelope:0);
+ const strokeScale=clip.name==='feeding'?.45:clip.name==='dying'?.25:1;
+ const tailAngle=wave*(p.tail||0)*(.42+speed*.14)*strokeScale+(clip.name==='hunting'?envelope*.32:0)+(clip.name==='dying'?-.12*envelope:0);
  const finPulse=Math.sin(phase+1.2),slow=flap;
  const horizontal=flip?-1:1;
  const far=layer==='far'||layer==='all',near=layer==='near'||layer==='all';
@@ -168,7 +169,7 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
   bodyScaleX:p.type==='jelly'?1-.07*pulse:1-.08*death,
   bodyScaleY:p.type==='jelly'?1+.09*pulse:1-.05*death,
   tailAngle,finPulse,clip:clip.name,clipProgress:u,bodyRoll:deathRoll,bodyPitch:clip.name==='turning'?turn:0,
-  bodyOpacity:clip.name==='dying'?1-.38*death:1,sinkY:death*.12};
+  bodyOpacity:clip.name==='dying'?1-.38*death:1,sinkY:death*.12,bodySurgeX:clip.name==='hunting'?envelope*.08:0};
 }
 function profile(species){const n=norm(species),key=ALIASES[n]||n,p=PROFILES[key];return p?{...p}:null}
 window.NexusCreatureAnimation={draw,profile,species:Object.keys(PROFILES),version:1};
