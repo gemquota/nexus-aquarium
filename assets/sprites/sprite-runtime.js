@@ -4,7 +4,7 @@
 const MANIFEST_URL=new URL('./runtime-manifest.json',document.currentScript.src).href;
 const images=new Map(),entries=[];
 const plantSpecies=new Set(['kelp','seagrass','sea_lettuce','mangrove','sargassum','seaweed','macroalgae','eelgrass','coral','coral_polyp','marsh_grass','saltmarsh']);
-const speciesAliases={shark:'great_white_shark',whale:'humpback_whale',dolphin:'bottlenose_dolphin',seal:'harbor_seal',sea_lion:'california_sea_lion',manatee:'west_indian_manatee',sunfish:'ocean_sunfish',seahorse:'pacific_seahorse',jellyfish:'moon_jellyfish',sea_turtle:'green_sea_turtle',turtle:'green_sea_turtle',clown_fish:'clownfish',coral_polyp:'coral',kelp:'seaweed',seagrass:'seaweed',sea_lettuce:'seaweed',mangrove:'seaweed',sargassum:'seaweed',eelgrass:'seaweed',gull:'seagull'};
+const speciesAliases={shark:'great_white_shark',whale:'humpback_whale',dolphin:'bottlenose_dolphin',seal:'harbor_seal',sea_lion:'california_sea_lion',manatee:'west_indian_manatee',sunfish:'ocean_sunfish',seahorse:'pacific_seahorse',jellyfish:'moon_jellyfish',sea_turtle:'green_sea_turtle',turtle:'green_sea_turtle',clown_fish:'clownfish',coral_polyp:'coral',kelp:'kelp',seaweed:'kelp',seagrass:'seagrass',sea_lettuce:'macroalgae',mangrove:'mangrove',sargassum:'sargassum',eelgrass:'seagrass',gull:'seagull'};
 const genericFishSpecies=new Set(['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','icefish','coelacanth','lanternfish','anglerfish','piranha','clownfish','tang','angelfish','butterflyfish','wrasse','goby','damselfish','parrotfish','triggerfish','surgeonfish','anchovy','herring','sprat','smelt','fry']);
 const normalise=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 const clean=e=>!/(?:_outline|_skeleton)(?:\.[^.]+)?$/i.test(e.filename||e.src||'');
@@ -151,11 +151,11 @@ function drawProp(ctx,species,x,y,width,height,time=0,seed=0){
 function drawPlant(ctx,x,baseY,width,height,time=0,seed=0,category='kelp'){
  const name=normalise(category);
  const rules={
-  kelp:e=>/^seaweed_green_[a-d]\.png$/i.test(e.filename||''),
-  seagrass:e=>/^seaweed_grass_[ab]\.png$/i.test(e.filename||''),
-  mangrove:e=>/^background_seaweed_[a-h]\.png$/i.test(e.filename||''),
-  sargassum:e=>/^seaweed_(green|orange)_[a-d]\.png$/i.test(e.filename||''),
-  macroalgae:e=>/^seaweed_(green|orange|pink)_[a-d]\.png$/i.test(e.filename||'')
+  kelp:e=>/^kelp_giant\\.svg$/i.test(e.filename||''),
+  seagrass:e=>/^seagrass_tuft\\.svg$/i.test(e.filename||''),
+  mangrove:e=>/^mangrove_roots\\.svg$/i.test(e.filename||''),
+  sargassum:e=>/^kelp_giant\\.svg$/i.test(e.filename||''),
+  macroalgae:e=>/^kelp_giant\\.svg$/i.test(e.filename||'')
  };
  const rule=name==='coral'?e=>/^coral_.*\.svg$/i.test(e.filename||''):(rules[name]||rules.kelp);
  const targetSpecies=name==='coral'?'coral':(['kelp','seagrass','mangrove','sargassum','macroalgae'].includes(name)?name:'kelp');
@@ -163,8 +163,7 @@ function drawPlant(ctx,x,baseY,width,height,time=0,seed=0,category='kelp'){
  if(!pool.length)return false;
  const entry=pool[hash(String(seed)+':'+name)%pool.length];
  const sway=Math.sin(time*1.25+seed*.71)*.045;
- // Kenney's flora frames are square canvases with transparent margins. Keep
- // their native aspect ratio and anchor the bottom edge to the substrate.
+ // Preserve native vector proportions and anchor every growth form at its root.
  return drawImage(ctx,entry,x,baseY,Math.max(width,height*.92),height,time,.5,1,false,sway,0);
 }
 function drawIsland(ctx,island,x,y,radius){
