@@ -36,10 +36,22 @@ function chooseView(vx,vy){
  // Use the side pose unless the simulation explicitly supplies a view state.
  return 'side';
 }
-function resolveView(o){
- const requested=normalise(o.view||o.facing_view||o.orientation_view||'side');
- return ['front','front_three_quarter','side','rear_three_quarter','rear'].includes(requested)?requested:'side';
+function resolveView(o,time=0){
+ const explicit=normalise(o.view||o.facing_view||o.orientation_view||'');
+ if(['front','front_three_quarter','side','rear_three_quarter','rear'].includes(explicit))return explicit;
+ const state=normalise(o.animation_state||o.behaviour||o.behavior||o.state||'');
+ if(state==='turning'||state==='turn'){
+  const target=normalise(o.turn_target_view||o.target_view||'front_three_quarter');
+  const valid=['front','front_three_quarter','rear_three_quarter','rear'].includes(target)?target:'front_three_quarter';
+  const elapsed=Math.max(0,Number(o.animation_elapsed??o.state_elapsed??0)||0);
+  const progress=clampView(elapsed/.9,0,1);
+  if(progress<.28)return 'side';
+  if(progress<.72)return valid==='rear'||valid==='rear_three_quarter'?'rear_three_quarter':'front_three_quarter';
+  return valid;
+ }
+ return 'side';
 }
+function clampView(v){return Math.max(0,Math.min(1,v));}
 function frame(entry,state,time){
  const fw=Math.max(1,Number(entry.frame_width)||state.image.naturalWidth);
  const fh=Math.max(1,Number(entry.frame_height)||state.image.naturalHeight);
@@ -75,11 +87,11 @@ function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=f
 }
 function drawOrganism(ctx,o,x,y,opts={}){
  const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature';
- const vx=Number(o.vx)||0,vy=Number(o.vy)||0,view=resolveView(o);
+ const vx=Number(o.vx)||0,vy=Number(o.vy)||0,time=Number(opts.time)||0,view=resolveView(o,time);
  const canonical=speciesAliases[species]||species;
  const entry=kind==='creature'?(findView(kind,canonical,view,o.id)||find(kind,species,o.id)):find(kind,species,o.id);
  if(!entry)return false;
- const time=Number(opts.time)||0,size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
+ const size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
  if(kind==='plant'){
   const h=(Number(entry.render_height)||(species==='mangrove'?6:species==='kelp'?3.5:2.4))*size;
   const w=(Number(entry.render_width)||Math.max(1.2,h*.55))*size;
