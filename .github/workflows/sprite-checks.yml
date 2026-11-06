@@ -30,6 +30,7 @@ jobs:
           python - <<'PY'
           import json
           import struct
+          import xml.etree.ElementTree as ET
           from pathlib import Path
           sources = json.loads(Path("assets/sprites/sources.json").read_text())
           runtime = json.loads(Path("assets/sprites/runtime-manifest.json").read_text())
@@ -54,6 +55,22 @@ jobs:
               width, height = struct.unpack(">II", data[16:24])
               assert width > 0 and height > 0, f"invalid dimensions: {path}"
               assert data[25] in (4, 6), f"generated sprite must include alpha: {path}"
+          # Every active runtime asset must exist and be parseable. SVGs are first-class
+          # runtime assets alongside transparent PNG creature poses.
+          legacy_packs = {"kenney-fish", "inmenus-bird-cc0"}
+          assert not any(a.get("source_pack") in legacy_packs for a in runtime["assets"]), "legacy-style assets must not remain active in the runtime manifest"
+          assert not any(a.get("kind") == "creature" and a.get("species") == "generic" for a in runtime["assets"]), "generic legacy fish must not be active runtime fallbacks"
+          for asset in runtime["assets"]:
+              path = Path(asset["src"].lstrip("/"))
+              assert path.is_file(), f"missing runtime sprite: {path}"
+              if path.suffix.lower() == ".svg":
+                  root = ET.parse(path).getroot()
+                  assert root.tag.endswith("svg"), f"invalid SVG root: {path}"
+              elif path.suffix.lower() == ".png":
+                  data = path.read_bytes()
+                  assert data[:8] == b"\\x89PNG\\r\\n\\x1a\\n", f"invalid PNG signature: {path}"
+              else:
+                  raise AssertionError(f"unsupported runtime sprite format: {path}")
           assert all(p.get("projection") == "side_view" for p in sources["packs"])
-          print(f"Validated {len(sources['packs'])} side-view source packs and {len(generated)} transparent generated poses")
+          print(f"Validated {len(sources['packs'])} side-view source packs, {len(generated)} transparent creature poses and {len(runtime['assets'])} active runtime sprites")
           PY
