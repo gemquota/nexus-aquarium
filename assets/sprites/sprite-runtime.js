@@ -109,9 +109,9 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const flip=(view==='side'||view.includes('three_quarter'))&&vx<0;
  const rig=window.NexusCreatureAnimation?.draw(ctx,o,x,y,bw,bh,time,{view,flip,layer:'far'});
  const bodyFlex=rig?.bodyFlex||0;
- const bodyY=y+(rig?.sinkY||0)*bh;
- const rendered=drawImage(ctx,entry,x,bodyY,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.006+(rig?.bodyPitch||0),Math.max(.025,bh*.012),rig?.bodyScaleX||1,rig?.bodyScaleY||1,bodyFlex,rig?.bodyRoll||0,rig?.bodyOpacity||1);
- if(rendered)window.NexusCreatureAnimation?.draw(ctx,o,x,bodyY,bw,bh,time,{view,flip,layer:'near'});
+ const bodyY=y+(rig?.sinkY||0)*bh,bodyX=x+(rig?.bodySurgeX||0)*bw;
+ const rendered=drawImage(ctx,entry,bodyX,bodyY,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.006+(rig?.bodyPitch||0),Math.max(.025,bh*.012),rig?.bodyScaleX||1,rig?.bodyScaleY||1,bodyFlex,rig?.bodyRoll||0,rig?.bodyOpacity||1);
+ if(rendered)window.NexusCreatureAnimation?.draw(ctx,o,bodyX,bodyY,bw,bh,time,{view,flip,layer:'near'});
  return rendered;
 }
 function drawBird(ctx,bird,x,y,opts={}){
