@@ -112,6 +112,14 @@ function draw(ctx,o,x,y,w,h,time,opts={}){
      shape(ctx,[[0,0],[-.1,-.035],[-.29,-.24],[-.38,-.18],[-.34,0],[-.38,.18],[-.29,.24],[-.1,.035]],top,stroke,line);
    }
    ctx.restore();
+   if(p.type==='whale'||p.type==='dolphin'){
+     for(const side of [-1,1]){
+       ctx.save();ctx.translate(.08,side*.105);ctx.rotate(side*flap*(p.pectoral||.2)*.2);
+       const reach=p.type==='whale'?.48:.3;
+       shape(ctx,[[0,0],[.12,side*.025],[reach,side*.18],[reach*.88,side*.22],[.1,side*.095]],top,stroke,line);
+       ctx.restore();
+     }
+   }
    if(p.type==='shark'||p.type==='fish'){
      // Dorsal fin rocks slightly with the travelling body wave.
      ctx.save();ctx.translate(-.05,-.16);ctx.rotate(-wave*(p.dorsal||p.fin||.15)*.12);
