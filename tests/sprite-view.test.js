@@ -2,12 +2,14 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const {URL}=require('node:url');
 const source=fs.readFileSync('assets/sprites/sprite-runtime.js','utf8');
 const sandbox={
  window:{dispatchEvent(){}},
  document:{currentScript:{src:'https://example.test/assets/sprites/sprite-runtime.js'}},
  fetch:async()=>({ok:true,json:async()=>({assets:[]})}),
  CustomEvent:class CustomEvent{},
+ URL,
  console:{info(){}}
 };
 vm.runInNewContext(source,sandbox,{filename:'assets/sprites/sprite-runtime.js'});
