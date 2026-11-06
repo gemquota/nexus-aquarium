@@ -87,7 +87,7 @@ function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=f
  }
  ctx.restore();return true;
 }
-function drawOrganism(ctx,o,x,y,opts={}){
+const spriteTiming={far:[],body:[],near:[]};function recordSpriteTime(layer,start){const a=spriteTiming[layer];a.push(performance.now()-start);if(a.length>120)a.shift()}function metric(a,q){if(!a.length)return 0;const v=[...a].sort((x,y)=>x-y);return v[Math.min(v.length-1,Math.floor((v.length-1)*q))]}\nfunction drawOrganism(ctx,o,x,y,opts={}){
  const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature';
  const vx=Number(o.vx)||0,vy=Number(o.vy)||0,time=Number(opts.time)||0,view=resolveView(o,time);
  const canonical=speciesAliases[species]||species;
@@ -109,11 +109,15 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const swim=Math.sin(time*5.2+(Number(o.id)||0)*.73);
  const turn=Math.max(-.08,Math.min(.08,heading*.08));
  const flip=(view==='side'||view.includes('three_quarter'))&&vx<0;
+ const sample=(Number(o.id)||0)%8===0,farStart=sample?performance.now():0;
  const rig=window.NexusCreatureAnimation?.draw(ctx,o,x,y,bw,bh,time,{view,flip,layer:'far'});
+ if(sample)recordSpriteTime('far',farStart);
  const bodyFlex=rig?.bodyFlex||0;
  const bodyY=y+(rig?.sinkY||0)*bh,bodyX=x+(rig?.bodySurgeX||0)*bw;
+ const bodyStart=sample?performance.now():0;
  const rendered=drawImage(ctx,entry,bodyX,bodyY,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.006+(rig?.bodyPitch||0),Math.max(.025,bh*.012),rig?.bodyScaleX||1,rig?.bodyScaleY||1,bodyFlex,rig?.bodyRoll||0,rig?.bodyOpacity||1);
- if(rendered)window.NexusCreatureAnimation?.draw(ctx,o,bodyX,bodyY,bw,bh,time,{view,flip,layer:'near'});
+ if(sample)recordSpriteTime('body',bodyStart);
+ if(rendered){const nearStart=sample?performance.now():0;window.NexusCreatureAnimation?.draw(ctx,o,bodyX,bodyY,bw,bh,time,{view,flip,layer:'near'});if(sample)recordSpriteTime('near',nearStart)}
  return rendered;
 }
 function drawBird(ctx,bird,x,y,opts={}){
@@ -147,6 +151,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,resolveView,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,resolveView,get metrics(){return {far:{median:metric(spriteTiming.far,.5),p95:metric(spriteTiming.far,.95),samples:spriteTiming.far.length},body:{median:metric(spriteTiming.body,.5),p95:metric(spriteTiming.body,.95),samples:spriteTiming.body.length},near:{median:metric(spriteTiming.near,.5),p95:metric(spriteTiming.near,.95),samples:spriteTiming.near.length}}},get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
