@@ -20,6 +20,7 @@ jobs:
           node --check app.js
           node --check assets/sprites/sprite-runtime.js
           node --check assets/biome-renderer.js
+          node tests/sprite-view.test.js
       - name: Check Python importer syntax
         run: python -m py_compile tools/import_sprite_packs.py
       - name: Validate sprite manifests
@@ -33,6 +34,10 @@ jobs:
           assert runtime["projection"] == "side_view"
           assert isinstance(sources["packs"], list)
           assert isinstance(runtime["assets"], list)
+          generated = [a for a in runtime["assets"] if a.get("source_pack") == "generated-turnarounds"]
+          assert len(generated) == 80, f"expected 80 generated views, got {len(generated)}"
+          assert len({a["species"] for a in generated}) == 16
+          assert {a["view"] for a in generated} == {"front", "front_three_quarter", "side", "rear_three_quarter", "rear"}
           assert all(p.get("projection") == "side_view" for p in sources["packs"])
           print(f"Validated {len(sources['packs'])} side-view source packs and {len(runtime['assets'])} runtime assets")
           PY

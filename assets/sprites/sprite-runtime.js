@@ -4,7 +4,7 @@
 const MANIFEST_URL=new URL('./runtime-manifest.json',document.currentScript.src).href;
 const images=new Map(),entries=[];
 const plantSpecies=new Set(['kelp','seagrass','sea_lettuce','mangrove','sargassum','seaweed','macroalgae','eelgrass','coral','coral_polyp','marsh_grass','saltmarsh']);
-const speciesAliases={sea_turtle:'turtle',coral_polyp:'coral',kelp:'seaweed',seagrass:'seaweed',sea_lettuce:'seaweed',mangrove:'seaweed',sargassum:'seaweed',eelgrass:'seaweed',gull:'seagull'};
+const speciesAliases={shark:'great_white_shark',whale:'humpback_whale',dolphin:'bottlenose_dolphin',seal:'harbor_seal',sea_lion:'california_sea_lion',manatee:'west_indian_manatee',sunfish:'ocean_sunfish',seahorse:'pacific_seahorse',jellyfish:'moon_jellyfish',sea_turtle:'green_sea_turtle',turtle:'green_sea_turtle',clown_fish:'clownfish',coral_polyp:'coral',kelp:'seaweed',seagrass:'seaweed',sea_lettuce:'seaweed',mangrove:'seaweed',sargassum:'seaweed',eelgrass:'seaweed',gull:'seagull'};
 const genericFishSpecies=new Set(['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','icefish','coelacanth','lanternfish','anglerfish','piranha','clownfish','tang','angelfish','butterflyfish','wrasse','goby','damselfish','parrotfish','triggerfish','surgeonfish','anchovy','herring','sprat','smelt','fry']);
 const normalise=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 const clean=e=>!/(?:_outline|_skeleton)(?:\.[^.]+)?$/i.test(e.filename||e.src||'');
@@ -25,6 +25,17 @@ function find(kind,species,seed=0){
  const name=speciesAliases[normalise(species)]||normalise(species);
  const exact=variants(kind,name);const generic=kind==='creature'&&genericFishSpecies.has(normalise(species))?entries.filter(e=>e.kind===kind&&clean(e)&&e.species==='generic'):[];const pool=exact.length?exact:generic;
  return pool.length?pool[hash(seed)%pool.length]:null;
+}
+function findView(kind,species,view,seed=0){
+ const name=speciesAliases[normalise(species)]||normalise(species);
+ const pool=entries.filter(e=>e.kind===kind&&clean(e)&&e.species===name&&e.view===view);
+ return pool.length?pool[hash(String(seed)+':'+view)%pool.length]:null;
+}
+function chooseView(vx,vy){
+ const x=Math.abs(Number(vx)||0),y=Math.abs(Number(vy)||0);
+ if(y<x*.32)return 'side';
+ if(y>x*1.25)return vy<0?'front':'rear';
+ return vy<0?'front_three_quarter':'rear_three_quarter';
 }
 function frame(entry,state,time){
  const fw=Math.max(1,Number(entry.frame_width)||state.image.naturalWidth);
@@ -48,7 +59,10 @@ function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=f
 }
 function drawOrganism(ctx,o,x,y,opts={}){
  const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature';
- const entry=find(kind,species,o.id);if(!entry)return false;
+ const vx=Number(o.vx)||0,vy=Number(o.vy)||0,view=chooseView(vx,vy);
+ const canonical=speciesAliases[species]||species;
+ const entry=kind==='creature'?(findView(kind,canonical,view,o.id)||find(kind,species,o.id)):find(kind,species,o.id);
+ if(!entry)return false;
  const time=Number(opts.time)||0,size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
  if(kind==='plant'){
   const h=(Number(entry.render_height)||(species==='mangrove'?6:species==='kelp'?3.5:2.4))*size;
@@ -57,15 +71,15 @@ function drawOrganism(ctx,o,x,y,opts={}){
   const sway=Math.sin(time*1.25+(Number(o.id)||0)*.71)*.045;
   return drawImage(ctx,entry,x,baseY,w,h,time,Number(entry.anchor_x??.5),1,false,sway,0);
  }
- const large=['whale','shark','dolphin','ray','orca','humpback_whale'].includes(species);
+ const large=['whale','shark','dolphin','ray','orca','humpback_whale','great_white_shark','hammerhead_shark','whale_shark','bottlenose_dolphin','harbor_seal','california_sea_lion','west_indian_manatee','ocean_sunfish','green_sea_turtle'].includes(canonical);
  const tiny=['reef_fish','surface_fish','pelagic_fish','deepwater_fish','sardine','mackerel','lanternfish','anglerfish'].includes(species);
  const bw=(Number(entry.render_width)||(large?6.2:tiny?2.8:3.8))*size;
  const bh=(Number(entry.render_height)||(large?3.4:tiny?2.0:2.8))*size;
- const vx=Number(o.vx)||0,vy=Number(o.vy)||0;
  const heading=Math.atan2(vy,Math.abs(vx)||.0001);
  const swim=Math.sin(time*5.2+(Number(o.id)||0)*.73);
  const turn=Math.max(-.16,Math.min(.16,heading*.22));
- return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),vx<0,turn+swim*.025,Math.max(.15,bh*.055));
+ const flip=(view==='side'||view.includes('three_quarter'))&&vx<0;
+ return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.025,Math.max(.15,bh*.055));
 }
 function drawBird(ctx,bird,x,y,opts={}){
  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
@@ -98,6 +112,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
