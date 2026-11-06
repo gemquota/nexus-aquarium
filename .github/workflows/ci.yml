@@ -35,3 +35,32 @@ jobs:
         run: node --check assets/biome-renderer.js
       - name: Test biome renderer regressions
         run: node tests/biome-renderer.test.js
+
+  browser-visual-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser test dependencies
+        run: |
+          npm init -y
+          npm install --no-save playwright pngjs
+          npx playwright install --with-deps chromium
+      - name: Serve dashboard
+        run: |
+          python3 -m http.server 4173 > /tmp/nexus-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+      - name: Capture deterministic habitat, population, zoom and behaviour matrix
+        run: node tests/browser/visual-regression.mjs
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexus-visual-regression
+          path: artifacts/nexus-visual-regression/
+          if-no-files-found: warn

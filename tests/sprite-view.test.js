@@ -16,8 +16,14 @@ vm.runInNewContext(source,sandbox,{filename:'assets/sprites/sprite-runtime.js'})
 const choose=sandbox.window.NexusSprites.chooseView;
 assert.equal(choose(1,0),'side');
 assert.equal(choose(-1,0),'side');
-assert.equal(choose(0,-1),'front');
-assert.equal(choose(0,1),'rear');
-assert.equal(choose(1,-1),'front_three_quarter');
-assert.equal(choose(1,1),'rear_three_quarter');
+assert.equal(choose(0,-1),'side');
+assert.equal(choose(0,1),'side');
+assert.equal(choose(1,-1),'side');
+assert.equal(choose(1,1),'side');
+assert.equal(sandbox.window.NexusSprites.resolveView({vy:-1}),'side');
+assert.equal(sandbox.window.NexusSprites.resolveView({view:'front_three_quarter'}),'front_three_quarter');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',view:'side',animation_elapsed:.05,turn_target_view:'rear'}),'side');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',view:'side',animation_elapsed:.85,turn_target_view:'rear'}),'rear','turning clip must override stale side orientation');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',animation_elapsed:.45,turn_target_view:'rear'}),'rear_three_quarter');
+assert.equal(sandbox.window.NexusSprites.resolveView({animation_state:'turning',animation_elapsed:.85,turn_target_view:'rear'}),'rear');
 console.log('Sprite view selection checks passed.');

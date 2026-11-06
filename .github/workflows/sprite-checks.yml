@@ -1,7 +1,7 @@
 name: Sprite asset checks
 on:
   push:
-    branches: [main, feat/sideview-sprite-renderer]
+    branches: [main, feat/sideview-sprite-renderer, feat/species-articulated-animation]
   pull_request:
   workflow_dispatch:
 jobs:
@@ -19,14 +19,17 @@ jobs:
         run: |
           node --check app.js
           node --check assets/sprites/sprite-runtime.js
+          node --check assets/sprites/creature-animation.js
           node --check assets/biome-renderer.js
           node tests/sprite-view.test.js
+          node tests/creature-animation.test.js
       - name: Check Python importer syntax
         run: python -m py_compile tools/import_sprite_packs.py
       - name: Validate sprite manifests
         run: |
           python - <<'PY'
           import json
+          import struct
           from pathlib import Path
           sources = json.loads(Path("assets/sprites/sources.json").read_text())
           runtime = json.loads(Path("assets/sprites/runtime-manifest.json").read_text())
@@ -35,9 +38,22 @@ jobs:
           assert isinstance(sources["packs"], list)
           assert isinstance(runtime["assets"], list)
           generated = [a for a in runtime["assets"] if a.get("source_pack") == "generated-turnarounds"]
+          species = {a["species"] for a in generated}
+          views = {"front", "front_three_quarter", "side", "rear_three_quarter", "rear"}
           assert len(generated) == 80, f"expected 80 generated views, got {len(generated)}"
-          assert len({a["species"] for a in generated}) == 16
-          assert {a["view"] for a in generated} == {"front", "front_three_quarter", "side", "rear_three_quarter", "rear"}
+          assert len(species) == 16, f"expected 16 species, got {len(species)}"
+          assert {a["view"] for a in generated} == views
+          keys = {(a["species"], a["view"]) for a in generated}
+          assert len(keys) == 80, "duplicate species/view keys found"
+          assert keys == {(name, view) for name in species for view in views}, "species/view matrix is incomplete"
+          for asset in generated:
+              path = Path(asset["src"].lstrip("/"))
+              assert path.is_file(), f"missing generated sprite: {path}"
+              data = path.read_bytes()
+              assert data[:8] == b"\x89PNG\r\n\x1a\n", f"invalid PNG signature: {path}"
+              width, height = struct.unpack(">II", data[16:24])
+              assert width > 0 and height > 0, f"invalid dimensions: {path}"
+              assert data[25] in (4, 6), f"generated sprite must include alpha: {path}"
           assert all(p.get("projection") == "side_view" for p in sources["packs"])
-          print(f"Validated {len(sources['packs'])} side-view source packs and {len(runtime['assets'])} runtime assets")
+          print(f"Validated {len(sources['packs'])} side-view source packs and {len(generated)} transparent generated poses")
           PY

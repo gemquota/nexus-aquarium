@@ -32,11 +32,28 @@ function findView(kind,species,view,seed=0){
  return pool.length?pool[hash(String(seed)+':'+view)%pool.length]:null;
 }
 function chooseView(vx,vy){
- const x=Math.abs(Number(vx)||0),y=Math.abs(Number(vy)||0);
- if(y<x*.32)return 'side';
- if(y>x*1.25)return vy<0?'front':'rear';
- return vy<0?'front_three_quarter':'rear_three_quarter';
+ // In a side-view world, screen-space vertical movement is not camera-facing yaw.
+ // Use the side pose unless the simulation explicitly supplies a view state.
+ return 'side';
 }
+function resolveView(o,time=0){
+ const state=normalise(o.animation_state||o.behaviour||o.behavior||o.state||'');
+ // A turning clip owns pose selection until it completes. A stale side-view
+ // orientation field must not short-circuit the authored turn transition.
+ if(state==='turning'||state==='turn'){
+  const target=normalise(o.turn_target_view||o.target_view||'front_three_quarter');
+  const valid=['front','front_three_quarter','rear_three_quarter','rear'].includes(target)?target:'front_three_quarter';
+  const elapsed=Math.max(0,Number(o.animation_elapsed??o.state_elapsed??0)||0);
+  const progress=clampView(elapsed/.9,0,1);
+  if(progress<.28)return 'side';
+  if(progress<.72)return valid==='rear'||valid==='rear_three_quarter'?'rear_three_quarter':'front_three_quarter';
+  return valid;
+ }
+ const explicit=normalise(o.view||o.facing_view||o.orientation_view||'');
+ if(['front','front_three_quarter','side','rear_three_quarter','rear'].includes(explicit))return explicit;
+ return 'side';
+}
+function clampView(v){return Math.max(0,Math.min(1,v));}
 function frame(entry,state,time){
  const fw=Math.max(1,Number(entry.frame_width)||state.image.naturalWidth);
  const fh=Math.max(1,Number(entry.frame_height)||state.image.naturalHeight);
@@ -46,24 +63,38 @@ function frame(entry,state,time){
  const index=count>1?Math.floor(time*Math.max(.1,Number(entry.fps)||6))%count:0;
  return {sx:(index%cols)*fw,sy:Math.floor(index/cols)*fh,sw:Math.min(fw,state.image.naturalWidth),sh:Math.min(fh,state.image.naturalHeight)};
 }
-function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=false,angle=0,breath=0){
+function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=false,angle=0,breath=0,deformX=1,deformY=1,flex=0,roll=0,opacity=1){
  const state=loadEntry(entry);if(!state?.loaded||state.failed)return false;
  const f=frame(entry,state,time),aspect=f.sw/f.sh;
  let w=boundW,h=boundH;
  if(w/h>aspect)w=h*aspect;else h=w/aspect;
  const bob=breath?Math.sin(time*2.8+hash(entry.filename||entry.src)%31)*breath:0;
- ctx.save();ctx.translate(x,y+bob);ctx.rotate(angle);ctx.scale(flip?-1:1,1);
+ ctx.save();ctx.globalAlpha=opacity;ctx.translate(x,y+bob);ctx.rotate(angle+roll);ctx.scale(flip?-1:1,1);ctx.scale(deformX,deformY);
  ctx.imageSmoothingEnabled=false;
- ctx.drawImage(state.image,f.sx,f.sy,f.sw,f.sh,-w*anchorX,-h*anchorY,w,h);
+ if(Math.abs(flex)>.0005&&f.sw>=5){
+  // Six overlapping horizontal body slices approximate a low-cost spine mesh.
+  // Each slice has its own joint angle and travelling-wave offset.
+  const segments=6,strip=f.sw/segments;
+  for(let i=0;i<segments;i++){
+   const t=(i+.5)/segments,theta=flex*Math.cos(t*Math.PI*2),offset=Math.sin(t*Math.PI)*flex*h*1.8;
+   const dx=-w*anchorX+t*w,dy=-h*anchorY+offset;
+   ctx.save();ctx.translate(dx,dy);ctx.rotate(theta);
+   ctx.drawImage(state.image,f.sx+i*strip,f.sy,Math.ceil(strip)+1,f.sh,-w/segments*.52,-h*.5,w/segments*1.04,h);
+   ctx.restore();
+  }
+ }else{
+  ctx.drawImage(state.image,f.sx,f.sy,f.sw,f.sh,-w*anchorX,-h*anchorY,w,h);
+ }
  ctx.restore();return true;
 }
+const spriteTiming={far:[],body:[],near:[]};function recordSpriteTime(layer,start){const a=spriteTiming[layer];a.push(performance.now()-start);if(a.length>120)a.shift()}function metric(a,q){if(!a.length)return 0;const v=[...a].sort((x,y)=>x-y);return v[Math.min(v.length-1,Math.floor((v.length-1)*q))]}
 function drawOrganism(ctx,o,x,y,opts={}){
  const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature';
- const vx=Number(o.vx)||0,vy=Number(o.vy)||0,view=chooseView(vx,vy);
+ const vx=Number(o.vx)||0,vy=Number(o.vy)||0,time=Number(opts.time)||0,view=resolveView(o,time);
  const canonical=speciesAliases[species]||species;
  const entry=kind==='creature'?(findView(kind,canonical,view,o.id)||find(kind,species,o.id)):find(kind,species,o.id);
  if(!entry)return false;
- const time=Number(opts.time)||0,size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
+ const size=.82+Math.max(0,Math.min(1,Number(o.genome?.size??.5)))*.36;
  if(kind==='plant'){
   const h=(Number(entry.render_height)||(species==='mangrove'?6:species==='kelp'?3.5:2.4))*size;
   const w=(Number(entry.render_width)||Math.max(1.2,h*.55))*size;
@@ -77,9 +108,18 @@ function drawOrganism(ctx,o,x,y,opts={}){
  const bh=(Number(entry.render_height)||(large?3.4:tiny?2.0:2.8))*size;
  const heading=Math.atan2(vy,Math.abs(vx)||.0001);
  const swim=Math.sin(time*5.2+(Number(o.id)||0)*.73);
- const turn=Math.max(-.16,Math.min(.16,heading*.22));
+ const turn=Math.max(-.08,Math.min(.08,heading*.08));
  const flip=(view==='side'||view.includes('three_quarter'))&&vx<0;
- return drawImage(ctx,entry,x,y,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.025,Math.max(.15,bh*.055));
+ const sample=(Number(o.id)||0)%8===0,farStart=sample?performance.now():0;
+ const rig=window.NexusCreatureAnimation?.draw(ctx,o,x,y,bw,bh,time,{view,flip,layer:'far'});
+ if(sample)recordSpriteTime('far',farStart);
+ const bodyFlex=rig?.bodyFlex||0;
+ const bodyY=y+(rig?.sinkY||0)*bh,bodyX=x+(rig?.bodySurgeX||0)*bw;
+ const bodyStart=sample?performance.now():0;
+ const rendered=drawImage(ctx,entry,bodyX,bodyY,bw,bh,time,Number(entry.anchor_x??.5),Number(entry.anchor_y??.5),flip,turn+swim*.006+(rig?.bodyPitch||0),Math.max(.025,bh*.012),rig?.bodyScaleX||1,rig?.bodyScaleY||1,bodyFlex,rig?.bodyRoll||0,rig?.bodyOpacity||1);
+ if(sample)recordSpriteTime('body',bodyStart);
+ if(rendered){const nearStart=sample?performance.now():0;window.NexusCreatureAnimation?.draw(ctx,o,bodyX,bodyY,bw,bh,time,{view,flip,layer:'near'});if(sample)recordSpriteTime('near',nearStart)}
+ return rendered;
 }
 function drawBird(ctx,bird,x,y,opts={}){
  const entry=find('bird',bird.species,opts.index)||find('bird','generic',opts.index);if(!entry)return false;
@@ -112,6 +152,6 @@ async function loadManifest(){
   window.dispatchEvent(new CustomEvent('nexus:sprites-ready',{detail:{count:entries.length}}));
  }catch(error){console.info('Nexus sprite manifest unavailable; using procedural fallback.',error.message)}
 }
-window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
+window.NexusSprites={drawOrganism,drawBird,drawIsland,drawProp,drawPlant,chooseView,resolveView,get metrics(){return {far:{median:metric(spriteTiming.far,.5),p95:metric(spriteTiming.far,.95),samples:spriteTiming.far.length},body:{median:metric(spriteTiming.body,.5),p95:metric(spriteTiming.body,.95),samples:spriteTiming.body.length},near:{median:metric(spriteTiming.near,.5),p95:metric(spriteTiming.near,.95),samples:spriteTiming.near.length}}},get status(){return {assets:entries.length,loaded:[...images.values()].filter(v=>v.loaded).length,failed:[...images.values()].filter(v=>v.failed).length}}};
 loadManifest();
 })();
