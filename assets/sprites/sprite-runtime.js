@@ -37,9 +37,9 @@ function chooseView(vx,vy){
  return 'side';
 }
 function resolveView(o,time=0){
- const explicit=normalise(o.view||o.facing_view||o.orientation_view||'');
- if(['front','front_three_quarter','side','rear_three_quarter','rear'].includes(explicit))return explicit;
  const state=normalise(o.animation_state||o.behaviour||o.behavior||o.state||'');
+ // A turning clip owns pose selection until it completes. A stale side-view
+ // orientation field must not short-circuit the authored turn transition.
  if(state==='turning'||state==='turn'){
   const target=normalise(o.turn_target_view||o.target_view||'front_three_quarter');
   const valid=['front','front_three_quarter','rear_three_quarter','rear'].includes(target)?target:'front_three_quarter';
@@ -49,6 +49,8 @@ function resolveView(o,time=0){
   if(progress<.72)return valid==='rear'||valid==='rear_three_quarter'?'rear_three_quarter':'front_three_quarter';
   return valid;
  }
+ const explicit=normalise(o.view||o.facing_view||o.orientation_view||'');
+ if(['front','front_three_quarter','side','rear_three_quarter','rear'].includes(explicit))return explicit;
  return 'side';
 }
 function clampView(v){return Math.max(0,Math.min(1,v));}
