@@ -87,7 +87,8 @@ function drawImage(ctx,entry,x,y,boundW,boundH,time,anchorX=.5,anchorY=.5,flip=f
  }
  ctx.restore();return true;
 }
-const spriteTiming={far:[],body:[],near:[]};function recordSpriteTime(layer,start){const a=spriteTiming[layer];a.push(performance.now()-start);if(a.length>120)a.shift()}function metric(a,q){if(!a.length)return 0;const v=[...a].sort((x,y)=>x-y);return v[Math.min(v.length-1,Math.floor((v.length-1)*q))]}\nfunction drawOrganism(ctx,o,x,y,opts={}){
+const spriteTiming={far:[],body:[],near:[]};function recordSpriteTime(layer,start){const a=spriteTiming[layer];a.push(performance.now()-start);if(a.length>120)a.shift()}function metric(a,q){if(!a.length)return 0;const v=[...a].sort((x,y)=>x-y);return v[Math.min(v.length-1,Math.floor((v.length-1)*q))]}
+function drawOrganism(ctx,o,x,y,opts={}){
  const species=normalise(o.species),kind=plantSpecies.has(species)?'plant':'creature';
  const vx=Number(o.vx)||0,vy=Number(o.vy)||0,time=Number(opts.time)||0,view=resolveView(o,time);
  const canonical=speciesAliases[species]||species;
