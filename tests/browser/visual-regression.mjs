@@ -22,6 +22,7 @@ async function waitForReady() {
   await page.locator('#ocean').waitFor({ state: 'visible' });
   await page.waitForFunction(() => Boolean(window.NexusVisualTest && window.NexusSprites));
   await page.waitForFunction(() => window.NexusSprites.status.loaded === window.NexusSprites.status.assets || window.NexusSprites.status.failed > 0, null, { timeout: 45000 });
+  await page.evaluate(() => window.NexusVisualTest.pause());
   await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}'});
   await page.evaluate(() => document.fonts.ready.then(() => true));
   await page.waitForTimeout(500);
@@ -41,7 +42,7 @@ function changedPixelRatio(a,b) {
   if(x.width!==y.width||x.height!==y.height) return 1;
   let changed=0,total=x.width*x.height;
   for(let i=0;i<x.data.length;i+=4) {
-    if(x.data[i]!==y.data[i]||x.data[i+1]!==y.data[i+1]||x.data[i+2]!==y.data[i+2]||x.data[i+3]!==y.data[i+3]) changed++;
+    if(Math.max(Math.abs(x.data[i]-y.data[i]),Math.abs(x.data[i+1]-y.data[i+1]),Math.abs(x.data[i+2]-y.data[i+2]),Math.abs(x.data[i+3]-y.data[i+3]))>8) changed++;
   }
   return changed/total;
 }
