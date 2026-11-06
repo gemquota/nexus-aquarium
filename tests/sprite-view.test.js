@@ -10,7 +10,8 @@ const sandbox={
  fetch:async()=>({ok:true,json:async()=>({assets:[
   {kind:'plant',species:'seaweed',filename:'seaweed_green_a.png',src:'/assets/sprites/seaweed_green_a.png',frames:1},
   {kind:'plant',species:'seaweed',filename:'seaweed_grass_a.png',src:'/assets/sprites/seaweed_grass_a.png',frames:1},
-  {kind:'plant',species:'seaweed',filename:'background_seaweed_a.png',src:'/assets/sprites/background_seaweed_a.png',frames:1}
+  {kind:'plant',species:'seaweed',filename:'background_seaweed_a.png',src:'/assets/sprites/background_seaweed_a.png',frames:1},
+  {kind:'plant',species:'coral',filename:'coral_staghorn.svg',src:'/assets/sprites/flora/coral_staghorn.svg',frames:1}
  ]})}),
  Image:class FakeImage{constructor(){this.naturalWidth=64;this.naturalHeight=64;this.decoding='';}set src(value){this._src=value;this.onload?.();}get src(){return this._src;}},
  CustomEvent:class CustomEvent{},
@@ -38,8 +39,8 @@ async function verifyPlantSprites(){
  assert.equal(sandbox.window.NexusSprites.drawPlant(ctx,10,100,36,90,1,7,'kelp'),true,'kelp resolves to imported green seaweed sprite');
  assert.equal(sandbox.window.NexusSprites.drawPlant(ctx,20,100,30,60,1,7,'seagrass'),true,'seagrass resolves to imported grass sprite');
  assert.equal(sandbox.window.NexusSprites.drawPlant(ctx,30,100,30,70,1,7,'mangrove'),true,'mangrove resolves to imported background seaweed sprite');
- assert.equal(sandbox.window.NexusSprites.drawPlant(ctx,40,100,30,70,1,7,'coral'),false,'missing coral artwork must not be misrepresented as a coral sprite');
- assert.equal(calls.length,3,'each available flora category draws a real image');
+ assert.equal(sandbox.window.NexusSprites.drawPlant(ctx,40,100,30,70,1,7,'coral'),true,'reef coral resolves to the original coral SVG sprite');
+ assert.equal(calls.length,4,'each available flora category draws a real image');
  console.log('Sprite view and flora asset checks passed.');
 }
 verifyPlantSprites().catch(error=>{console.error(error);process.exitCode=1;});
